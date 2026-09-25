@@ -4,12 +4,13 @@
 
 O backend (`InsightF-AI/Insight-flow-backend`) já expõe via REST: cadastro/login com JWT, watchlist, busca de ativos, cotação atual, histórico OHLCV, indicadores técnicos, sinais + backtest, alertas de preço, notificações in-app e o portfólio simulado completo (operações, posições, rentabilidade, benchmark, distribuição). Não existe nenhum cliente ainda — o repositório web não foi criado.
 
-Este sub-projeto é a **Fase 5 do roadmap** ("Cliente mobile consumindo API existente"): um app React Native que cobre tudo que o backend já oferece, sem alterar o backend. A stack é a definida nos documentos do projeto (`escopo-e-stack` e `documentacao-tecnica`, seção 8): **React Native + Expo SDK 54, EAS CLI, Expo Notifications, Victory Native**.
+Este sub-projeto é a **Fase 5 do roadmap** ("Cliente mobile consumindo API existente"): um app React Native que cobre tudo que o backend já oferece, sem alterar o backend. A stack segue a dos documentos do projeto (`escopo-e-stack` e `documentacao-tecnica`, seção 8) — **React Native + Expo, EAS CLI, Expo Notifications, Victory Native** — com uma divergência deliberada de versão: **Expo SDK 57** em vez do 54 (ver decisões).
 
 O app também atende os requisitos do Checkpoint 01 da disciplina de Programação Mobile: TypeScript, componentes próprios, props, `useState`, estilos com Flexbox e as principais telas do projeto existentes.
 
 **Decisões tomadas em brainstorming:**
 
+- **Expo SDK 57, não 54.** Em 25/09/2026 o SDK atual é o 57, e o Expo Go das lojas só abre projetos do SDK mais recente. Com o 54, iPhones não abririam o app pelo Expo Go. Os documentos do projeto (`escopo-e-stack`, `documentacao-tecnica`) precisam ser atualizados para "Expo SDK 57".
 - **Repositório próprio** (`InsightF-AI/Insight-flow-mobile`), seguindo a decisão arquitetural dos documentos de que os clientes são desacoplados e só compartilham o contrato REST.
 - **Escopo = tudo que o backend já tem.** Telas de IA (análise textual por ativo e chat) entram com layout e aviso legal, exibindo "disponível em breve", porque o backend ainda não tem os endpoints de IA. Push notifications ficam fora (ver "Fora do escopo").
 - **Stack de estado igual à do web** (TanStack Query + Zustand). Os documentos pedem "reaproveitamento da camada de API do web", mas o web não existe; aqui acontece o inverso — `src/api/` nasce sem dependência de React Native, para o web poder copiá-la.
@@ -30,17 +31,17 @@ O app também atende os requisitos do Checkpoint 01 da disciplina de Programaç�
 
 | Papel | Biblioteca |
 |---|---|
-| Runtime | Expo SDK 54 (React Native 0.81, React 19.1), TypeScript estrito |
+| Runtime | Expo SDK 57 (React Native 0.86, React 19.2), TypeScript 6 estrito |
 | Navegação | `expo-router` |
 | Estado de servidor | `@tanstack/react-query` v5 |
 | Estado global | `zustand` v5 (somente sessão) |
 | Armazenamento do token | `expo-secure-store` |
-| Gráficos | `victory-native` (XL) + `@shopify/react-native-skia` + `react-native-reanimated` + `react-native-gesture-handler`; fonte TTF local em `assets/fonts/` para os rótulos de eixo (o Victory XL desenha texto via Skia `useFont`) |
+| Gráficos | `victory-native` 42 (XL) + `@shopify/react-native-skia` + `react-native-reanimated` + `react-native-gesture-handler`. Sem rótulos de eixo desenhados no Skia (evita embarcar fonte TTF): mínimo, máximo e datas do período ficam em `Text` do React Native abaixo do gráfico |
 | Data da operação | `@react-native-community/datetimepicker` |
-| Testes | `jest-expo` + `@testing-library/react-native` |
+| Testes | `jest-expo` + `@testing-library/react-native` v14 (API assíncrona, renderer `test-renderer`) |
 | Lint | `eslint-config-expo` (via `npx expo lint`) |
 
-Dependências nativas são instaladas com `npx expo install` para casar as versões com o SDK 54. Todas as bibliotecas acima estão incluídas no Expo Go do SDK 54.
+Dependências nativas são instaladas com `npx expo install` para casar as versões com o SDK 57. Todas as bibliotecas nativas acima estão incluídas no Expo Go do SDK 57.
 
 ## Arquitetura
 
@@ -178,12 +179,12 @@ Todas as telas usam três componentes de estado compartilhados: `Carregando`, `E
 2. Comparativo: carteira × CDI e carteira × Ibovespa (duas queries). `rentabilidade_benchmark_percentual: null` → "indisponível". 404 → estado vazio "Registre uma operação para comparar".
 3. Distribuição (`/portfolio/distribuicao`): gráfico de rosca com seletor Classe / Setor / Moeda.
 4. Posições (`/portfolio/posicoes`): ticker, quantidade, preço médio, cotação atual, valor de mercado e lucro não realizado.
-5. Histórico de operações (`/operacoes`), com remoção (confirmação → `DELETE /operacoes/{id}`; 422 mostra a mensagem do backend, ex.: remover uma compra deixaria uma venda posterior sem saldo).
+5. Histórico de operações (`/operacoes`), com remoção (confirmação → `DELETE /operacoes/{id}`; o 422 também chega só com o UUID, e o app mostra "Esta operação não pode ser removida: uma venda posterior ficaria sem saldo em carteira.").
 6. Botão flutuante "Nova operação" → `operacao/nova`. Botão no cabeçalho "Perguntar à IA" → `chat`.
 
 O ticker das operações vem das posições ou da watchlist (`OperacaoResponse` só tem `ativo_id`).
 
-**Nova operação (`operacao/nova`)** — campos: tipo (Compra | Venda), ativo (busca por ticker), quantidade, preço unitário, data (datepicker, padrão hoje, sem datas futuras). Ao escolher o ativo, o preço unitário é preenchido com a cotação atual quando disponível (editável).
+**Nova operação (`operacao/nova`)** — campos: tipo (Compra | Venda), ativo (ticker digitado, com atalhos para os tickers da watchlist logo abaixo), quantidade, preço unitário, data (datepicker, padrão hoje, sem datas futuras). Quando o ticker já está na watchlist, um botão "Usar cotação atual (R$ …)" preenche o preço unitário com um toque; o campo continua editável. O preenchimento não é automático para não depender de efeito colateral nem adicionar o ativo à watchlist só por digitar.
 
 Algoritmo `resolverAtivoId(ticker, deps)` em `src/dominio/`, puro e testado, com as chamadas de API injetadas:
 
@@ -192,7 +193,7 @@ Algoritmo `resolverAtivoId(ticker, deps)` em `src/dominio/`, puro e testado, com
 3. 409 no passo 2 (corrida) → repete o passo 1; se ainda não achar, lança `ApiError`.
 4. Outros erros propagam (404 → "Ativo não encontrado", 503 → fonte indisponível).
 
-Depois: `POST /operacoes`. 422 → mensagem do backend abaixo do formulário (ex.: venda acima da quantidade em carteira). Sucesso → invalida caches e volta ao Portfólio.
+Depois: `POST /operacoes`. 422 → mensagem abaixo do formulário. Atenção: quando falta quantidade, o backend responde `detail` com **apenas o UUID do ativo** (`QuantidadeInsuficienteError(ativo_id)` convertido em string); nesse caso o app mostra "Quantidade insuficiente em carteira para esta venda na data informada." Os demais 422 (`OperacaoInvalidaError`) já trazem texto legível e são exibidos como vieram. Sucesso → invalida caches e volta ao Portfólio.
 
 **Alertas (aba)** — lista de `Alerta`: ticker, condição ("Preço ≥ R$ 40,00" / "Preço ≤ …", com a `moeda_alvo`), switch de habilitado (`PATCH { ativo }`) e "Disparado em …" quando `disparado_em` existir. Formulário de criação (ticker, condição, valor > 0) → `POST /alertas`. Remoção com confirmação → `DELETE`.
 
@@ -218,7 +219,7 @@ Depois: `POST /operacoes`. 422 → mensagem do backend abaixo do formulário (ex
 
 - `EXPO_PUBLIC_API_URL` em `.env` (com `.env.example` versionado): no celular físico com Expo Go, o IP do PC na rede local (`http://192.168.x.x:8000`); no emulador Android, `http://10.0.2.2:8000`; no simulador iOS, `http://localhost:8000`.
 - Backend via `docker compose up` no repositório do backend.
-- Node: o Expo SDK 54 é testado com Node 20.19+/22 LTS. A máquina de desenvolvimento está no Node 25; o primeiro passo da implementação valida o scaffold nele e, se falhar, documenta o Node 22 LTS no README (`.nvmrc` com `22`).
+- Node: o React Native 0.86 aceita `^20.19.4 || ^22.13.0 || ^24.3.0 || >= 25.0.0`, então o Node 25 da máquina de desenvolvimento serve. O CI usa Node 24 LTS (`.nvmrc` com `24`).
 
 ## Testes
 
@@ -229,10 +230,11 @@ Depois: `POST /operacoes`. 422 → mensagem do backend abaixo do formulário (ex
 - Componentes: `VariacaoBadge` (positivo/negativo/zero), `AvisoIA` com o texto exato, `SinalCard` com backtest vazio/nulo.
 - Telas: login (sucesso navega; 401 mostra mensagem) e `CardAnaliseIA`/`chat` contendo o `AvisoIA`, com o módulo de API mockado.
 - `GraficoPreco` e `GraficoDistribuicao` (Skia) são mockados nos testes de tela; não há teste de renderização do Skia no Jest.
+- Testes de unidade ficam ao lado do código em `src/` (`*.test.ts(x)`). Testes de tela ficam em `__tests__/telas/`, nunca em `app/` — o Expo Router trata todo arquivo de `app/` como rota.
 
 ## CI
 
-`.github/workflows/ci.yml` em push/PR para `main` e `develop`: Node 22, `npm ci`, `npx expo lint`, `npx tsc --noEmit`, `npx jest --ci`. Atende a regra do `CONTRIBUTING` de só mesclar com CI verde.
+`.github/workflows/ci.yml` em push/PR para `main` e `develop`: Node 24, `npm ci`, `npx expo lint`, `npx tsc --noEmit`, `npx jest --ci`. Atende a regra do `CONTRIBUTING` de só mesclar com CI verde.
 
 ## Git
 
