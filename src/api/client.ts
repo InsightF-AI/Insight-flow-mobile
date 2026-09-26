@@ -87,8 +87,13 @@ export async function request<T>(caminho: string, opcoes: OpcoesRequest = {}): P
     })
     .finally(() => clearTimeout(temporizador));
 
-  if (resposta.status === 401 && token) aoNaoAutorizado();
+  // Um 401 tardio de uma sessão anterior não pode derrubar a sessão nova.
+  if (resposta.status === 401 && token && obterToken() === token) aoNaoAutorizado();
   if (!resposta.ok) throw new ApiError(resposta.status, await extrairMensagem(resposta));
   if (resposta.status === 204) return undefined as T;
-  return (await resposta.json()) as T;
+  try {
+    return (await resposta.json()) as T;
+  } catch {
+    throw new ApiError(0, 'Resposta inválida do servidor');
+  }
 }

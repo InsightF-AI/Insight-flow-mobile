@@ -132,3 +132,20 @@ it('401 sem token (login) não chama aoNaoAutorizado', async () => {
   await expect(request('/auth/login', { metodo: 'POST', corpo: {} })).rejects.toMatchObject({ status: 401 });
   expect(aoNaoAutorizado).not.toHaveBeenCalled();
 });
+
+it('401 tardio de uma sessão anterior não derruba a sessão nova', async () => {
+  token = 'velho';
+  fetchMock.mockImplementation(async () => {
+    token = 'novo';
+    return resposta(401, { detail: 'Token invalido' });
+  });
+  await expect(request('/watchlist')).rejects.toMatchObject({ status: 401 });
+  expect(aoNaoAutorizado).not.toHaveBeenCalled();
+});
+
+it('2xx com corpo que não é JSON vira ApiError de status 0', async () => {
+  fetchMock.mockResolvedValue(resposta(200));
+  const erro = await request('/x').catch((e: unknown) => e);
+  expect(erro).toBeInstanceOf(ApiError);
+  expect(erro).toMatchObject({ status: 0, message: 'Resposta inválida do servidor' });
+});
