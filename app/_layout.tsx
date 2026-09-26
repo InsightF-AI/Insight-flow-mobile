@@ -1,4 +1,5 @@
 import { focusManager, QueryClientProvider } from '@tanstack/react-query';
+import { useFonts } from 'expo-font';
 import { DarkTheme, DefaultTheme, Stack, type Theme, ThemeProvider } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
@@ -9,7 +10,10 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { configurarApi } from '@/api/client';
 import { queryClient } from '@/hooks/queryClient';
+import { usePreferencias } from '@/store/preferencias';
 import { useSessao } from '@/store/sessao';
+import { FONTES } from '@/theme/carregarFontes';
+import { fontesProntas } from '@/theme/familias';
 import { type Tema, useTema } from '@/theme/useTema';
 
 void SplashScreen.preventAutoHideAsync();
@@ -45,15 +49,22 @@ function temaDeNavegacao(tema: Tema): Theme {
 export default function RootLayout() {
   const status = useSessao((estado) => estado.status);
   const hidratar = useSessao((estado) => estado.hidratar);
+  const preferenciasHidratadas = usePreferencias((estado) => estado.hidratado);
+  const hidratarPreferencias = usePreferencias((estado) => estado.hidratar);
+  const [carregouFontes, erroFontes] = useFonts(FONTES);
   const tema = useTema();
 
   useEffect(() => {
     void hidratar();
-  }, [hidratar]);
+    void hidratarPreferencias();
+  }, [hidratar, hidratarPreferencias]);
+
+  // Splash presa até sessão, preferência de tema e fontes estarem prontas (erro de fonte não trava: usa a do sistema).
+  const pronto = status !== 'carregando' && preferenciasHidratadas && fontesProntas(carregouFontes, erroFontes);
 
   useEffect(() => {
-    if (status !== 'carregando') void SplashScreen.hideAsync();
-  }, [status]);
+    if (pronto) void SplashScreen.hideAsync();
+  }, [pronto]);
 
   useEffect(() => {
     // Sem isso o TanStack não sabe quando o app volta ao primeiro plano no React Native.
@@ -61,7 +72,7 @@ export default function RootLayout() {
     return () => assinatura.remove();
   }, []);
 
-  if (status === 'carregando') return null;
+  if (!pronto) return null;
   const autenticado = status === 'autenticado';
 
   return (
@@ -69,7 +80,7 @@ export default function RootLayout() {
       <SafeAreaProvider>
         <QueryClientProvider client={queryClient}>
           <ThemeProvider value={temaDeNavegacao(tema)}>
-            <StatusBar style="auto" />
+            <StatusBar style={tema.esquema === 'escuro' ? 'light' : 'dark'} />
             <Stack screenOptions={{ headerBackTitle: 'Voltar' }}>
               <Stack.Protected guard={autenticado}>
                 <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
