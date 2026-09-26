@@ -7,3 +7,11 @@ export const ROTULO_TIPO_ATIVO: Record<TipoAtivo, string> = {
   BDR: 'BDR',
   CRIPTO: 'Cripto',
 };
+
+export const ROTULO_CLASSE_PLURAL: Record<TipoAtivo, string> = {
+  ACAO: 'Ações',
+  FII: 'FIIs',
+  ETF: 'ETFs',
+  BDR: 'BDRs',
+  CRIPTO: 'Criptomoedas',
+};

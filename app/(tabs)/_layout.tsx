@@ -16,6 +16,13 @@ export default function TabsLayout() {
           headerRight: () => <BotaoCabecalho icone="add" rotulo="Buscar ativo" onPress={() => router.push('/buscar')} />,
         }}
       />
+      <Tabs.Screen
+        name="portfolio"
+        options={{
+          title: 'Portfólio',
+          tabBarIcon: ({ color, size }) => <Ionicons name="pie-chart-outline" color={color} size={size} />,
+        }}
+      />
     </Tabs>
   );
 }
