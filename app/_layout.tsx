@@ -74,6 +74,7 @@ export default function RootLayout() {
               <Stack.Protected guard={autenticado}>
                 <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
                 <Stack.Screen name="buscar" options={{ title: 'Buscar ativo' }} />
+                <Stack.Screen name="ativo/[id]" options={{ title: 'Ativo' }} />
               </Stack.Protected>
               <Stack.Protected guard={!autenticado}>
                 <Stack.Screen name="(auth)" options={{ headerShown: false }} />
