@@ -19,6 +19,7 @@ import { SeletorSegmentado } from '@/components/SeletorSegmentado';
 import { Tela } from '@/components/Tela';
 import { Texto } from '@/components/Texto';
 import { VariacaoBadge } from '@/components/VariacaoBadge';
+import { mensagemErroOperacao } from '@/dominio/operacao';
 import { type DimensaoDistribuicao, mapaAtivos, prepararDistribuicao } from '@/dominio/portfolio';
 import {
   useBenchmark,
@@ -31,7 +32,7 @@ import {
 import { useWatchlist } from '@/hooks/useWatchlist';
 import { espaco } from '@/theme/escala';
 import { useTema } from '@/theme/useTema';
-import { ehStatus, mensagemDeErro } from '@/utils/erros';
+import { ehStatus } from '@/utils/erros';
 import { formatarMoeda, formatarPercentual } from '@/utils/formatacao';
 
 const DIMENSOES: readonly { valor: DimensaoDistribuicao; rotulo: string }[] = [
@@ -88,7 +89,7 @@ export default function Portfolio() {
         style: 'destructive',
         onPress: () =>
           removerOperacao.mutate(operacao.id, {
-            onError: (erro) => Alert.alert('Não foi possível remover', mensagemDeErro(erro)),
+            onError: (erro) => Alert.alert('Não foi possível remover', mensagemErroOperacao(erro, 'remover')),
           }),
       },
     ]);
