@@ -38,6 +38,8 @@ Expo SDK 57 (React Native 0.86, TypeScript), Expo Router, TanStack Query, Zustan
 
    No celular físico, libere a porta 8000 no firewall do Windows.
 
+   Endereços `http://` funcionam no Expo Go e em desenvolvimento. Uma development build ou uma build de release exige HTTPS (ou liberar tráfego em texto claro no Android e uma exceção de ATS no iOS).
+
 4. Inicie o Metro e abra no Expo Go (SDK 57) pelo QR code, ou pressione `a` para o emulador Android:
 
    ```bash
