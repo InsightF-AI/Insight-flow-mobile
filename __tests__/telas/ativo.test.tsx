@@ -1,8 +1,10 @@
-import { screen } from '@testing-library/react-native';
+import { screen, userEvent, waitFor } from '@testing-library/react-native';
+import { Alert } from 'react-native';
 
 import { ativosApi } from '@/api/ativos';
 import { ApiError } from '@/api/client';
 import { watchlistApi } from '@/api/watchlist';
+import type { ItemWatchlist } from '@/api/tipos';
 import { AVISO_IA } from '@/dominio/regulatorio';
 import { renderizar } from '@/test/renderizar';
 
@@ -11,7 +13,8 @@ import DetalheAtivo from '../../app/ativo/[id]';
 jest.mock('expo-router', () => ({
   useLocalSearchParams: () => ({ id: 'a-1', ticker: 'PETR4' }),
   router: { back: jest.fn() },
-  Stack: { Screen: () => null },
+  // Renderiza o botão do cabeçalho para os testes poderem tocá-lo.
+  Stack: { Screen: ({ options }: { options?: { headerRight?: () => unknown } }) => options?.headerRight?.() ?? null },
 }));
 // O gráfico usa Skia, que não roda no Jest.
 jest.mock('@/components/GraficoPreco', () => ({ GraficoPreco: () => null }));
@@ -59,4 +62,57 @@ it('mostra cotação indisponível, indicadores, sinal com histórico e o aviso 
   expect(screen.getByText('Dados insuficientes para o gráfico neste período.')).toBeOnTheScreen();
   expect(screen.getByText(AVISO_IA)).toBeOnTheScreen();
   expect(ativosApi.backtest).toHaveBeenCalledWith('a-1', 'r-1');
+});
+
+const itemWatchlist: ItemWatchlist = {
+  ativo: { id: 'a-1', ticker: 'PETR4', nome: 'Petrobras PN', tipo: 'ACAO', setor: null, moeda: 'BRL' },
+  notificar: true,
+  adicionado_em: '2026-09-20T12:00:00Z',
+};
+
+function prepararAtivoNaWatchlist() {
+  jest.mocked(watchlistApi.listar).mockResolvedValue([itemWatchlist]);
+  jest.mocked(ativosApi.cotacao).mockRejectedValue(new ApiError(404, 'Cotacao nao encontrada para o ativo'));
+  jest.mocked(ativosApi.historico).mockResolvedValue([]);
+  jest.mocked(ativosApi.indicadores).mockResolvedValue([]);
+  jest.mocked(ativosApi.sinais).mockResolvedValue([]);
+}
+
+describe('botão de notificações do cabeçalho', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    jest.restoreAllMocks();
+    prepararAtivoNaWatchlist();
+  });
+
+  it('avisa quando a API falha ao alterar as notificações', async () => {
+    const user = userEvent.setup();
+    const alerta = jest.spyOn(Alert, 'alert').mockImplementation(() => {});
+    jest.mocked(watchlistApi.definirNotificacao).mockRejectedValue(new ApiError(500, 'Falha no servidor'));
+    await renderizar(<DetalheAtivo />);
+
+    await user.press(await screen.findByRole('button', { name: 'Desativar notificações' }));
+
+    await waitFor(() => expect(alerta).toHaveBeenCalledWith('Não foi possível alterar as notificações', 'Falha no servidor'));
+  });
+
+  it('ignora toques enquanto a alteração está pendente', async () => {
+    const user = userEvent.setup();
+    let concluir: (item: ItemWatchlist) => void = () => {};
+    jest.mocked(watchlistApi.definirNotificacao).mockReturnValue(
+      new Promise<ItemWatchlist>((resolver) => {
+        concluir = resolver;
+      }),
+    );
+    await renderizar(<DetalheAtivo />);
+
+    const botao = await screen.findByRole('button', { name: 'Desativar notificações' });
+    await user.press(botao);
+    await user.press(screen.getByRole('button', { name: 'Desativar notificações' }));
+
+    expect(watchlistApi.definirNotificacao).toHaveBeenCalledTimes(1);
+    jest.mocked(watchlistApi.listar).mockResolvedValue([{ ...itemWatchlist, notificar: false }]);
+    concluir({ ...itemWatchlist, notificar: false });
+    expect(await screen.findByRole('button', { name: 'Ativar notificações' })).toBeOnTheScreen();
+  });
 });

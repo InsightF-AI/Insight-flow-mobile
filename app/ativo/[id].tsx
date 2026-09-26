@@ -83,7 +83,13 @@ export default function DetalheAtivo() {
                 <BotaoCabecalho
                   icone={item.notificar ? 'notifications' : 'notifications-off-outline'}
                   rotulo={item.notificar ? 'Desativar notificações' : 'Ativar notificações'}
-                  onPress={() => definirNotificacao.mutate({ ativoId: id, notificar: !item.notificar })}
+                  onPress={() => {
+                    if (definirNotificacao.isPending) return;
+                    definirNotificacao.mutate(
+                      { ativoId: id, notificar: !item.notificar },
+                      { onError: (erro) => Alert.alert('Não foi possível alterar as notificações', mensagemDeErro(erro)) },
+                    );
+                  }}
                 />
               )
             : undefined,
