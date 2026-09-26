@@ -43,13 +43,13 @@ export default function NovaOperacao() {
   const enviando = resolver.isPending || registrar.isPending;
 
   async function aoRegistrar() {
+    setErroGeral(null);
     const resultado = validarOperacao({ tipo, ticker, quantidade, precoUnitario, data });
     if (!resultado.ok) {
       setErros(resultado.erros);
       return;
     }
     setErros({});
-    setErroGeral(null);
     const { dados } = resultado;
     try {
       const { ativoId } = await resolver.mutateAsync(dados.ticker);

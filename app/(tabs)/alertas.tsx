@@ -31,13 +31,13 @@ function FormNovoAlerta() {
   const [erroGeral, setErroGeral] = useState<string | null>(null);
 
   async function aoCriar() {
+    setErroGeral(null);
     const resultado = validarAlerta({ ticker, tipoCondicao, valorAlvo });
     if (!resultado.ok) {
       setErros(resultado.erros);
       return;
     }
     setErros({});
-    setErroGeral(null);
     try {
       await criar.mutateAsync(resultado.dados);
       setTicker('');

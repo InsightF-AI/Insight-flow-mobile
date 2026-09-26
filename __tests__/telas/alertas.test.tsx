@@ -72,3 +72,20 @@ it('alternar o switch desabilita o alerta no backend', async () => {
   await waitFor(() => expect(screen.getByRole('switch', { name: 'Alerta de PETR4 habilitado' })).not.toBeChecked());
   await assentarLista();
 });
+
+it('submit inválido depois de um erro geral da API remove a mensagem geral e mostra só os erros de campo', async () => {
+  const user = userEvent.setup();
+  jest.mocked(alertasApi.criar).mockRejectedValue(new ApiError(500, 'Falha no servidor'));
+  await renderizar(<Alertas />);
+  await user.type(screen.getByLabelText('Ticker'), 'PETR4');
+  await user.type(screen.getByLabelText('Valor alvo'), '10');
+  await user.press(screen.getByRole('button', { name: 'Criar alerta' }));
+  expect(await screen.findByText('Falha no servidor')).toBeOnTheScreen();
+
+  await user.clear(screen.getByLabelText('Ticker'));
+  await user.press(screen.getByRole('button', { name: 'Criar alerta' }));
+
+  expect(await screen.findByText('Informe o ticker do ativo')).toBeOnTheScreen();
+  expect(screen.queryByText('Falha no servidor')).not.toBeOnTheScreen();
+  await assentarLista();
+});

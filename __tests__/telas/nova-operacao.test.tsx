@@ -108,3 +108,20 @@ it('venda sem saldo mostra frase legível em vez do UUID do backend', async () =
   expect(alerta).not.toHaveTextContent('3fa85f64');
   expect(router.back).not.toHaveBeenCalled();
 });
+
+it('submit inválido depois de um erro geral da API remove a mensagem geral e mostra só os erros de campo', async () => {
+  const user = userEvent.setup();
+  jest.mocked(portfolioApi.registrarOperacao).mockRejectedValue(new ApiError(500, 'Falha no servidor'));
+  await renderizar(<NovaOperacao />);
+  await user.type(screen.getByLabelText('Ativo (ticker)'), 'PETR4');
+  await user.type(screen.getByLabelText('Quantidade'), '5');
+  await user.type(screen.getByLabelText('Preço unitário'), '38');
+  await user.press(screen.getByRole('button', { name: 'Registrar operação' }));
+  expect(await screen.findByText('Falha no servidor')).toBeOnTheScreen();
+
+  await user.clear(screen.getByLabelText('Ativo (ticker)'));
+  await user.press(screen.getByRole('button', { name: 'Registrar operação' }));
+
+  expect(await screen.findByText('Informe o ticker do ativo')).toBeOnTheScreen();
+  expect(screen.queryByText('Falha no servidor')).not.toBeOnTheScreen();
+});
