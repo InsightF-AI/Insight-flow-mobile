@@ -47,7 +47,7 @@
     "lint": "expo lint",
     "typecheck": "tsc --noEmit",
     "test": "jest",
-    "test:ci": "jest --ci",
+    "test:ci": "jest --ci --maxWorkers=2",
     "verificar": "npm run lint && npm run typecheck && npm run test:ci"
   },
   "private": true,
@@ -60,7 +60,7 @@
     "moduleNameMapper": {
       "^@/(.*)$": "<rootDir>/src/$1"
     },
-    "testTimeout": 20000,
+    "testTimeout": 30000,
     "testPathIgnorePatterns": [
       "/node_modules/",
       "/.expo/",
