@@ -1,4 +1,4 @@
-import type { TipoAtivo } from '@/api/tipos';
+import type { TipoAtivo, TipoNotificacao } from '@/api/tipos';
 
 export const ROTULO_TIPO_ATIVO: Record<TipoAtivo, string> = {
   ACAO: 'Ação',
@@ -14,4 +14,9 @@ export const ROTULO_CLASSE_PLURAL: Record<TipoAtivo, string> = {
   ETF: 'ETFs',
   BDR: 'BDRs',
   CRIPTO: 'Criptomoedas',
+};
+
+export const ROTULO_TIPO_NOTIFICACAO: Record<TipoNotificacao, string> = {
+  SINAL_ATIVADO: 'Sinal técnico',
+  ALERTA_DISPARADO: 'Alerta de preço',
 };
