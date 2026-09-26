@@ -1,6 +1,6 @@
 import { useColorScheme } from 'react-native';
 
-import { type Cores, coresClaro, coresEscuro, paletaClaro, paletaEscuro } from '@/theme/cores';
+import { type Cores, coresClaro, coresEscuro, criarSerie, graficoClaro, graficoEscuro } from '@/theme/cores';
 
 export interface Tema {
   esquema: 'claro' | 'escuro';
@@ -8,8 +8,8 @@ export interface Tema {
   serie: readonly string[];
 }
 
-const temaClaro: Tema = { esquema: 'claro', cores: coresClaro, serie: paletaClaro };
-const temaEscuro: Tema = { esquema: 'escuro', cores: coresEscuro, serie: paletaEscuro };
+const temaClaro: Tema = { esquema: 'claro', cores: coresClaro, serie: criarSerie(coresClaro, graficoClaro) };
+const temaEscuro: Tema = { esquema: 'escuro', cores: coresEscuro, serie: criarSerie(coresEscuro, graficoEscuro) };
 
 export function useTema(): Tema {
   return useColorScheme() === 'dark' ? temaEscuro : temaClaro;
