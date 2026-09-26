@@ -3,7 +3,7 @@ import { fireEvent, screen, userEvent, waitFor } from '@testing-library/react-na
 import { alertasApi } from '@/api/alertas';
 import { ApiError } from '@/api/client';
 import type { Alerta } from '@/api/tipos';
-import { assentarLista, renderizar } from '@/test/renderizar';
+import { renderizar } from '@/test/renderizar';
 
 import Alertas from '../../app/(tabs)/alertas';
 
@@ -32,7 +32,6 @@ beforeEach(() => {
 it('lista vazia mostra estado vazio', async () => {
   await renderizar(<Alertas />);
   expect(await screen.findByText('Nenhum alerta cadastrado.')).toBeOnTheScreen();
-  await assentarLista();
 });
 
 it('cria alerta com ticker normalizado e limpa o formulário', async () => {
@@ -49,7 +48,6 @@ it('cria alerta com ticker normalizado e limpa o formulário', async () => {
   );
   await waitFor(() => expect(screen.getByLabelText('Ticker')).toHaveDisplayValue(''));
   expect(await screen.findByText('PETR4')).toBeOnTheScreen();
-  await assentarLista();
 });
 
 it('ticker inexistente marca o campo', async () => {
@@ -60,7 +58,6 @@ it('ticker inexistente marca o campo', async () => {
   await user.type(screen.getByLabelText('Valor alvo'), '10');
   await user.press(screen.getByRole('button', { name: 'Criar alerta' }));
   expect(await screen.findByText('Ativo não encontrado')).toBeOnTheScreen();
-  await assentarLista();
 });
 
 it('alternar o switch desabilita o alerta no backend', async () => {
@@ -70,7 +67,6 @@ it('alternar o switch desabilita o alerta no backend', async () => {
   await fireEvent(await screen.findByRole('switch', { name: 'Alerta de PETR4 habilitado' }), 'valueChange', false);
   expect(alertasApi.atualizar).toHaveBeenCalledWith('al-1', { ativo: false });
   await waitFor(() => expect(screen.getByRole('switch', { name: 'Alerta de PETR4 habilitado' })).not.toBeChecked());
-  await assentarLista();
 });
 
 it('submit inválido depois de um erro geral da API remove a mensagem geral e mostra só os erros de campo', async () => {
@@ -87,5 +83,4 @@ it('submit inválido depois de um erro geral da API remove a mensagem geral e mo
 
   expect(await screen.findByText('Informe o ticker do ativo')).toBeOnTheScreen();
   expect(screen.queryByText('Falha no servidor')).not.toBeOnTheScreen();
-  await assentarLista();
 });

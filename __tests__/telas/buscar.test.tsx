@@ -4,7 +4,7 @@ import { router } from 'expo-router';
 import { ativosApi } from '@/api/ativos';
 import { ApiError } from '@/api/client';
 import { watchlistApi } from '@/api/watchlist';
-import { assentarLista, renderizar } from '@/test/renderizar';
+import { renderizar } from '@/test/renderizar';
 
 import Buscar from '../../app/buscar';
 
@@ -43,7 +43,6 @@ it('escolher um resultado adiciona à watchlist e abre o ativo', async () => {
   );
   expect(ativosApi.buscar).toHaveBeenLastCalledWith('PETR');
   expect(watchlistApi.adicionar).toHaveBeenCalledWith('PETR4');
-  await assentarLista();
 });
 
 it('fonte de dados fora do ar mostra erro amigável', async () => {
@@ -81,7 +80,6 @@ it('toque duplo no mesmo resultado adiciona e navega uma única vez', async () =
   concluirAdicao(itemDaWatchlist);
   await waitFor(() => expect(router.replace).toHaveBeenCalledTimes(1));
   expect(watchlistApi.adicionar).toHaveBeenCalledTimes(1);
-  await assentarLista();
 });
 
 it('o erro da tentativa anterior some ao digitar um novo termo', async () => {
@@ -95,5 +93,4 @@ it('o erro da tentativa anterior some ao digitar um novo termo', async () => {
   expect(await screen.findByRole('alert')).toBeOnTheScreen();
   await user.type(screen.getByLabelText('Ticker ou nome'), '4');
   expect(screen.queryByRole('alert')).not.toBeOnTheScreen();
-  await assentarLista();
 });

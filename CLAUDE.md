@@ -20,3 +20,5 @@ Before writing or changing RNTL tests, read the relevant guide in
 `node_modules/@testing-library/react-native/docs/`, starting with
 `node_modules/@testing-library/react-native/docs/guides/llm-guidelines.md`.
 Prefer those package docs over stale assumptions, and follow deprecation notices.
+
+Listas (FlatList) não exigem nada especial nos testes: o `afterEach` de `jest.setup.ts` aguarda o timer de lote do VirtualizedList antes do cleanup do RNTL. Por isso `jest.setup.ts` não pode importar `@testing-library/react-native` no topo (só `pure`, via require preguiçoso).
