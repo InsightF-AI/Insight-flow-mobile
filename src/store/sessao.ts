@@ -37,8 +37,14 @@ export const useSessao = create<EstadoSessao>()((set) => ({
   },
 
   entrar: async (token, email) => {
-    await SecureStore.setItemAsync(CHAVE_TOKEN, token);
-    await SecureStore.setItemAsync(CHAVE_EMAIL, email);
+    try {
+      await SecureStore.setItemAsync(CHAVE_TOKEN, token);
+      await SecureStore.setItemAsync(CHAVE_EMAIL, email);
+    } catch (erro) {
+      // Sem credencial parcial: apaga as duas chaves (best-effort) e relança o erro original.
+      await Promise.allSettled([SecureStore.deleteItemAsync(CHAVE_TOKEN), SecureStore.deleteItemAsync(CHAVE_EMAIL)]);
+      throw erro;
+    }
     set({ status: 'autenticado', token, email });
   },
 

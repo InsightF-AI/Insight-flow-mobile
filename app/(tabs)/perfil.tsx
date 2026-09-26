@@ -42,7 +42,12 @@ export default function Perfil() {
         style: 'destructive',
         // `sair` limpa o estado antes de tocar no armazenamento seguro: se ele falhar, a sessão já foi encerrada.
         onPress: () => {
-          void sair().catch(() => {});
+          void sair().catch(() => {
+            Alert.alert(
+              'Não foi possível concluir a saída',
+              'A sessão foi encerrada neste aparelho, mas o acesso salvo pode voltar ao reabrir o app.',
+            );
+          });
         },
       },
     ]);
