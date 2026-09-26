@@ -19,7 +19,10 @@ describe('validarOperacao', () => {
   });
 
   it('operação de hoje às 23:30 não é considerada futura (dia local, não UTC)', () => {
-    expect(validarOperacao({ ...base, data: new Date(2026, 8, 25, 23, 30) }, hoje).ok).toBe(true);
+    const resultado = validarOperacao({ ...base, data: new Date(2026, 8, 25, 23, 30) }, hoje);
+    expect(resultado.ok).toBe(true);
+    // Em America/Sao_Paulo, 23:30 local já é o dia seguinte em UTC: grava o dia local, não o de toISOString().
+    expect(resultado.ok && resultado.dados.data).toBe('2026-09-25');
   });
 
   it('data de amanhã é rejeitada', () => {
