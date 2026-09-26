@@ -1,7 +1,7 @@
-import { Ionicons } from '@expo/vector-icons';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import type { AtivoEncontrado } from '@/api/tipos';
+import { Icone } from '@/components/Icone';
 import { Texto } from '@/components/Texto';
 import { ROTULO_TIPO_ATIVO } from '@/dominio/rotulos';
 import { espaco } from '@/theme/escala';
@@ -26,7 +26,7 @@ export function LinhaResultadoBusca({ ativo, aoPressionar }: Props) {
         <Texto numberOfLines={1}>{ativo.nome}</Texto>
         <Texto variante="legenda" cor="secundario">{`${ROTULO_TIPO_ATIVO[ativo.tipo]} · ${ativo.moeda}`}</Texto>
       </View>
-      <Ionicons name="add-circle-outline" size={24} color={cores.primaria} />
+      <Icone nome="mais-circulo" tamanho={24} cor="primaria" />
     </Pressable>
   );
 }

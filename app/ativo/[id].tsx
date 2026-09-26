@@ -81,7 +81,7 @@ export default function DetalheAtivo() {
           headerRight: item
             ? () => (
                 <BotaoCabecalho
-                  icone={item.notificar ? 'notifications' : 'notifications-off-outline'}
+                  icone={item.notificar ? 'sino' : 'sino-desligado'}
                   rotulo={item.notificar ? 'Desativar notificações' : 'Ativar notificações'}
                   onPress={() => {
                     if (definirNotificacao.isPending) return;

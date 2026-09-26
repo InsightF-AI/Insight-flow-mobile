@@ -184,7 +184,7 @@ export default function Portfolio() {
 
         <View style={estilos.espacoDoBotao} />
       </Tela>
-      <BotaoFlutuante rotulo="Nova operação" icone="add" onPress={() => router.push('/operacao/nova')} />
+      <BotaoFlutuante rotulo="Nova operação" icone="mais" onPress={() => router.push('/operacao/nova')} />
     </View>
   );
 }
