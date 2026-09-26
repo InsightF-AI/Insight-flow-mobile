@@ -20,18 +20,23 @@ export default function Cadastro() {
   const [senha, setSenha] = useState('');
   const [erros, setErros] = useState<ErrosCredenciais>({});
   const [erroGeral, setErroGeral] = useState<string | null>(null);
+  // `isPending` da mutation volta a false antes de `entrar` terminar de gravar no armazenamento seguro.
+  const [enviando, setEnviando] = useState(false);
 
   async function aoEnviar() {
     const encontrados = validarCadastro({ nome, email, senha });
     setErros(encontrados);
     if (Object.keys(encontrados).length > 0) return;
     setErroGeral(null);
+    setEnviando(true);
     try {
       const { access_token } = await cadastro.mutateAsync({ nome: nome.trim(), email: email.trim(), senha });
       await entrar(access_token, email.trim());
     } catch (erro) {
       if (ehStatus(erro, 409)) setErros({ email: 'E-mail já cadastrado' });
       else setErroGeral(mensagemDeErro(erro));
+    } finally {
+      setEnviando(false);
     }
   }
 
@@ -65,7 +70,7 @@ export default function Cadastro() {
           {erroGeral}
         </Texto>
       ) : null}
-      <Botao titulo="Criar conta" onPress={aoEnviar} carregando={cadastro.isPending} />
+      <Botao titulo="Criar conta" onPress={aoEnviar} carregando={enviando} />
       <Link href="/login" replace asChild>
         <Pressable role="link" style={estilos.link}>
           <Texto cor="primaria" negrito>

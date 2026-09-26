@@ -51,3 +51,36 @@ it('401 mostra mensagem de credenciais incorretas e mantém anônimo', async () 
   expect(await screen.findByRole('alert')).toHaveTextContent('E-mail ou senha incorretos');
   expect(useSessao.getState().status).toBe('anonimo');
 });
+
+it('segundo toque enquanto a sessão é gravada não dispara outro login', async () => {
+  const user = userEvent.setup();
+  let liberarArmazenamento: () => void = () => {};
+  jest.mocked(SecureStore.setItemAsync).mockImplementationOnce(
+    () => new Promise<void>((resolver) => (liberarArmazenamento = resolver)),
+  );
+  jest.mocked(authApi.login).mockResolvedValue({ access_token: 'tok', token_type: 'bearer' });
+  await renderizar(<Login />);
+  await user.type(screen.getByLabelText('E-mail'), 'ana@exemplo.com');
+  await user.type(screen.getByLabelText('Senha'), 'segredo123');
+  await user.press(screen.getByRole('button', { name: 'Entrar' }));
+  // A mutation já resolveu (isPending voltou a false), mas `entrar` segue esperando o armazenamento seguro.
+  await waitFor(() => expect(SecureStore.setItemAsync).toHaveBeenCalledTimes(1));
+  await user.press(screen.getByRole('button', { name: 'Entrar' }));
+  expect(authApi.login).toHaveBeenCalledTimes(1);
+  expect(screen.getByRole('button', { name: 'Entrar' })).toBeDisabled();
+  liberarArmazenamento();
+  await waitFor(() => expect(useSessao.getState().status).toBe('autenticado'));
+  expect(authApi.login).toHaveBeenCalledTimes(1);
+});
+
+it('falha ao gravar a sessão reabilita o botão para nova tentativa', async () => {
+  const user = userEvent.setup();
+  jest.mocked(SecureStore.setItemAsync).mockRejectedValueOnce(new Error('falha no armazenamento'));
+  jest.mocked(authApi.login).mockResolvedValue({ access_token: 'tok', token_type: 'bearer' });
+  await renderizar(<Login />);
+  await user.type(screen.getByLabelText('E-mail'), 'ana@exemplo.com');
+  await user.type(screen.getByLabelText('Senha'), 'segredo123');
+  await user.press(screen.getByRole('button', { name: 'Entrar' }));
+  expect(await screen.findByRole('alert')).toBeOnTheScreen();
+  expect(screen.getByRole('button', { name: 'Entrar' })).toBeEnabled();
+});

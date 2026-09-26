@@ -19,17 +19,22 @@ export default function Login() {
   const [senha, setSenha] = useState('');
   const [erros, setErros] = useState<ErrosCredenciais>({});
   const [erroGeral, setErroGeral] = useState<string | null>(null);
+  // `isPending` da mutation volta a false antes de `entrar` terminar de gravar no armazenamento seguro.
+  const [enviando, setEnviando] = useState(false);
 
   async function aoEnviar() {
     const encontrados = validarLogin({ email, senha });
     setErros(encontrados);
     if (Object.keys(encontrados).length > 0) return;
     setErroGeral(null);
+    setEnviando(true);
     try {
       const { access_token } = await login.mutateAsync({ email: email.trim(), senha });
       await entrar(access_token, email.trim());
     } catch (erro) {
       setErroGeral(ehStatus(erro, 401) ? 'E-mail ou senha incorretos' : mensagemDeErro(erro));
+    } finally {
+      setEnviando(false);
     }
   }
 
@@ -54,7 +59,7 @@ export default function Login() {
           {erroGeral}
         </Texto>
       ) : null}
-      <Botao titulo="Entrar" onPress={aoEnviar} carregando={login.isPending} />
+      <Botao titulo="Entrar" onPress={aoEnviar} carregando={enviando} />
       <Link href="/cadastro" replace asChild>
         <Pressable role="link" style={estilos.link}>
           <Texto cor="primaria" negrito>

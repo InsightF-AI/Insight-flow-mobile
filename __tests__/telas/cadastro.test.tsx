@@ -20,6 +20,7 @@ async function preencher() {
   await user.type(screen.getByLabelText('E-mail'), 'ana@exemplo.com');
   await user.type(screen.getByLabelText('Senha'), 'segredo123');
   await user.press(screen.getByRole('button', { name: 'Criar conta' }));
+  return user;
 }
 
 beforeEach(() => {
@@ -42,4 +43,22 @@ it('409 marca o e-mail como já cadastrado', async () => {
   await preencher();
   expect(await screen.findByText('E-mail já cadastrado')).toBeOnTheScreen();
   expect(useSessao.getState().status).toBe('anonimo');
+});
+
+it('segundo toque enquanto a sessão é gravada não dispara outro cadastro', async () => {
+  let liberarArmazenamento: () => void = () => {};
+  jest.mocked(SecureStore.setItemAsync).mockImplementationOnce(
+    () => new Promise<void>((resolver) => (liberarArmazenamento = resolver)),
+  );
+  jest.mocked(authApi.cadastrar).mockResolvedValue({ access_token: 'novo', token_type: 'bearer' });
+  await renderizar(<Cadastro />);
+  const user = await preencher();
+  // A mutation já resolveu (isPending voltou a false), mas `entrar` segue esperando o armazenamento seguro.
+  await waitFor(() => expect(SecureStore.setItemAsync).toHaveBeenCalledTimes(1));
+  await user.press(screen.getByRole('button', { name: 'Criar conta' }));
+  expect(authApi.cadastrar).toHaveBeenCalledTimes(1);
+  expect(screen.getByRole('button', { name: 'Criar conta' })).toBeDisabled();
+  liberarArmazenamento();
+  await waitFor(() => expect(useSessao.getState().status).toBe('autenticado'));
+  expect(authApi.cadastrar).toHaveBeenCalledTimes(1);
 });
