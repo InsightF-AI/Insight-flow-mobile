@@ -55,3 +55,45 @@ it('fonte de dados fora do ar mostra erro amigável', async () => {
     'Fonte de dados de mercado indisponível. Tente novamente em instantes.',
   );
 });
+
+const itemDaWatchlist = {
+  ativo: { id: 'a-1', ticker: 'PETR4', nome: 'Petrobras PN', tipo: 'ACAO' as const, setor: 'Petróleo', moeda: 'BRL' },
+  notificar: true,
+  adicionado_em: '2026-09-25T12:00:00Z',
+};
+
+it('toque duplo no mesmo resultado adiciona e navega uma única vez', async () => {
+  const user = userEvent.setup();
+  let concluirAdicao: (item: typeof itemDaWatchlist) => void = () => {};
+  jest.mocked(ativosApi.buscar).mockResolvedValue([petr]);
+  jest.mocked(watchlistApi.listar).mockResolvedValue([]);
+  jest.mocked(watchlistApi.adicionar).mockImplementation(
+    () => new Promise((resolver) => (concluirAdicao = resolver)),
+  );
+  await renderizar(<Buscar />);
+  await user.type(screen.getByLabelText('Ticker ou nome'), 'PETR');
+  const resultado = await screen.findByRole('button', { name: 'PETR4, Petrobras PN' }, { timeout: TEMPO_DA_BUSCA_MS });
+  await user.press(resultado);
+  await waitFor(() => expect(watchlistApi.adicionar).toHaveBeenCalledTimes(1));
+  await screen.findByText('Adicionando à watchlist…');
+  await user.press(screen.getByRole('button', { name: 'PETR4, Petrobras PN' }));
+  expect(watchlistApi.adicionar).toHaveBeenCalledTimes(1);
+  concluirAdicao(itemDaWatchlist);
+  await waitFor(() => expect(router.replace).toHaveBeenCalledTimes(1));
+  expect(watchlistApi.adicionar).toHaveBeenCalledTimes(1);
+  await assentarLista();
+});
+
+it('o erro da tentativa anterior some ao digitar um novo termo', async () => {
+  const user = userEvent.setup();
+  jest.mocked(ativosApi.buscar).mockResolvedValue([petr]);
+  jest.mocked(watchlistApi.listar).mockResolvedValue([]);
+  jest.mocked(watchlistApi.adicionar).mockRejectedValue(new ApiError(503, 'Fonte de dados de mercado indisponivel'));
+  await renderizar(<Buscar />);
+  await user.type(screen.getByLabelText('Ticker ou nome'), 'PETR');
+  await user.press(await screen.findByRole('button', { name: 'PETR4, Petrobras PN' }, { timeout: TEMPO_DA_BUSCA_MS }));
+  expect(await screen.findByRole('alert')).toBeOnTheScreen();
+  await user.type(screen.getByLabelText('Ticker ou nome'), '4');
+  expect(screen.queryByRole('alert')).not.toBeOnTheScreen();
+  await assentarLista();
+});

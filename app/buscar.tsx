@@ -26,6 +26,8 @@ export default function Buscar() {
   const resolver = useResolverAtivo();
 
   async function aoEscolher(ativo: AtivoEncontrado) {
+    // A lista segue tocável durante a adição: ignora toques até a resolução terminar (evita duas adições e duas navegações).
+    if (resolver.isPending) return;
     setErro(null);
     try {
       const { ativoId } = await resolver.mutateAsync(ativo.ticker);
@@ -59,7 +61,10 @@ export default function Buscar() {
       <Campo
         rotulo="Ticker ou nome"
         valor={termo}
-        aoMudar={setTermo}
+        aoMudar={(texto) => {
+          setErro(null);
+          setTermo(texto);
+        }}
         placeholder="Ex.: PETR4, Vale"
         autoCapitalize="characters"
       />
