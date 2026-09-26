@@ -5,7 +5,7 @@ import { ativosApi } from '@/api/ativos';
 import { ApiError } from '@/api/client';
 import type { CotacaoAtual, ItemWatchlist } from '@/api/tipos';
 import { watchlistApi } from '@/api/watchlist';
-import { renderizar } from '@/test/renderizar';
+import { assentarLista, renderizar } from '@/test/renderizar';
 
 import Watchlist from '../../app/(tabs)/index';
 
@@ -43,6 +43,7 @@ it('watchlist vazia oferece a busca', async () => {
   await renderizar(<Watchlist />);
   await user.press(await screen.findByRole('button', { name: 'Buscar ativo' }));
   expect(router.push).toHaveBeenCalledWith('/buscar');
+  await assentarLista();
 });
 
 it('mostra preço e variação, e "sem cotação" quando a cotação falha', async () => {
@@ -55,6 +56,7 @@ it('mostra preço e variação, e "sem cotação" quando a cotação falha', asy
   expect(await screen.findByText(`R$${NBSP}38,50`)).toBeOnTheScreen();
   expect(screen.getByText('▲ +1,05%')).toBeOnTheScreen();
   expect(await screen.findByText('sem cotação')).toBeOnTheScreen();
+  await assentarLista();
 });
 
 it('tocar no ativo abre o detalhe com id e ticker', async () => {
@@ -64,4 +66,5 @@ it('tocar no ativo abre o detalhe com id e ticker', async () => {
   await renderizar(<Watchlist />);
   await user.press(await screen.findByRole('button', { name: 'PETR4, Petrobras PN' }));
   expect(router.push).toHaveBeenCalledWith({ pathname: '/ativo/[id]', params: { id: 'a-1', ticker: 'PETR4' } });
+  await assentarLista();
 });

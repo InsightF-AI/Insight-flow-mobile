@@ -7,7 +7,7 @@ import { notificacoesApi } from '@/api/notificacoes';
 import type { Notificacao } from '@/api/tipos';
 import { watchlistApi } from '@/api/watchlist';
 import { useSessao } from '@/store/sessao';
-import { renderizar } from '@/test/renderizar';
+import { assentarLista, renderizar } from '@/test/renderizar';
 
 import Perfil from '../../app/(tabs)/perfil';
 
@@ -55,6 +55,7 @@ it('mostra o e-mail e as notificações, com ticker quando conhecido', async () 
   expect(await screen.findByText('ana@exemplo.com')).toBeOnTheScreen();
   expect(await screen.findByText('Sinal técnico · PETR4')).toBeOnTheScreen();
   expect(screen.getByText('Alerta de preço')).toBeOnTheScreen();
+  await assentarLista();
 });
 
 it('tocar numa não lida marca como lida e abre o ativo', async () => {
@@ -65,6 +66,7 @@ it('tocar numa não lida marca como lida e abre o ativo', async () => {
   );
   await waitFor(() => expect(notificacoesApi.marcarComoLida).toHaveBeenCalledWith('n-1'));
   expect(router.push).toHaveBeenCalledWith({ pathname: '/ativo/[id]', params: { id: 'a-1', ticker: 'PETR4' } });
+  await assentarLista();
 });
 
 it('sair pede confirmação e encerra a sessão', async () => {
@@ -75,6 +77,7 @@ it('sair pede confirmação e encerra a sessão', async () => {
   await renderizar(<Perfil />);
   await user.press(await screen.findByRole('button', { name: 'Sair' }));
   await waitFor(() => expect(useSessao.getState().status).toBe('anonimo'));
+  await assentarLista();
 });
 
 it('sair encerra a sessão mesmo se o armazenamento seguro falhar, sem rejeição não tratada', async () => {
@@ -86,4 +89,5 @@ it('sair encerra a sessão mesmo se o armazenamento seguro falhar, sem rejeiçã
   await renderizar(<Perfil />);
   await user.press(await screen.findByRole('button', { name: 'Sair' }));
   await waitFor(() => expect(useSessao.getState().status).toBe('anonimo'));
+  await assentarLista();
 });
