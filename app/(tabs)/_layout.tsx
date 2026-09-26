@@ -23,6 +23,13 @@ export default function TabsLayout() {
           tabBarIcon: ({ color, size }) => <Ionicons name="pie-chart-outline" color={color} size={size} />,
         }}
       />
+      <Tabs.Screen
+        name="alertas"
+        options={{
+          title: 'Alertas',
+          tabBarIcon: ({ color, size }) => <Ionicons name="alarm-outline" color={color} size={size} />,
+        }}
+      />
     </Tabs>
   );
 }
