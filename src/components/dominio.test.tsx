@@ -7,22 +7,22 @@ import { IndicadorItem } from '@/components/IndicadorItem';
 import { SinalCard } from '@/components/SinalCard';
 import { VariacaoBadge } from '@/components/VariacaoBadge';
 import { AVISO_IA } from '@/dominio/regulatorio';
-import { coresClaro } from '@/theme/cores';
+import { coresEscuro } from '@/theme/cores';
 
 describe('VariacaoBadge', () => {
   it('alta mostra seta para cima em verde', async () => {
     await render(<VariacaoBadge valor="1.23" escala="pontos" />);
-    expect(screen.getByText('▲ +1,23%')).toHaveStyle({ color: coresClaro.positivo });
+    expect(screen.getByText('▲ +1,23%')).toHaveStyle({ color: coresEscuro.positivo });
   });
 
   it('baixa mostra seta para baixo em vermelho', async () => {
     await render(<VariacaoBadge valor="-0.025" escala="fracao" />);
-    expect(screen.getByText('▼ -2,50%')).toHaveStyle({ color: coresClaro.negativo });
+    expect(screen.getByText('▼ -2,50%')).toHaveStyle({ color: coresEscuro.negativo });
   });
 
   it('zero é neutro', async () => {
     await render(<VariacaoBadge valor="0" escala="pontos" />);
-    expect(screen.getByText('• 0,00%')).toHaveStyle({ color: coresClaro.textoSecundario });
+    expect(screen.getByText('• 0,00%')).toHaveStyle({ color: coresEscuro.textoSecundario });
   });
 });
 
