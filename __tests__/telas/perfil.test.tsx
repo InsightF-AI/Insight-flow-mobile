@@ -88,6 +88,12 @@ it('sair encerra a sessão mesmo se o armazenamento seguro falhar, sem rejeiçã
   });
   await renderizar(<Perfil />);
   await user.press(await screen.findByRole('button', { name: 'Sair' }));
+  await waitFor(() => expect(SecureStore.deleteItemAsync).toHaveBeenCalled());
   await waitFor(() => expect(useSessao.getState().status).toBe('anonimo'));
+  // Sem o `.catch` em perfil.tsx a rejeição de `sair` fica sem tratamento e o Jest reprova o teste em curso ao detectá-la.
+  // O Node só a detecta depois de esvaziar as microtarefas, então cedemos voltas do laço de eventos antes de terminar
+  // para que a detecção aconteça aqui dentro e não escape para depois do fim do teste.
+  await new Promise<void>((resolver) => setImmediate(resolver));
+  await new Promise<void>((resolver) => setImmediate(resolver));
   await assentarLista();
 });
