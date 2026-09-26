@@ -60,6 +60,7 @@
     "moduleNameMapper": {
       "^@/(.*)$": "<rootDir>/src/$1"
     },
+    "testTimeout": 20000,
     "testPathIgnorePatterns": [
       "/node_modules/",
       "/.expo/",

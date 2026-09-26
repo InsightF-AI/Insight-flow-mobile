@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
-import { Tabs } from 'expo-router';
+import { router, Tabs } from 'expo-router';
 
+import { BotaoCabecalho } from '@/components/BotaoCabecalho';
 import { useTema } from '@/theme/useTema';
 
 export default function TabsLayout() {
@@ -12,6 +13,7 @@ export default function TabsLayout() {
         options={{
           title: 'Watchlist',
           tabBarIcon: ({ color, size }) => <Ionicons name="eye-outline" color={color} size={size} />,
+          headerRight: () => <BotaoCabecalho icone="add" rotulo="Buscar ativo" onPress={() => router.push('/buscar')} />,
         }}
       />
     </Tabs>

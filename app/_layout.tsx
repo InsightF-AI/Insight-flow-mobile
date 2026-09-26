@@ -73,6 +73,7 @@ export default function RootLayout() {
             <Stack screenOptions={{ headerBackTitle: 'Voltar' }}>
               <Stack.Protected guard={autenticado}>
                 <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+                <Stack.Screen name="buscar" options={{ title: 'Buscar ativo' }} />
               </Stack.Protected>
               <Stack.Protected guard={!autenticado}>
                 <Stack.Screen name="(auth)" options={{ headerShown: false }} />

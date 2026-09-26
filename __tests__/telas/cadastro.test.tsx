@@ -12,9 +12,6 @@ import Cadastro from '../../app/(auth)/cadastro';
 jest.mock('expo-router', () => ({ Link: ({ children }: { children: ReactNode }) => children }));
 jest.mock('@/api/auth', () => ({ authApi: { login: jest.fn(), cadastrar: jest.fn() } }));
 
-// A primeira renderização com cache frio do Jest carrega muitos módulos do React Native e passa dos 5 s padrão.
-jest.setTimeout(20000);
-
 const armazenamento = (SecureStore as unknown as { __armazenamento: Map<string, string> }).__armazenamento;
 
 async function preencher() {
