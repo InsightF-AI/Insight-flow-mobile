@@ -12,13 +12,19 @@ interface Props {
 }
 
 export function BotaoFlutuante({ rotulo, icone, onPress }: Props) {
-  const { cores } = useTema();
+  const { cores, sombras } = useTema();
   return (
     <Pressable
       role="button"
       aria-label={rotulo}
       onPress={onPress}
-      style={({ pressed }) => [estilos.botao, { backgroundColor: cores.primaria, opacity: pressed ? 0.85 : 1 }]}
+      style={({ pressed }) => [
+        estilos.botao,
+        {
+          backgroundColor: pressed ? cores.primariaHover : cores.primaria,
+          boxShadow: `${sombras.primaria}, ${sombras.lg}`,
+        },
+      ]}
     >
       <Icone nome={icone} tamanho={22} cor="textoSobrePrimaria" />
       <Texto negrito cor="sobrePrimaria">
@@ -39,10 +45,5 @@ const estilos = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: espaco.sm,
-    elevation: 4,
-    shadowColor: '#000',
-    shadowOpacity: 0.2,
-    shadowRadius: 6,
-    shadowOffset: { width: 0, height: 3 },
   },
 });
