@@ -48,6 +48,14 @@ Objeto `grafico`: `grade` `#182238`/`#e7ebf3`, `eixo` `#5b6780`/`#8391ab`, `cruz
 
 **Contraste (regra do projeto, teste em `cores.test.ts`):** todo par texto/fundo informativo ≥ 4,5:1 nos dois temas (`texto`, `textoSecundario`, `textoTerciario`, `positivo`, `negativo`, `alerta`, `destaque`, `ia`, `primaria` sobre `fundo`/`superficie`/`superficieElevada`; `textoSobrePrimaria` sobre `primaria`; texto dos tons sobre seus fundos). Se um valor do web não atingir 4,5:1 num par em que o token é usado (ex.: `textoTerciario` claro sobre branco ≈ 4,0:1), ajusta-se o valor **no mínimo necessário**, mantendo o matiz, e o desvio é registrado num comentário ao lado do token. `textoDesativado` é isento por ser só decorativo (bordas de ícone desativado, placeholder de baixa ênfase) e nunca carrega informação.
 
+**Ajustes definidos ao escrever o plano** (`docs/superpowers/plans/2026-09-26-redesign-visual-web.md`, valem sobre o texto acima):
+
+- Valores finais com contraste verificado (mesmo matiz do web, ajuste mínimo): tema claro `textoTerciario` `#616e86`, `primaria` `#1e6bc9`, `positivo` `#0c7e4f`, `negativo` `#c72d42`, `destaque` `#98620b`, `ia` `#7356c7`; tema escuro `textoTerciario` `#7985a2`. Os demais valores são os da tabela.
+- O objeto `grafico` fica só com os tokens usados: `alta`, `baixa`, `eixo`, `sma20`, `sma50`, `sma200`, `benchCarteira` (o app não desenha grade nem eixos no Skia). `serie` = `sma20`, `benchCarteira`, `sma200`, `sma50`, `negativo`, `eixo`.
+- Sem gradiente de fundo na `Tela`, sem gradiente no item ativo da aba e sem flutuação da logo. Só o gradiente azul→verde do card de login.
+- Sombras: `Sombras` ganha a chave `foco` (anel de foco dos campos). `Card` ganha a prop `tomIcone`. `Texto` ganha a variante `secao`, a prop `numerico` e as cores `terciario`, `destaque` e `ia`.
+- `Botao` mantém as variantes `primario | secundario | perigo`.
+
 ## Tipografia
 
 - Inter (400, 500, 600, 700) no corpo e Space Grotesk (600, 700) nos títulos, via `@expo-google-fonts/inter` e `@expo-google-fonts/space-grotesk` + `expo-font` (instalados com `npx expo install`).
