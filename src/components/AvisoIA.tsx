@@ -7,10 +7,10 @@ import { espaco, raio } from '@/theme/escala';
 import { useTema } from '@/theme/useTema';
 
 export function AvisoIA() {
-  const { cores } = useTema();
+  const { cores, tons } = useTema();
   return (
-    <View style={[estilos.aviso, { backgroundColor: cores.superficieElevada, borderColor: cores.alerta }]}>
-      <Icone nome="info" tamanho={16} cor="alerta" />
+    <View style={[estilos.aviso, { backgroundColor: tons.violetaFundo, borderColor: cores.ia }]}>
+      <Icone nome="info" tamanho={16} cor="ia" />
       <Texto variante="legenda" cor="secundario" style={estilos.texto}>
         {AVISO_IA}
       </Texto>
