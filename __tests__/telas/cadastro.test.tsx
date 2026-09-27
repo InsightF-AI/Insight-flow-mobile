@@ -29,6 +29,13 @@ beforeEach(() => {
   useSessao.setState({ status: 'anonimo', token: null, email: null });
 });
 
+it('mostra o card do web com título, alternância de senha e link para entrar', async () => {
+  await renderizar(<Cadastro />);
+  expect(screen.getByRole('heading', { name: 'Criar conta' })).toBeOnTheScreen();
+  expect(screen.getByLabelText('Mostrar senha')).toBeOnTheScreen();
+  expect(screen.getByRole('link', { name: 'Já tenho conta' })).toBeOnTheScreen();
+});
+
 it('cadastro com sucesso já entra no app', async () => {
   jest.mocked(authApi.cadastrar).mockResolvedValue({ access_token: 'novo', token_type: 'bearer' });
   await renderizar(<Cadastro />);
