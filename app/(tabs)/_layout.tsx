@@ -3,6 +3,7 @@ import { router, Tabs } from 'expo-router';
 import { BotaoCabecalho } from '@/components/BotaoCabecalho';
 import { Icone } from '@/components/Icone';
 import { useNaoLidas } from '@/hooks/useNotificacoes';
+import { familia } from '@/theme/familias';
 import { useTema } from '@/theme/useTema';
 
 export default function TabsLayout() {
@@ -10,7 +11,23 @@ export default function TabsLayout() {
   // Montar as abas liga o polling de notificações (só acontece com sessão ativa).
   const naoLidas = useNaoLidas();
   return (
-    <Tabs screenOptions={{ tabBarActiveTintColor: cores.primaria, tabBarInactiveTintColor: cores.textoSecundario }}>
+    <Tabs
+      screenOptions={{
+        headerStyle: { backgroundColor: cores.superficie },
+        headerTitleStyle: { fontFamily: familia.tituloSemi, color: cores.texto },
+        headerShadowVisible: false,
+        sceneStyle: { backgroundColor: cores.fundo },
+        tabBarStyle: { backgroundColor: cores.superficie, borderTopColor: cores.borda },
+        tabBarActiveTintColor: cores.primaria,
+        tabBarInactiveTintColor: cores.textoTerciario,
+        tabBarLabelStyle: { fontFamily: familia.medio, fontSize: 11 },
+        tabBarBadgeStyle: {
+          backgroundColor: cores.negativo,
+          color: cores.textoSobrePrimaria,
+          fontFamily: familia.negrito,
+        },
+      }}
+    >
       <Tabs.Screen
         name="index"
         options={{

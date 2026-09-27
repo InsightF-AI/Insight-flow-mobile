@@ -13,7 +13,7 @@ import { queryClient } from '@/hooks/queryClient';
 import { usePreferencias } from '@/store/preferencias';
 import { useSessao } from '@/store/sessao';
 import { FONTES } from '@/theme/carregarFontes';
-import { fontesProntas } from '@/theme/familias';
+import { familia, fontesProntas } from '@/theme/familias';
 import { type Tema, useTema } from '@/theme/useTema';
 
 void SplashScreen.preventAutoHideAsync();
@@ -81,7 +81,16 @@ export default function RootLayout() {
         <QueryClientProvider client={queryClient}>
           <ThemeProvider value={temaDeNavegacao(tema)}>
             <StatusBar style={tema.esquema === 'escuro' ? 'light' : 'dark'} />
-            <Stack screenOptions={{ headerBackTitle: 'Voltar' }}>
+            <Stack
+              screenOptions={{
+                headerBackTitle: 'Voltar',
+                headerStyle: { backgroundColor: tema.cores.superficie },
+                headerTintColor: tema.cores.primaria,
+                headerTitleStyle: { fontFamily: familia.tituloSemi, color: tema.cores.texto },
+                headerShadowVisible: false,
+                contentStyle: { backgroundColor: tema.cores.fundo },
+              }}
+            >
               <Stack.Protected guard={autenticado}>
                 <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
                 <Stack.Screen name="buscar" options={{ title: 'Buscar ativo' }} />
