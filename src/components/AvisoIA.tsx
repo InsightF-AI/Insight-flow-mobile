@@ -24,7 +24,7 @@ const estilos = StyleSheet.create({
     alignItems: 'center',
     gap: espaco.sm,
     borderWidth: 1,
-    borderRadius: raio.md,
+    borderRadius: raio.sm,
     padding: espaco.sm,
   },
   texto: { flex: 1 },
