@@ -10,7 +10,7 @@ interface Props {
 }
 
 export function SugestoesTicker({ tickers, aoEscolher }: Props) {
-  const { cores } = useTema();
+  const { cores, tons } = useTema();
   if (tickers.length === 0) return null;
   return (
     <ScrollView
@@ -24,8 +24,9 @@ export function SugestoesTicker({ tickers, aoEscolher }: Props) {
           key={ticker}
           role="button"
           aria-label={`Usar ${ticker}`}
+          hitSlop={8}
           onPress={() => aoEscolher(ticker)}
-          style={[estilos.chip, { borderColor: cores.primaria }]}
+          style={[estilos.chip, { borderColor: cores.primaria, backgroundColor: tons.azulFundo }]}
         >
           <Texto variante="legenda" negrito cor="primaria">
             {ticker}

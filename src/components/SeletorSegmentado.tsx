@@ -22,7 +22,7 @@ export function SeletorSegmentado<T extends string>({ rotulo, opcoes, selecionad
     <View
       role="radiogroup"
       aria-label={rotulo}
-      style={[estilos.grupo, { borderColor: cores.borda, backgroundColor: cores.superficieElevada }]}
+      style={[estilos.grupo, { borderColor: cores.bordaForte, backgroundColor: cores.superficieElevada }]}
     >
       {opcoes.map((opcao) => {
         const ativo = opcao.valor === selecionado;
@@ -46,6 +46,6 @@ export function SeletorSegmentado<T extends string>({ rotulo, opcoes, selecionad
 }
 
 const estilos = StyleSheet.create({
-  grupo: { flexDirection: 'row', borderWidth: 1, borderRadius: raio.md, padding: 2 },
-  opcao: { flex: 1, minHeight: 36, alignItems: 'center', justifyContent: 'center', borderRadius: raio.sm },
+  grupo: { flexDirection: 'row', borderWidth: 1, borderRadius: raio.sm, padding: 2 },
+  opcao: { flex: 1, minHeight: 44, alignItems: 'center', justifyContent: 'center', borderRadius: raio.sm },
 });
