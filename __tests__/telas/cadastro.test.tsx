@@ -33,7 +33,10 @@ it('mostra o card do web com título, alternância de senha e link para entrar',
   await renderizar(<Cadastro />);
   expect(screen.getByRole('heading', { name: 'Criar conta' })).toBeOnTheScreen();
   expect(screen.getByLabelText('Mostrar senha')).toBeOnTheScreen();
-  expect(screen.getByRole('link', { name: 'Já tenho conta' })).toBeOnTheScreen();
+  // WCAG 2.5.3: o nome acessível do link contém o texto visível.
+  const link = screen.getByRole('link', { name: 'Já tem conta? Entrar' });
+  expect(link).toBeOnTheScreen();
+  expect(link).toHaveTextContent('Já tem conta? Entrar');
 });
 
 it('cadastro com sucesso já entra no app', async () => {

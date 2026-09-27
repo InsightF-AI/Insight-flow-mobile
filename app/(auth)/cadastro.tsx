@@ -48,7 +48,7 @@ export default function Cadastro() {
         subtitulo="Monte sua watchlist e registre operações simuladas, sem dinheiro real."
         rodape={
           <Link href="/login" replace asChild>
-            <Pressable role="link" aria-label="Já tenho conta" style={estilos.link}>
+            <Pressable role="link" aria-label="Já tem conta? Entrar" style={estilos.link}>
               <Texto cor="secundario">
                 Já tem conta?{' '}
                 <Texto cor="primaria" negrito>
