@@ -12,11 +12,13 @@ import { EstadoVazio } from '@/components/EstadoVazio';
 import { GraficoPreco } from '@/components/GraficoPreco';
 import { IndicadorItem } from '@/components/IndicadorItem';
 import { Linha } from '@/components/Linha';
+import { Pill } from '@/components/Pill';
 import { SeletorSegmentado } from '@/components/SeletorSegmentado';
 import { SinalCard } from '@/components/SinalCard';
 import { Tela } from '@/components/Tela';
 import { Texto } from '@/components/Texto';
 import { VariacaoBadge } from '@/components/VariacaoBadge';
+import { ROTULO_TIPO_ATIVO } from '@/dominio/rotulos';
 import { prepararSeriePreco } from '@/dominio/graficos';
 import { descreverIndicadores } from '@/dominio/indicadores';
 import { useBacktests, useCotacao, useHistorico, useIndicadores, useSinais } from '@/hooks/useAtivo';
@@ -97,7 +99,15 @@ export default function DetalheAtivo() {
       />
       <Tela aoAtualizar={atualizar} atualizando={cotacao.isRefetching}>
         <Card>
-          {ativo ? <Texto cor="secundario">{ativo.nome}</Texto> : null}
+          {ativo ? (
+            <>
+              <Texto cor="secundario">{ativo.nome}</Texto>
+              <View style={estilos.pills}>
+                <Pill tom="azul">{ROTULO_TIPO_ATIVO[ativo.tipo]}</Pill>
+                <Pill>{ativo.moeda}</Pill>
+              </View>
+            </>
+          ) : null}
           <EstadoConsulta
             consulta={cotacao}
             mensagemErro={(erro) => (ehStatus(erro, 404) ? 'Sem cotação disponível para este ativo.' : undefined)}
@@ -115,7 +125,7 @@ export default function DetalheAtivo() {
           </EstadoConsulta>
         </Card>
 
-        <Card titulo="Histórico de fechamento">
+        <Card titulo="Histórico de fechamento" icone="tendencia">
           <SeletorSegmentado rotulo="Período do gráfico" opcoes={PERIODOS} selecionado={periodo} aoSelecionar={setPeriodo} />
           <EstadoConsulta
             consulta={historico}
@@ -132,7 +142,7 @@ export default function DetalheAtivo() {
           </EstadoConsulta>
         </Card>
 
-        <Card titulo="Indicadores técnicos">
+        <Card titulo="Indicadores técnicos" icone="atividade">
           <EstadoConsulta consulta={indicadores}>
             {(lista) =>
               lista.length === 0 ? (
@@ -177,5 +187,6 @@ export default function DetalheAtivo() {
 }
 
 const estilos = StyleSheet.create({
+  pills: { flexDirection: 'row', alignItems: 'center', gap: espaco.sm },
   linhaPreco: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: espaco.md },
 });

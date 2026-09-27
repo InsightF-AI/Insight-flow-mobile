@@ -49,8 +49,16 @@ function FormNovoAlerta() {
   }
 
   return (
-    <Card titulo="Novo alerta de preço">
-      <Campo rotulo="Ticker" valor={ticker} aoMudar={setTicker} erro={erros.ticker} autoCapitalize="characters" placeholder="Ex.: PETR4" />
+    <Card titulo="Novo alerta de preço" icone="sino">
+      <Campo
+        rotulo="Ticker"
+        valor={ticker}
+        aoMudar={setTicker}
+        erro={erros.ticker}
+        autoCapitalize="characters"
+        placeholder="Ex.: PETR4"
+        icone="busca"
+      />
       <SeletorSegmentado rotulo="Condição do alerta" opcoes={CONDICOES} selecionado={tipoCondicao} aoSelecionar={setTipoCondicao} />
       <Campo
         rotulo="Valor alvo"

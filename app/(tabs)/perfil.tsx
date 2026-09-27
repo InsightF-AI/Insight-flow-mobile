@@ -8,16 +8,25 @@ import { Carregando } from '@/components/Carregando';
 import { ErroComRetry } from '@/components/ErroComRetry';
 import { EstadoVazio } from '@/components/EstadoVazio';
 import { ItemNotificacao } from '@/components/ItemNotificacao';
+import { SeletorSegmentado } from '@/components/SeletorSegmentado';
 import { Texto } from '@/components/Texto';
 import { mapaAtivos } from '@/dominio/portfolio';
 import { useMarcarLida, useNotificacoes } from '@/hooks/useNotificacoes';
 import { useWatchlist } from '@/hooks/useWatchlist';
+import { type EsquemaTema, usePreferencias } from '@/store/preferencias';
 import { useSessao } from '@/store/sessao';
 import { espaco } from '@/theme/escala';
 import { useTema } from '@/theme/useTema';
 
+const TEMAS: readonly { valor: EsquemaTema; rotulo: string }[] = [
+  { valor: 'escuro', rotulo: 'Escuro' },
+  { valor: 'claro', rotulo: 'Claro' },
+];
+
 export default function Perfil() {
   const { cores } = useTema();
+  const tema = usePreferencias((estado) => estado.tema);
+  const definirTema = usePreferencias((estado) => estado.definirTema);
   const email = useSessao((estado) => estado.email);
   const sair = useSessao((estado) => estado.sair);
   const notificacoes = useNotificacoes();
@@ -76,9 +85,17 @@ export default function Perfil() {
       }
       ListHeaderComponent={
         <View style={estilos.cabecalho}>
-          <Card>
+          <Card titulo="Conta" icone="usuario">
             <Texto cor="secundario">Conectado como</Texto>
             <Texto negrito>{email ?? '—'}</Texto>
+          </Card>
+          <Card titulo="Aparência" icone="lua" tomIcone="destaque">
+            <SeletorSegmentado
+              rotulo="Tema do aplicativo"
+              opcoes={TEMAS}
+              selecionado={tema}
+              aoSelecionar={(valor) => void definirTema(valor)}
+            />
           </Card>
           <Texto variante="subtitulo" role="heading">
             Notificações

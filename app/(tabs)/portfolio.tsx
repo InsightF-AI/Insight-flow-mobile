@@ -113,7 +113,7 @@ export default function Portfolio() {
   return (
     <View style={estilos.tela}>
       <Tela aoAtualizar={atualizar} atualizando={operacoes.isRefetching}>
-        <Card titulo="Resumo da carteira">
+        <Card titulo="Resumo da carteira" icone="carteira">
           <EstadoConsulta consulta={rentabilidade}>
             {(dados) => (
               <>
@@ -129,11 +129,11 @@ export default function Portfolio() {
           </EstadoConsulta>
         </Card>
 
-        <Card titulo="Comparativo desde a 1ª operação">
+        <Card titulo="Comparativo desde a 1ª operação" icone="tendencia">
           <ComparativoBenchmarks cdi={cdi} ibovespa={ibovespa} />
         </Card>
 
-        <Card titulo="Distribuição">
+        <Card titulo="Distribuição" icone="grafico-pizza">
           <SeletorSegmentado
             rotulo="Agrupar distribuição por"
             opcoes={DIMENSOES}
@@ -152,7 +152,7 @@ export default function Portfolio() {
           </EstadoConsulta>
         </Card>
 
-        <Card titulo="Posições">
+        <Card titulo="Posições" icone="lista">
           <EstadoConsulta consulta={posicoes}>
             {(lista) =>
               lista.length > 0 ? (
@@ -166,7 +166,7 @@ export default function Portfolio() {
           </EstadoConsulta>
         </Card>
 
-        <Card titulo="Operações simuladas">
+        <Card titulo="Operações simuladas" icone="lista">
           {operacoes.data.map((operacao) => {
             const info = ativos.get(operacao.ativo_id);
             return (

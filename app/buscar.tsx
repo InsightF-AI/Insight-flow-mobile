@@ -67,6 +67,7 @@ export default function Buscar() {
         }}
         placeholder="Ex.: PETR4, Vale"
         autoCapitalize="characters"
+        icone="busca"
       />
       {erro ? (
         <Texto role="alert" cor="negativo">
