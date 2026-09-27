@@ -49,6 +49,13 @@ describe('Campo (padrão do web)', () => {
     expect(screen.getByLabelText('Senha').props.value).toBe('segredo123');
   });
 
+  it('o botão do olho tem alvo de toque de pelo menos 44 pt sem depender de hitSlop', async () => {
+    await render(<CampoDeSenha />);
+    const botao = screen.getByRole('button', { name: 'Mostrar senha' });
+    expect(botao).toHaveStyle({ minWidth: 44, minHeight: 44 });
+    expect(botao.props.hitSlop).toBeUndefined();
+  });
+
   it('sem alternarSenha não mostra o botão de olho', async () => {
     await render(<Campo rotulo="Senha" valor="" aoMudar={() => undefined} secureTextEntry />);
     expect(screen.queryByRole('button', { name: 'Mostrar senha' })).toBeNull();

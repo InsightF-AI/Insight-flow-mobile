@@ -64,8 +64,8 @@ export function Campo({ rotulo, valor, aoMudar, erro, icone, alternarSenha = fal
             role="button"
             aria-label={senhaVisivel ? 'Ocultar senha' : 'Mostrar senha'}
             aria-pressed={senhaVisivel}
-            hitSlop={8}
             onPress={() => setSenhaVisivel((visivel) => !visivel)}
+            style={estilos.olho}
           >
             <Icone nome={senhaVisivel ? 'olho-fechado' : 'olho'} tamanho={18} cor="textoTerciario" />
           </Pressable>
@@ -92,4 +92,5 @@ const estilos = StyleSheet.create({
     paddingHorizontal: espaco.md,
   },
   entrada: { flex: 1, minHeight: 46, fontSize: fonte.corpo },
+  olho: { minWidth: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center', marginRight: -espaco.sm },
 });
