@@ -24,7 +24,6 @@ export function SugestoesTicker({ tickers, aoEscolher }: Props) {
           key={ticker}
           role="button"
           aria-label={`Usar ${ticker}`}
-          hitSlop={8}
           onPress={() => aoEscolher(ticker)}
           style={[estilos.chip, { borderColor: cores.primaria, backgroundColor: tons.azulFundo }]}
         >
@@ -39,5 +38,12 @@ export function SugestoesTicker({ tickers, aoEscolher }: Props) {
 
 const estilos = StyleSheet.create({
   lista: { gap: espaco.sm },
-  chip: { borderWidth: 1, borderRadius: raio.pilula, paddingHorizontal: espaco.md, paddingVertical: espaco.xs },
+  chip: {
+    minHeight: 44,
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderRadius: raio.pilula,
+    paddingHorizontal: espaco.md,
+    paddingVertical: espaco.xs,
+  },
 });
