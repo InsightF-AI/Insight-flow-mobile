@@ -53,7 +53,16 @@ export function CartaoAuth({ titulo, subtitulo, children, rodape }: Props) {
 }
 
 const estilos = StyleSheet.create({
-  cartao: { borderWidth: 1, borderRadius: raio.xl, padding: espaco.xl, gap: espaco.sm, overflow: 'hidden' },
+  cartao: {
+    width: '100%',
+    maxWidth: 440,
+    alignSelf: 'center',
+    borderWidth: 1,
+    borderRadius: raio.xl,
+    padding: espaco.xl,
+    gap: espaco.sm,
+    overflow: 'hidden',
+  },
   barra: { position: 'absolute', top: 0, left: '18%', right: '18%', height: 2, borderRadius: 2 },
   logo: { width: 64, height: 64, alignSelf: 'center' },
   centro: { textAlign: 'center' },

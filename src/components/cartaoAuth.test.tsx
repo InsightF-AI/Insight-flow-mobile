@@ -17,4 +17,14 @@ describe('CartaoAuth', () => {
     expect(screen.getByText('conteúdo')).toBeOnTheScreen();
     expect(screen.getByText('rodapé')).toBeOnTheScreen();
   });
+
+  it('limita a largura do card a 440 pt e o centraliza (tablets)', async () => {
+    await render(
+      <CartaoAuth titulo="Entrar" subtitulo="Acesse sua conta">
+        <Text>conteúdo</Text>
+      </CartaoAuth>,
+    );
+    const cartao = screen.getByRole('heading', { name: 'Entrar' }).parent?.parent;
+    expect(cartao).toHaveStyle({ width: '100%', maxWidth: 440, alignSelf: 'center' });
+  });
 });
