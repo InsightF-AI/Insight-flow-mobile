@@ -22,8 +22,8 @@ export function ItemPosicao({ posicao, moeda }: Props) {
         </Texto>
       </View>
       <View style={estilos.direita}>
-        <Texto negrito>{formatarMoeda(posicao.valor_mercado_brl, 'BRL')}</Texto>
-        <Texto variante="legenda" cor={corLucro}>
+        <Texto negrito numerico>{formatarMoeda(posicao.valor_mercado_brl, 'BRL')}</Texto>
+        <Texto variante="legenda" cor={corLucro} numerico>
           {`${lucro > 0 ? '+' : ''}${formatarMoeda(posicao.lucro_nao_realizado, moeda)}`}
         </Texto>
       </View>

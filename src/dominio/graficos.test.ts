@@ -1,5 +1,5 @@
 import type { PontoHistorico } from '@/api/tipos';
-import { prepararSeriePreco } from '@/dominio/graficos';
+import { corDaVariacao, prepararSeriePreco } from '@/dominio/graficos';
 
 function ponto(data: string, fechamento: string): PontoHistorico {
   return { data, abertura: fechamento, maxima: fechamento, minima: fechamento, fechamento, volume: '1000' };
@@ -37,4 +37,17 @@ it('descarta fechamentos que não são números', () => {
     ponto('2026-09-03T00:00:00Z', '11'),
   ]);
   expect(serie?.pontos).toHaveLength(2);
+});
+
+describe('corDaVariacao', () => {
+  const grafico = { alta: '#00ff00', baixa: '#ff0000' };
+
+  it('variação positiva ou zero usa a cor de alta', () => {
+    expect(corDaVariacao(1.5, grafico)).toBe('#00ff00');
+    expect(corDaVariacao(0, grafico)).toBe('#00ff00');
+  });
+
+  it('variação negativa usa a cor de baixa', () => {
+    expect(corDaVariacao(-0.01, grafico)).toBe('#ff0000');
+  });
 });

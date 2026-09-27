@@ -16,10 +16,10 @@ interface Props {
 }
 
 export function ItemAlerta({ alerta, aoAlternar, aoRemover, ocupado }: Props) {
-  const { cores } = useTema();
+  const { cores, sombras } = useTema();
   const ticker = alerta.ativo.ticker;
   return (
-    <View style={[estilos.item, { backgroundColor: cores.superficie, borderColor: cores.borda }]}>
+    <View style={[estilos.item, { backgroundColor: cores.superficie, borderColor: cores.borda, boxShadow: sombras.sm }]}>
       <View style={estilos.textos}>
         <Texto negrito>{ticker}</Texto>
         <Texto>{descreverCondicao(alerta.tipo_condicao, alerta.valor_alvo, alerta.moeda_alvo)}</Texto>
@@ -35,7 +35,7 @@ export function ItemAlerta({ alerta, aoAlternar, aoRemover, ocupado }: Props) {
         value={alerta.habilitado}
         onValueChange={aoAlternar}
         disabled={ocupado}
-        trackColor={{ true: cores.primaria, false: cores.borda }}
+        trackColor={{ true: cores.primaria, false: cores.bordaForte }}
       />
       <Pressable
         role="button"

@@ -3,7 +3,7 @@ import { Area, CartesianChart, Line } from 'victory-native';
 
 import { Texto } from '@/components/Texto';
 import { VariacaoBadge } from '@/components/VariacaoBadge';
-import type { SeriePreco } from '@/dominio/graficos';
+import { corDaVariacao, type SeriePreco } from '@/dominio/graficos';
 import { espaco } from '@/theme/escala';
 import { useTema } from '@/theme/useTema';
 import { formatarData, formatarMoeda } from '@/utils/formatacao';
@@ -15,7 +15,8 @@ interface Props {
 
 // Sem eixos desenhados no Skia (evita embarcar fonte TTF); mínimo, máximo e datas ficam em Text.
 export function GraficoPreco({ serie, moeda }: Props) {
-  const { cores } = useTema();
+  const { grafico } = useTema();
+  const cor = corDaVariacao(serie.variacaoPercentual, grafico);
   return (
     <View style={estilos.container}>
       <View
@@ -25,8 +26,8 @@ export function GraficoPreco({ serie, moeda }: Props) {
         <CartesianChart data={serie.pontos} xKey="indice" yKeys={['fechamento']} domainPadding={{ top: 16, bottom: 16 }}>
           {({ points, chartBounds }) => (
             <>
-              <Area points={points.fechamento} y0={chartBounds.bottom} color={cores.primaria} opacity={0.15} />
-              <Line points={points.fechamento} color={cores.primaria} strokeWidth={2} />
+              <Area points={points.fechamento} y0={chartBounds.bottom} color={cor} opacity={0.15} />
+              <Line points={points.fechamento} color={cor} strokeWidth={2} />
             </>
           )}
         </CartesianChart>

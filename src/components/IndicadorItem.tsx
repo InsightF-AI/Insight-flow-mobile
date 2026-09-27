@@ -13,7 +13,7 @@ export function IndicadorItem({ indicador }: { indicador: IndicadorDescrito }) {
           {indicador.descricao}
         </Texto>
       </View>
-      <Texto negrito>{indicador.valor}</Texto>
+      <Texto negrito numerico>{indicador.valor}</Texto>
     </View>
   );
 }

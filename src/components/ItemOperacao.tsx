@@ -31,7 +31,7 @@ export function ItemOperacao({ operacao, ticker, moeda, aoRemover, removendo }: 
           {`${data} · ${formatarQuantidade(operacao.quantidade)} × ${formatarMoeda(operacao.preco_unitario, moeda)}`}
         </Texto>
       </View>
-      <Texto negrito>{formatarMoeda(total, moeda)}</Texto>
+      <Texto negrito numerico>{formatarMoeda(total, moeda)}</Texto>
       <Pressable
         role="button"
         aria-label={`Remover operação de ${rotuloTipo.toLowerCase()} de ${nomeAtivo} em ${data}`}
