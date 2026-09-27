@@ -56,6 +56,13 @@ Objeto `grafico`: `grade` `#182238`/`#e7ebf3`, `eixo` `#5b6780`/`#8391ab`, `cruz
 - Sombras: `Sombras` ganha a chave `foco` (anel de foco dos campos). `Card` ganha a prop `tomIcone`. `Texto` ganha a variante `secao`, a prop `numerico` e as cores `terciario`, `destaque` e `ia`.
 - `Botao` mantém as variantes `primario | secundario | perigo`.
 
+**Fora desta entrega (cortes conscientes):**
+
+- Pill "IA" em `AvisoIA` e `CardAnaliseIA` (usam o `IconeChip` `brilho`).
+- Pills de status de alerta, tipo de notificação, sinais e classe/setor/moeda: só o detalhe do ativo ganhou Pills de tipo e moeda; a notificação não lida ganhou a Pill "Nova".
+- `IconeChip` em Nova operação e Watchlist.
+- Android 7–8.1 (API < 28) não desenha `boxShadow` (sem sombra, degradação segura); o FAB perdeu o `elevation` do MVP nessas versões.
+
 ## Tipografia
 
 - Inter (400, 500, 600, 700) no corpo e Space Grotesk (600, 700) nos títulos, via `@expo-google-fonts/inter` e `@expo-google-fonts/space-grotesk` + `expo-font` (instalados com `npx expo install`).
