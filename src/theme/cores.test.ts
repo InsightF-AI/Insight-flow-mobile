@@ -71,6 +71,10 @@ describe.each([
     expect(contraste(cores.textoSobrePrimaria, cores.primaria)).toBeGreaterThanOrEqual(4.5);
     expect(contraste(cores.textoSobrePrimaria, cores.primariaHover)).toBeGreaterThanOrEqual(4.5);
   });
+
+  it('texto sobre a cor negativa (badge da aba) atinge contraste AA', () => {
+    expect(contraste(cores.textoSobrePrimaria, cores.negativo)).toBeGreaterThanOrEqual(4.5);
+  });
 });
 
 it('os dois temas têm as mesmas chaves (cores, tons, gráfico e sombras)', () => {
