@@ -38,6 +38,42 @@ describe('LinhaAtivo', () => {
     await user.press(screen.getByRole('button', { name: 'PETR4, Petrobras PN' }));
     expect(aoPressionar).toHaveBeenCalled();
   });
+
+  it('mostra o selo de sinais só quando há sinais, com singular e plural', async () => {
+    const { rerender } = await render(
+      <LinhaAtivo ativo={ativo} cotacao={cotacao} estadoCotacao="ok" sinais={1} aoPressionar={jest.fn()} />,
+    );
+    expect(screen.getByText('1 sinal')).toBeOnTheScreen();
+    await rerender(<LinhaAtivo ativo={ativo} cotacao={cotacao} estadoCotacao="ok" sinais={2} aoPressionar={jest.fn()} />);
+    expect(screen.getByText('2 sinais')).toBeOnTheScreen();
+    await rerender(<LinhaAtivo ativo={ativo} cotacao={cotacao} estadoCotacao="ok" sinais={0} aoPressionar={jest.fn()} />);
+    expect(screen.queryByText(/sinal/)).not.toBeOnTheScreen();
+  });
+
+  it('sem aoAlternarNotificacao não mostra o sino', async () => {
+    await render(<LinhaAtivo ativo={ativo} estadoCotacao="carregando" notificar aoPressionar={jest.fn()} />);
+    expect(screen.queryByRole('switch')).not.toBeOnTheScreen();
+  });
+
+  it('o sino reflete o estado e alterna sem abrir o ativo', async () => {
+    const user = userEvent.setup();
+    const aoPressionar = jest.fn();
+    const aoAlternar = jest.fn();
+    await render(
+      <LinhaAtivo
+        ativo={ativo}
+        estadoCotacao="carregando"
+        notificar
+        aoAlternarNotificacao={aoAlternar}
+        aoPressionar={aoPressionar}
+      />,
+    );
+    const sino = screen.getByRole('switch', { name: 'Notificações de PETR4' });
+    expect(sino).toBeChecked();
+    await user.press(sino);
+    expect(aoAlternar).toHaveBeenCalledTimes(1);
+    expect(aoPressionar).not.toHaveBeenCalled();
+  });
 });
 
 it('LinhaResultadoBusca mostra o ativo encontrado', async () => {
