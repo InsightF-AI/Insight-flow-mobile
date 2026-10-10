@@ -6,7 +6,6 @@ import { Alert } from 'react-native';
 import { authApi } from '@/api/auth';
 import { notificacoesApi } from '@/api/notificacoes';
 import type { Notificacao } from '@/api/tipos';
-import { watchlistApi } from '@/api/watchlist';
 import { usePreferencias } from '@/store/preferencias';
 import { useSessao } from '@/store/sessao';
 import { renderizar } from '@/test/renderizar';
@@ -17,7 +16,6 @@ import Perfil from '../../app/(tabs)/perfil';
 jest.mock('expo-router', () => ({ router: { push: jest.fn() } }));
 jest.mock('@/api/auth', () => ({ authApi: { sair: jest.fn(), renovar: jest.fn() } }));
 jest.mock('@/api/notificacoes', () => ({ notificacoesApi: { listar: jest.fn(), marcarComoLida: jest.fn() } }));
-jest.mock('@/api/watchlist', () => ({ watchlistApi: { listar: jest.fn() } }));
 
 const armazenamento = (SecureStore as unknown as { __armazenamento: Map<string, string> }).__armazenamento;
 
@@ -30,15 +28,6 @@ const naoLida: Notificacao = {
   lida: false,
   criado_em: '2026-09-25T15:30:00Z',
 };
-const lidaDeAtivoRemovido: Notificacao = {
-  id: 'n-2',
-  ativo_id: 'a-9',
-  tipo: 'ALERTA_DISPARADO',
-  mensagem: 'Preço atingiu o alvo',
-  contexto: {},
-  lida: true,
-  criado_em: '2026-09-24T15:30:00Z',
-};
 
 beforeEach(() => {
   jest.clearAllMocks();
@@ -47,51 +36,22 @@ beforeEach(() => {
   usePreferencias.setState({ tema: 'escuro' });
   useSessao.setState({ status: 'autenticado', token: 'tok', refreshToken: 'ref', expiraEm: null, email: 'ana@exemplo.com' });
   jest.mocked(authApi.sair).mockResolvedValue(undefined);
-  jest.mocked(watchlistApi.listar).mockResolvedValue([
-    {
-      ativo: { id: 'a-1', ticker: 'PETR4', nome: 'Petrobras PN', tipo: 'ACAO', setor: null, moeda: 'BRL' },
-      notificar: true,
-      adicionado_em: '2026-09-20T12:00:00Z',
-    },
-  ]);
-  jest.mocked(notificacoesApi.listar).mockResolvedValue([naoLida, lidaDeAtivoRemovido]);
-  jest.mocked(notificacoesApi.marcarComoLida).mockResolvedValue({ ...naoLida, lida: true });
+  jest.mocked(notificacoesApi.listar).mockResolvedValue([naoLida]);
 });
 
-it('mostra o e-mail e as notificações, com ticker quando conhecido', async () => {
+it('mostra o e-mail e leva à caixa de notificações com a contagem de não lidas', async () => {
+  const user = userEvent.setup();
   await renderizar(<Perfil />);
   expect(await screen.findByText('ana@exemplo.com')).toBeOnTheScreen();
-  expect(await screen.findByText('Sinal técnico · PETR4')).toBeOnTheScreen();
-  expect(screen.getByText('Alerta de preço')).toBeOnTheScreen();
+  expect(await screen.findByText('1 não lida')).toBeOnTheScreen();
+  await user.press(screen.getByRole('button', { name: 'Abrir notificações' }));
+  expect(router.push).toHaveBeenCalledWith('/notificacoes');
 });
 
-it('resumo diário aparece com o título do tipo e o toque só marca como lida', async () => {
-  const user = userEvent.setup();
-  const resumo: Notificacao = {
-    id: 'n-3',
-    ativo_id: null,
-    tipo: 'RESUMO_DIARIO',
-    mensagem: 'Resumo diario da carteira',
-    contexto: { texto: 'A carteira fechou o dia estável.', aviso_legal: 'Análise gerada por IA.' },
-    lida: false,
-    criado_em: '2026-10-09T21:30:00Z',
-  };
-  jest.mocked(notificacoesApi.listar).mockResolvedValue([resumo]);
-  jest.mocked(notificacoesApi.marcarComoLida).mockResolvedValue({ ...resumo, lida: true });
+it('sem notificações não lidas a contagem diz isso', async () => {
+  jest.mocked(notificacoesApi.listar).mockResolvedValue([{ ...naoLida, lida: true }]);
   await renderizar(<Perfil />);
-  await user.press(await screen.findByRole('button', { name: /Resumo diário/ }));
-  await waitFor(() => expect(notificacoesApi.marcarComoLida).toHaveBeenCalledWith('n-3'));
-  expect(router.push).not.toHaveBeenCalled();
-});
-
-it('tocar numa não lida marca como lida e abre o ativo', async () => {
-  const user = userEvent.setup();
-  await renderizar(<Perfil />);
-  await user.press(
-    await screen.findByRole('button', { name: 'Não lida. Sinal técnico · PETR4. Sobrevenda RSI ativado em PETR4' }),
-  );
-  await waitFor(() => expect(notificacoesApi.marcarComoLida).toHaveBeenCalledWith('n-1'));
-  expect(router.push).toHaveBeenCalledWith({ pathname: '/ativo/[id]', params: { id: 'a-1', ticker: 'PETR4' } });
+  expect(await screen.findByText('Nenhuma não lida')).toBeOnTheScreen();
 });
 
 it('sair pede confirmação e encerra a sessão', async () => {

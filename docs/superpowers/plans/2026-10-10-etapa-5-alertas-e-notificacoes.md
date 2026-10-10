@@ -1823,9 +1823,9 @@ import { renderizar } from '@/test/renderizar';
 
 import DetalheNotificacao from '../../app/notificacao/[id]';
 
-let idDaRota = 'n-9';
+let mockIdDaRota = 'n-9';
 jest.mock('expo-router', () => ({
-  useLocalSearchParams: () => ({ id: idDaRota }),
+  useLocalSearchParams: () => ({ id: mockIdDaRota }),
   router: { push: jest.fn() },
 }));
 jest.mock('@/api/notificacoes', () => ({ notificacoesApi: { listar: jest.fn(), marcarComoLida: jest.fn() } }));
@@ -1843,7 +1843,7 @@ const resumo: Notificacao = {
 
 beforeEach(() => {
   jest.clearAllMocks();
-  idDaRota = 'n-9';
+  mockIdDaRota = 'n-9';
   jest.mocked(watchlistApi.listar).mockResolvedValue([]);
 });
 
@@ -1869,7 +1869,7 @@ it('resumo sem texto não quebra e explica', async () => {
 });
 
 it('notificação inexistente mostra aviso em vez de tela em branco', async () => {
-  idDaRota = 'n-404';
+  mockIdDaRota = 'n-404';
   jest.mocked(notificacoesApi.listar).mockResolvedValue([resumo]);
   await renderizar(<DetalheNotificacao />);
   expect(await screen.findByText('Notificação não encontrada.')).toBeOnTheScreen();
