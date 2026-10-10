@@ -92,3 +92,33 @@ describe.each(Object.entries(ativos))('%s: séries do app × /indicadores', (_ti
     bate(analise?.macd.histograma[ultimo], esperado.valores_auxiliares.histograma);
   });
 });
+
+describe.each(Object.entries(ativos))('%s: período recortado (como no app) × /indicadores', (_ticker, captura) => {
+  const historico = pontos(captura.historico);
+  const recorte = historico.slice(-22);
+
+  it('com o histórico 5A de aquecimento, RSI e MACD do último dia batem com os oficiais', () => {
+    const analise = prepararAnaliseTecnica(recorte, historico);
+    expect(analise?.candles).toHaveLength(22);
+    expect(analise?.rsiMacdCalculados).toBe(true);
+    const ultimo = 21;
+    const rsi = oficial(captura.indicadores, 'RSI', 14);
+    const macd = oficial(captura.indicadores, 'MACD');
+    if (rsi) bate(analise?.rsi[ultimo], Number(rsi.valor));
+    if (macd?.valores_auxiliares) {
+      bate(analise?.macd.linha[ultimo], Number(macd.valor));
+      bate(analise?.macd.sinal[ultimo], macd.valores_auxiliares.linha_sinal);
+      bate(analise?.macd.histograma[ultimo], macd.valores_auxiliares.histograma);
+    }
+  });
+
+  it('sem o aquecimento RSI e MACD ficam sem valor em vez de começar errados', () => {
+    const analise = prepararAnaliseTecnica(recorte);
+    expect(analise?.rsiMacdCalculados).toBe(false);
+    expect(analise?.rsi.every((v) => v === null)).toBe(true);
+    expect(analise?.macd.linha.every((v) => v === null)).toBe(true);
+    // As de janela fixa não mudam: SMA 20 e Bollinger do último dia seguem batendo com os oficiais.
+    const sma20 = oficial(captura.indicadores, 'SMA', 20);
+    if (sma20) bate(analise?.sma20[21], Number(sma20.valor));
+  });
+});

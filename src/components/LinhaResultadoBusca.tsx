@@ -29,8 +29,8 @@ export function LinhaResultadoBusca({ ativo, aoPressionar, naWatchlist = false }
         <Texto variante="legenda" cor="secundario">{`${ROTULO_TIPO_ATIVO[ativo.tipo]} · ${ativo.moeda}`}</Texto>
       </View>
       <View style={estilos.acao}>
-        <Icone nome={naWatchlist ? 'confirmado' : 'mais-circulo'} tamanho={22} cor={naWatchlist ? 'positivo' : 'primaria'} />
-        <Texto variante="legenda" cor={naWatchlist ? 'positivo' : 'primaria'}>
+        <Icone nome={naWatchlist ? 'confirmado' : 'mais-circulo'} tamanho={22} cor={naWatchlist ? 'textoSecundario' : 'primaria'} />
+        <Texto variante="legenda" cor={naWatchlist ? 'secundario' : 'primaria'}>
           {naWatchlist ? 'Na watchlist' : 'Adicionar à watchlist'}
         </Texto>
       </View>

@@ -42,6 +42,11 @@ export interface AnaliseTecnica {
   bollinger: FaixasBollinger;
   rsi: Serie;
   macd: SeriesMacd;
+  /**
+   * RSI e MACD são recursivos (cada valor depende de todo o histórico anterior): só valem com o histórico anterior ao
+   * período ou quando o período já começa no primeiro registro. Falso = as séries vêm sem valor, nunca aproximadas.
+   */
+  rsiMacdCalculados: boolean;
 }
 
 /** Dias corridos que o aquecimento pode terminar antes do primeiro candle exibido (fins de semana e feriados). */
@@ -55,17 +60,25 @@ function diasEntre(anterior: string, posterior: string): number {
  * Séries calculadas sobre o histórico e recortadas para o período exibido. `completo` (histórico 5A) só entrega os
  * candles anteriores ao período, para as médias e o RSI não começarem vazios; os candles exibidos são sempre os de
  * `exibido`. Um aquecimento que termina muito antes do período não é contínuo com ele e é ignorado.
+ *
+ * SMA e Bollinger têm janela fixa e saem exatas com ou sem aquecimento. RSI (suavização de Wilder) e MACD (médias
+ * exponenciais) não: calculados só sobre o período, começam em valores plausíveis porém diferentes dos oficiais (RSI
+ * de 26,4 contra 33,3 numa captura real). Por isso só são calculados com o aquecimento contíguo, ou quando o período
+ * começa no primeiro registro do histórico completo; fora disso ficam sem valor.
  */
 export function prepararAnaliseTecnica(exibido: PontoHistorico[], completo?: PontoHistorico[]): AnaliseTecnica | null {
   const visiveis = prepararCandles(exibido);
   if (visiveis.length < 2) return null;
   const inicio = visiveis[0].data;
 
-  const anteriores = completo ? prepararCandles(completo).filter((candle) => candle.data < inicio) : [];
+  const historicoCompleto = completo ? prepararCandles(completo) : [];
+  const anteriores = historicoCompleto.filter((candle) => candle.data < inicio);
   const ultimoAnterior = anteriores[anteriores.length - 1];
   const contiguo =
     ultimoAnterior !== undefined && diasEntre(ultimoAnterior.data, inicio) <= FOLGA_MAXIMA_DO_AQUECIMENTO_EM_DIAS;
   const prefixo = contiguo ? anteriores : [];
+  const comecaNoInicioDoHistorico = historicoCompleto.length > 0 && anteriores.length === 0;
+  const rsiMacdCalculados = contiguo || comecaNoInicioDoHistorico;
 
   const base = [...prefixo, ...visiveis];
   const primeiro = prefixo.length;
@@ -73,6 +86,7 @@ export function prepararAnaliseTecnica(exibido: PontoHistorico[], completo?: Pon
   const recortar = (serie: Serie): Serie => serie.slice(primeiro);
   const faixas = bollinger(fechamentos);
   const seriesMacd = macd(fechamentos);
+  const semValor = (): Serie => new Array<number | null>(visiveis.length).fill(null);
 
   return {
     candles: visiveis,
@@ -84,11 +98,14 @@ export function prepararAnaliseTecnica(exibido: PontoHistorico[], completo?: Pon
       media: recortar(faixas.media),
       inferior: recortar(faixas.inferior),
     },
-    rsi: recortar(rsi(fechamentos)),
-    macd: {
-      linha: recortar(seriesMacd.linha),
-      sinal: recortar(seriesMacd.sinal),
-      histograma: recortar(seriesMacd.histograma),
-    },
+    rsi: rsiMacdCalculados ? recortar(rsi(fechamentos)) : semValor(),
+    macd: rsiMacdCalculados
+      ? {
+          linha: recortar(seriesMacd.linha),
+          sinal: recortar(seriesMacd.sinal),
+          histograma: recortar(seriesMacd.histograma),
+        }
+      : { linha: semValor(), sinal: semValor(), histograma: semValor() },
+    rsiMacdCalculados,
   };
 }

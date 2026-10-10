@@ -9,12 +9,24 @@ import type { AnaliseTecnica, Candle } from '@/dominio/candles';
 // O Skia não é transformável pelo Jest do projeto: a geometria é testada à parte e aqui o desenho é um stub.
 jest.mock('@shopify/react-native-skia', () => {
   const { View } = jest.requireActual<typeof import('react-native')>('react-native');
-  const caminho = () => ({ moveTo: jest.fn(), lineTo: jest.fn(), addRect: jest.fn(), close: jest.fn() });
+  const construtor = () => {
+    const c = { moveTo: jest.fn(), lineTo: jest.fn(), addRect: jest.fn(), detach: jest.fn(() => ({})) };
+    c.moveTo.mockReturnValue(c);
+    c.lineTo.mockReturnValue(c);
+    c.addRect.mockReturnValue(c);
+    return c;
+  };
   return {
     Canvas: View,
     Path: () => null,
     Skia: {
-      Path: { Make: caminho },
+      // Path.Make() e os moveTo/lineTo/addRect do SkPath estão deprecated no Skia 2.x: o código deve usar o PathBuilder.
+      Path: {
+        Make: () => {
+          throw new Error('Skia.Path.Make() é deprecated: use Skia.PathBuilder.Make()');
+        },
+      },
+      PathBuilder: { Make: construtor },
       XYWHRect: (x: number, y: number, largura: number, altura: number) => ({ x, y, width: largura, height: altura }),
     },
   };
@@ -53,6 +65,7 @@ function analise(): AnaliseTecnica {
       sinal: candles.map((_, i) => 0.4 + i / 10),
       histograma: candles.map(() => 0.1),
     },
+    rsiMacdCalculados: true,
   };
 }
 
@@ -155,10 +168,41 @@ describe('PainelTecnico', () => {
     expect(screen.getByRole('switch', { name: 'Bollinger' })).toBeChecked();
   });
 
-  it('valor ausente do indicador aparece como traço, nunca zero', async () => {
+  it('valor ausente do indicador no dia escolhido aparece como traço, nunca zero', async () => {
     const base = analise();
-    const semRsi = { ...base, rsi: base.rsi.map(() => null) };
-    await render(<PainelTecnico analise={semRsi} moeda="BRL" />);
-    expect(screen.getByText('RSI (14): —')).toBeOnTheScreen();
+    const comLacuna = { ...base, rsi: base.rsi.map((valor, i) => (i === 0 ? null : valor)) };
+    await render(<PainelTecnico analise={comLacuna} moeda="BRL" />);
+    await medirCandles();
+    await tocarEm(9);
+    expect(await screen.findByText('RSI (14): —')).toBeOnTheScreen();
+  });
+
+  it('sem o histórico anterior explica por que RSI e MACD não aparecem, sem painéis vazios', async () => {
+    const base = analise();
+    const semAquecimento = {
+      ...base,
+      rsi: base.rsi.map(() => null),
+      macd: { linha: base.rsi.map(() => null), sinal: base.rsi.map(() => null), histograma: base.rsi.map(() => null) },
+      rsiMacdCalculados: false,
+    };
+    await render(<PainelTecnico analise={semAquecimento} moeda="BRL" />);
+    expect(
+      screen.getByText('RSI e MACD precisam do histórico anterior ao período, que não está disponível agora.'),
+    ).toBeOnTheScreen();
+    expect(screen.queryByTestId('area-rsi')).not.toBeOnTheScreen();
+    expect(screen.queryByTestId('area-macd')).not.toBeOnTheScreen();
+    expect(screen.queryByText(/RSI (14):/)).not.toBeOnTheScreen();
+  });
+
+  it('histórico curto demais para o MACD diz isso e mantém o RSI que existe', async () => {
+    const base = analise();
+    const semMacd = {
+      ...base,
+      macd: { linha: base.rsi.map(() => null), sinal: base.rsi.map(() => null), histograma: base.rsi.map(() => null) },
+    };
+    await render(<PainelTecnico analise={semMacd} moeda="BRL" />);
+    expect(screen.getByText('Histórico curto demais para calcular o MACD (12, 26, 9).')).toBeOnTheScreen();
+    expect(screen.getByTestId('area-rsi')).toBeOnTheScreen();
+    expect(screen.queryByTestId('area-macd')).not.toBeOnTheScreen();
   });
 });

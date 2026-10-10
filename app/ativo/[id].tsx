@@ -52,12 +52,11 @@ export default function DetalheAtivo() {
   const aquecimento = useHistorico(id, '5A', { habilitado: precisaAquecimento });
   // Trocar de período mantém o gráfico anterior até a resposta chegar: não o apresenta como se fosse o novo período.
   const trocandoPeriodo = historico.isPlaceholderData;
+  // No período 5A o próprio histórico é o completo. RSI e MACD só aparecem com o histórico anterior ao período.
+  const historicoCompleto = precisaAquecimento ? aquecimento.data : historico.data;
   const analise = useMemo(
-    () =>
-      historico.data && !trocandoPeriodo
-        ? prepararAnaliseTecnica(historico.data, precisaAquecimento ? aquecimento.data : undefined)
-        : null,
-    [historico.data, trocandoPeriodo, aquecimento.data, precisaAquecimento],
+    () => (historico.data && !trocandoPeriodo ? prepararAnaliseTecnica(historico.data, historicoCompleto) : null),
+    [historico.data, trocandoPeriodo, historicoCompleto],
   );
   const indicadores = useIndicadores(id);
   const sinais = useSinais(id);

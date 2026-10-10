@@ -19,6 +19,18 @@ function numero(valor: number | null | undefined, casas = 2): string {
   return valor === null || valor === undefined ? '—' : formatarNumero(valor, casas);
 }
 
+function temValor(serie: readonly (number | null)[]): boolean {
+  return serie.some((valor) => valor !== null);
+}
+
+/** Por que RSI e/ou MACD não aparecem: falta do histórico anterior ao período ou histórico curto demais. */
+function motivoSemIndicadores(semRsi: boolean, semMacd: boolean, calculados: boolean): string | null {
+  if (!semRsi && !semMacd) return null;
+  if (!calculados) return 'RSI e MACD precisam do histórico anterior ao período, que não está disponível agora.';
+  const nomes = [semRsi ? 'o RSI (14)' : null, semMacd ? 'o MACD (12, 26, 9)' : null].filter(Boolean);
+  return `Histórico curto demais para calcular ${nomes.join(' e ')}.`;
+}
+
 /** Candles, RSI e MACD com uma mira única: tocar num candle mostra os valores de todos os indicadores naquele dia. */
 export function PainelTecnico({ analise, moeda }: Props) {
   const { grafico } = useTema();
@@ -35,6 +47,9 @@ export function PainelTecnico({ analise, moeda }: Props) {
   const indice = Math.min(selecionado ?? total - 1, total - 1);
   const candle = analise.candles[indice];
   const alternar = (chave: keyof Sobreposicoes) => setSobreposicoes((atual) => ({ ...atual, [chave]: !atual[chave] }));
+  const temRsi = temValor(analise.rsi);
+  const temMacd = temValor(analise.macd.linha);
+  const motivo = motivoSemIndicadores(!temRsi, !temMacd, analise.rsiMacdCalculados);
 
   return (
     <View style={estilos.painel}>
@@ -91,17 +106,31 @@ export function PainelTecnico({ analise, moeda }: Props) {
         aoSelecionar={setSelecionado}
       />
 
-      <Texto variante="legenda" cor="secundario" numerico>
-        {`RSI (14): ${numero(analise.rsi[indice], 1)}`}
-      </Texto>
-      <GraficoIndicador tipo="rsi" analise={analise} indiceSelecionado={selecionado} />
+      {temRsi ? (
+        <>
+          <Texto variante="legenda" cor="secundario" numerico>
+            {`RSI (14): ${numero(analise.rsi[indice], 1)}`}
+          </Texto>
+          <GraficoIndicador tipo="rsi" analise={analise} indiceSelecionado={selecionado} />
+        </>
+      ) : null}
 
-      <Texto variante="legenda" cor="secundario" numerico>
-        {`MACD: ${numero(analise.macd.linha[indice])} · Sinal: ${numero(analise.macd.sinal[indice])} · Histograma: ${numero(
-          analise.macd.histograma[indice],
-        )}`}
-      </Texto>
-      <GraficoIndicador tipo="macd" analise={analise} indiceSelecionado={selecionado} />
+      {temMacd ? (
+        <>
+          <Texto variante="legenda" cor="secundario" numerico>
+            {`MACD: ${numero(analise.macd.linha[indice])} · Sinal: ${numero(analise.macd.sinal[indice])} · Histograma: ${numero(
+              analise.macd.histograma[indice],
+            )}`}
+          </Texto>
+          <GraficoIndicador tipo="macd" analise={analise} indiceSelecionado={selecionado} />
+        </>
+      ) : null}
+
+      {motivo ? (
+        <Texto variante="legenda" cor="secundario">
+          {motivo}
+        </Texto>
+      ) : null}
     </View>
   );
 }

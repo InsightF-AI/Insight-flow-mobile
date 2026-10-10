@@ -1,9 +1,10 @@
-import { Canvas, Path, Skia } from '@shopify/react-native-skia';
+import { Canvas, Path } from '@shopify/react-native-skia';
 import { useMemo, useState } from 'react';
 import { type LayoutChangeEvent, StyleSheet, View } from 'react-native';
 
+import { caminhoDeLinhas, caminhoDeRetangulos, reta } from '@/components/caminhosSkia';
 import type { AnaliseTecnica } from '@/dominio/candles';
-import { criarGeometriaIndicador, type Ponto, posicoesX } from '@/dominio/geometriaGrafico';
+import { criarGeometriaIndicador, posicoesX } from '@/dominio/geometriaGrafico';
 import { useTema } from '@/theme/useTema';
 
 interface Props {
@@ -11,23 +12,6 @@ interface Props {
   analise: AnaliseTecnica;
   indiceSelecionado: number | null;
   altura?: number;
-}
-
-function caminhoDeLinhas(segmentos: Ponto[][]) {
-  const caminho = Skia.Path.Make();
-  for (const segmento of segmentos) {
-    segmento.forEach((ponto, i) => (i === 0 ? caminho.moveTo(ponto.x, ponto.y) : caminho.lineTo(ponto.x, ponto.y)));
-  }
-  return caminho;
-}
-
-function reta(x1: number, y1: number, x2: number, y2: number) {
-  return caminhoDeLinhas([
-    [
-      { x: x1, y: y1 },
-      { x: x2, y: y2 },
-    ],
-  ]);
 }
 
 /** RSI (0–100, referências em 30 e 70) ou MACD (linha, sinal e histograma), na mesma coluna dos candles. */
@@ -49,13 +33,7 @@ export function GraficoIndicador({ tipo, analise, indiceSelecionado, altura = 11
             series: [analise.macd.linha, analise.macd.sinal],
             barras: analise.macd.histograma,
           });
-    const barras = (positivas: boolean) => {
-      const caminho = Skia.Path.Make();
-      for (const barra of geometria.barras.filter((b) => b.positiva === positivas)) {
-        caminho.addRect(Skia.XYWHRect(barra.x, barra.y, barra.largura, barra.altura));
-      }
-      return caminho;
-    };
+    const barras = (positivas: boolean) => caminhoDeRetangulos(geometria.barras.filter((b) => b.positiva === positivas));
     // Cores próprias do indicador (não as das médias): a linha do MACD e a de sinal não se confundem com SMA 20/50.
     const coresDasLinhas = tipo === 'rsi' ? [cores.primaria] : [cores.primaria, cores.destaque];
     const y0 = geometria.yDoValor(0);

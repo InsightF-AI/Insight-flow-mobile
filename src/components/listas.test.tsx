@@ -1,8 +1,10 @@
 import { render, screen, userEvent } from '@testing-library/react-native';
+import { StyleSheet } from 'react-native';
 
 import type { Ativo, CotacaoAtual } from '@/api/tipos';
 import { LinhaAtivo } from '@/components/LinhaAtivo';
 import { LinhaResultadoBusca } from '@/components/LinhaResultadoBusca';
+import { coresEscuro } from '@/theme/cores';
 
 const NBSP = ' ';
 const ativo: Ativo = { id: 'a-1', ticker: 'PETR4', nome: 'Petrobras PN', tipo: 'ACAO', setor: 'Petróleo', moeda: 'BRL' };
@@ -119,5 +121,11 @@ describe('LinhaResultadoBusca (watchlist)', () => {
     await render(<LinhaResultadoBusca ativo={encontrado} naWatchlist aoPressionar={jest.fn()} />);
     expect(screen.getByText('Na watchlist')).toBeOnTheScreen();
     expect(screen.queryByText('Adicionar à watchlist')).not.toBeOnTheScreen();
+  });
+
+  it('o selo não usa verde nem vermelho: essas cores só indicam valor positivo ou negativo', async () => {
+    await render(<LinhaResultadoBusca ativo={encontrado} naWatchlist aoPressionar={jest.fn()} />);
+    const estilo = StyleSheet.flatten(screen.getByText('Na watchlist').props.style) as { color?: string };
+    expect([coresEscuro.positivo, coresEscuro.negativo]).not.toContain(estilo.color);
   });
 });

@@ -1,8 +1,9 @@
-import { Canvas, Path, Skia } from '@shopify/react-native-skia';
+import { Canvas, Path } from '@shopify/react-native-skia';
 import { useMemo, useState } from 'react';
 import { type LayoutChangeEvent, StyleSheet, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 
+import { caminhoDeLinhas, caminhoDeRetangulos, reta } from '@/components/caminhosSkia';
 import type { AnaliseTecnica } from '@/dominio/candles';
 import { criarGeometriaCandles, indiceDoX, type Ponto, segmentosDaSerie } from '@/dominio/geometriaGrafico';
 import type { Serie } from '@/dominio/series';
@@ -17,20 +18,6 @@ interface Props {
   indiceSelecionado: number | null;
   aoSelecionar: (indice: number) => void;
   altura?: number;
-}
-
-function caminhoDeLinhas(segmentos: Ponto[][]) {
-  const caminho = Skia.Path.Make();
-  for (const segmento of segmentos) {
-    segmento.forEach((ponto, i) => (i === 0 ? caminho.moveTo(ponto.x, ponto.y) : caminho.lineTo(ponto.x, ponto.y)));
-  }
-  return caminho;
-}
-
-function caminhoDeRetangulos(retangulos: { x: number; y: number; largura: number; altura: number }[]) {
-  const caminho = Skia.Path.Make();
-  for (const r of retangulos) caminho.addRect(Skia.XYWHRect(r.x, r.y, r.largura, r.altura));
-  return caminho;
 }
 
 function valoresFinitos(serie: Serie): number[] {
@@ -101,15 +88,7 @@ export function GraficoCandles({ analise, sobreposicoes, indiceSelecionado, aoSe
   const xSelecionado =
     desenho && indiceSelecionado !== null ? desenho.xs[Math.min(indiceSelecionado, quantidade - 1)] : undefined;
   const mira = useMemo(
-    () =>
-      xSelecionado === undefined
-        ? null
-        : caminhoDeLinhas([
-            [
-              { x: xSelecionado, y: 0 },
-              { x: xSelecionado, y: altura },
-            ],
-          ]),
+    () => (xSelecionado === undefined ? null : reta(xSelecionado, 0, xSelecionado, altura)),
     [xSelecionado, altura],
   );
 

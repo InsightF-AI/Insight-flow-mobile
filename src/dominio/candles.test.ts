@@ -92,6 +92,38 @@ describe('prepararAnaliseTecnica', () => {
     expect(analise?.macd.linha[0]).not.toBeNull();
   });
 
+  it('sem aquecimento RSI e MACD ficam sem valor, mesmo com candles de sobra: são recursivos e começariam errados', () => {
+    const analise = prepararAnaliseTecnica(serieDiaria(40));
+    expect(analise?.rsiMacdCalculados).toBe(false);
+    expect(analise?.rsi.every((v) => v === null)).toBe(true);
+    expect(analise?.macd.linha.every((v) => v === null)).toBe(true);
+    expect(analise?.macd.sinal.every((v) => v === null)).toBe(true);
+    // As médias de janela fixa não dependem do que veio antes: seguem exatas.
+    expect(analise?.sma20[39]).not.toBeNull();
+    expect(analise?.bollinger.media[39]).not.toBeNull();
+  });
+
+  it('aquecimento que não é contíguo ao período não vale para RSI e MACD', () => {
+    const analise = prepararAnaliseTecnica(serieDiaria(40, 100), serieDiaria(30, 0));
+    expect(analise?.rsiMacdCalculados).toBe(false);
+    expect(analise?.rsi.every((v) => v === null)).toBe(true);
+    expect(analise?.macd.linha.every((v) => v === null)).toBe(true);
+  });
+
+  it('período que já começa no primeiro registro do histórico calcula RSI e MACD sem prefixo', () => {
+    const completo = serieDiaria(40);
+    const analise = prepararAnaliseTecnica(completo, completo);
+    expect(analise?.rsiMacdCalculados).toBe(true);
+    expect(analise?.rsi[39]).not.toBeNull();
+    expect(analise?.macd.linha[39]).not.toBeNull();
+  });
+
+  it('com prefixo contíguo do 5A, RSI e MACD valem desde o primeiro candle exibido', () => {
+    const completo = serieDiaria(60);
+    const analise = prepararAnaliseTecnica(completo.slice(-10), completo);
+    expect(analise?.rsiMacdCalculados).toBe(true);
+  });
+
   it('as séries têm o mesmo tamanho dos candles exibidos', () => {
     const completo = serieDiaria(60);
     const analise = prepararAnaliseTecnica(completo.slice(-10), completo);
