@@ -93,7 +93,7 @@ describe('botão de notificações do cabeçalho', () => {
 
     await user.press(await screen.findByRole('button', { name: 'Desativar notificações' }));
 
-    await waitFor(() => expect(alerta).toHaveBeenCalledWith('Não foi possível alterar as notificações', 'Falha no servidor'));
+    await waitFor(() => expect(alerta).toHaveBeenCalledWith('Não foi possível alterar as notificações', 'Erro no servidor. Tente novamente em instantes.'));
   });
 
   it('ignora toques enquanto a alteração está pendente', async () => {
