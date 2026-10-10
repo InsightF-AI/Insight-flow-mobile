@@ -225,7 +225,9 @@ O celular não enxerga o `localhost` do PC: o app precisa do **IP do PC na rede*
 ### 9.2 Rede do PC (Windows)
 
 1. Descobrir o IP: `ipconfig` → "Endereço IPv4" do adaptador Wi-Fi (ex.: `192.168.0.10`).
-2. A rede do Windows precisa estar como **Privada**: Configurações → Rede e Internet → Wi-Fi → propriedades.
+2. Prefira deixar a rede do Windows como **Privada**: Configurações → Rede e Internet → Wi-Fi → propriedades. Wi-Fi de
+   faculdade costuma vir como **Pública**; se não puder mudar, use `-Profile Public` na regra abaixo e remova-a depois
+   (`Remove-NetFirewallRule -DisplayName "InsightFlow API 8000"`). Para ver a categoria: `Get-NetConnectionProfile`.
 3. Liberar a porta da API no firewall (PowerShell como administrador):
 
    ```powershell

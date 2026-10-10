@@ -2217,3 +2217,19 @@ EOF
 - [ ] **Step 6: Resumo do ciclo para o usuário**
 
 Responder com: o que foi feito (tarefas e PRs), o que foi e o que não foi testado em aparelho, problemas encontrados, o rascunho do status para a issue #9 do backend (para o usuário revisar e publicar) e o próximo passo (plano detalhado da Etapa 3 e o documento do Checkpoint 02).
+
+---
+
+## Registro da execução (10/10/2026)
+
+Desvios em relação ao texto acima, decididos durante a execução:
+
+- Os cabeçalhos "Tarefa N" viraram "Task N": o extrator de briefs do fluxo de execução só reconhece "Task".
+- Task 6: o teste de `timeoutMs` do plano falhava por rejeição sem tratador; o `expect(...).rejects` passou a ser anexado antes de avançar o relógio.
+- Task 8: três testes de tela passaram a esperar "Erro no servidor. Tente novamente em instantes." em vez da mensagem crua de um 500.
+- Revisão final, três correções além do plano:
+  1. **Geração da sessão** (`geracaoDaSessao`, incrementada em hidratação, login e logout, nunca em renovação). Uma resposta tardia da sessão A (refresh recusado ou 401) não derruba a sessão B nem repete uma escrita com as credenciais de B; a renovação em andamento só é compartilhada dentro da mesma geração.
+  2. **Renovação antecipada que estoura o tempo limite** devolve o erro de tempo em vez de enviar a requisição (o que dobraria a espera), e a mensagem de tempo inclui o endereço do servidor.
+  3. **`POST /watchlist`** usa tempo limite de 30 s (PLANO §5.2), porque a primeira inclusão de um ticker coleta histórico.
+- Documentação: o passo a passo do firewall passou a tratar a rede **Pública** (a do Wi-Fi do usuário) e o `.env.example` avisa contra `/api/v1`.
+- Tarefas 4 e 9 (passos manuais em aparelho): adiadas, dependem do celular do usuário.
