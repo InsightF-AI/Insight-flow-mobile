@@ -12,7 +12,7 @@ WebAPI utilizada: `Insight-flow-backend` (FastAPI), repositório <https://github
 **O que foi implementado desde então:**
 
 - Cadastro e login reais na WebAPI, com sessão por token de acesso (30 min) e token de renovação (30 dias) guardados em armazenamento seguro (`expo-secure-store`). O aplicativo renova a sessão sozinho; se a renovação for recusada, volta ao login.
-- Consumo de dados reais por `GET` em todas as telas: watchlist, cotação, histórico de preços, indicadores técnicos, sinais e seu histórico (backtest), alertas, notificações, posições, rentabilidade, comparação com CDI e Ibovespa, e distribuição da carteira.
+- Consumo de dados reais por `GET` nas telas de dados: watchlist, cotação, histórico de preços, indicadores técnicos, sinais e seu histórico (backtest), alertas, notificações, posições, rentabilidade, comparação com CDI e Ibovespa, e distribuição da carteira.
 - Operações com `POST`, `PATCH` e `DELETE`: adicionar e remover ativos da watchlist, ligar e desligar notificações, criar, ativar, desativar e remover alertas de preço, registrar e remover operações simuladas.
 - Tela **Início** (dashboard): indicadores da carteira, resumo diário gerado por IA (com o aviso legal obrigatório), watchlist com preço, variação e sinais, e sinais técnicos ativos com o histórico da mesma condição.
 - Tratamento explícito de carregamento, lista vazia, falha de comunicação e erro do servidor nas telas.
@@ -39,7 +39,7 @@ Biblioteca: **Expo Router** (rotas por arquivo, pilhas e abas).
 
 **Proteção de rotas.** O layout raiz mostra só `(auth)` sem sessão e só `(tabs)` e as pilhas com sessão (`Stack.Protected`); ao sair ou ao perder a sessão, o aplicativo volta ao login sozinho.
 
-**Dados entre telas.** Só o identificador (e o ticker, para o título) trafega pelos parâmetros de rota, por exemplo `router.push({ pathname: '/ativo/[id]', params: { id, ticker } })`. O restante vem do **cache do TanStack Query**: a mesma chave de consulta não gera nova requisição enquanto o dado está válido, então abrir o detalhe de um ativo já visto na watchlist é imediato.
+**Dados entre telas.** Só o identificador (e o ticker, para o título) trafega pelos parâmetros de rota, por exemplo `router.push({ pathname: '/ativo/[id]', params: { id, ticker } })`. O restante vem do **cache do TanStack Query**: a mesma chave de consulta não gera nova requisição enquanto o dado está válido, então abrir o detalhe de um ativo já visto na watchlist reaproveita a cotação, os sinais e o histórico da condição que a tela Início já carregou (o gráfico e os indicadores técnicos são buscados ao abrir).
 
 ## 3. Integração com a WebAPI
 
@@ -87,13 +87,27 @@ Biblioteca: **Expo Router** (rotas por arquivo, pilhas e abas).
 | WebAPI disponível e com dados | Mostra indicadores, resumo, watchlist ordenada e sinais |
 | WebAPI disponível sem registros | Mensagens de lista vazia com ação ("Sua watchlist está vazia" + "Buscar ativo"); indicadores mostram "—" com orientação, nunca "R$ 0,00" |
 | Aguardando resposta | Esqueletos nos blocos e indicador de carregamento nas linhas |
-| Falha na comunicação | Mensagem "Sem conexão com o servidor (endereço)" ou "O servidor demorou demais para responder (endereço)", com botão "Tentar novamente" |
+| Falha na comunicação | Mensagem "Sem conexão com o servidor (endereço)" ou "O servidor demorou demais para responder (endereço)", com botão "Tentar novamente". Se o dado já estava na tela, ele continua visível |
 | Erro enviado pelo servidor | Mensagem em português ("Erro no servidor. Tente novamente em instantes.") e o **código do erro** (`X-Request-ID`) para localizar a requisição nos logs do servidor |
 
-**Apresentação de erros.** Cada bloco trata o próprio erro: se o resumo diário falha, a watchlist e os indicadores continuam aparecendo; se a cotação de um ativo falha, só aquela linha mostra "sem cotação". Mensagens do backend (muitas sem acento) são traduzidas por um dicionário em `src/utils/erros.ts`; as que não constam passam como vieram. Valores ausentes nunca viram zero.
+**Apresentação de erros.** Cada bloco trata o próprio erro: se o resumo diário falha, a watchlist e os indicadores continuam aparecendo; se a cotação de um ativo falha, só aquela linha mostra "sem cotação". Mensagens do backend (muitas sem acento) são traduzidas por um dicionário em `src/utils/erros.ts`; as que não constam passam como vieram, exceto erros 5xx, que viram uma mensagem genérica. Valores ausentes nunca viram zero: sem dado, a tela mostra "—" ou "indisponível". Uma falha ao reler um dado que já está na tela não o apaga.
 
 ## 5. Regras do produto respeitadas
 
 - Todo texto gerado por IA aparece com o aviso **"Análise gerada por IA. Não constitui recomendação de investimento."**
-- Linguagem informativa: nenhuma tela tem botão ou texto de compra ou venda; verde e vermelho indicam só valor positivo ou negativo.
+- Linguagem informativa (RN-01): nenhum texto de análise sugere comprar, vender ou investir; "Compra" e "Venda" aparecem só como o tipo da operação simulada que o próprio usuário registra. Verde e vermelho indicam só valor positivo ou negativo.
 - Portfólio **simulado**: nenhuma operação é executada em corretora.
+
+## 6. Requisitos do Checkpoint e onde estão no código
+
+| Requisito | Onde |
+| --- | --- |
+| Navegação funcional entre as telas | `app/_layout.tsx` e `app/(tabs)/_layout.tsx` (Expo Router) |
+| Interface com Flexbox | `flexDirection`, `flexWrap`, `flex` e `flexBasis` em `app/(tabs)/index.tsx`, `src/components/Kpi.tsx` e `src/components/LinhaAtivo.tsx` |
+| Integração com Web API e requisições HTTP (GET) | `src/api/client.ts` (`fetch`) e uma função por rota em `src/api/*.ts` |
+| Conversão e uso do JSON recebido | `resposta.json()` em `src/api/client.ts`; `paraNumero` e os formatadores de `src/utils/formatacao.ts` |
+| Renderização dos dados recebidos | `app/(tabs)/index.tsx` e os componentes de `src/components/` |
+| async e await | `src/api/client.ts` (`request`) e `src/store/sessao.ts` (`entrar`, `renovar`) |
+| useEffect | `app/_layout.tsx` (hidratação da sessão e do tema; `AppState` ligado ao `focusManager`). O carregamento dos dados usa `useQuery` do TanStack Query, que dispara a requisição ao montar a tela e guarda estado, carregamento e erro; por isso as telas de dados não repetem `useEffect` com `useState` |
+| Estado para guardar os dados recebidos | `useQuery` em `src/hooks/`, `useSessao` e `usePreferencias` |
+| Separação entre componentes visuais e comunicação | `src/api/` (HTTP) separado de `src/hooks/` (estado) e de `app/` e `src/components/` (visual) |
