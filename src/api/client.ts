@@ -38,6 +38,11 @@ interface ConfigApi {
    * Rejeita quando não deu para renovar (ex.: sem rede). Quem implementa garante uma renovação por vez.
    */
   renovarToken: () => Promise<string | null>;
+  /**
+   * Identifica a sessão atual: muda a cada login e logout, mas NÃO ao renovar o token. Uma resposta tardia de
+   * uma sessão anterior nunca é repetida nem renovada com as credenciais da sessão seguinte.
+   */
+  geracaoDaSessao: () => number;
   timeoutMs?: number;
 }
 
@@ -141,7 +146,7 @@ async function enviar(atual: ConfigApi, caminho: string, opcoes: OpcoesRequest, 
     return { resposta, requestId };
   } catch {
     throw esgotou
-      ? new ApiError(0, 'O servidor demorou demais para responder', { causa: 'tempo', requestId })
+      ? new ApiError(0, `O servidor demorou demais para responder (${atual.baseUrl})`, { causa: 'tempo', requestId })
       : new ApiError(0, `Sem conexão com o servidor (${atual.baseUrl})`, { causa: 'rede', requestId });
   } finally {
     clearTimeout(temporizador);
@@ -164,12 +169,16 @@ async function interpretar<T>({ resposta, requestId }: Enviada): Promise<T> {
   }
 }
 
-/** Renovação antes de enviar. Sem rede, tenta com o token atual: o servidor decide se ainda vale. */
+/**
+ * Renovação antes de enviar. Se falhar rápido (sem rede, 5xx), tenta com o token atual: o servidor decide se ainda
+ * vale. Se estourar o tempo limite, o servidor não responde: enviar a requisição só dobraria a espera.
+ */
 async function renovarAntesDeEnviar(atual: ConfigApi, token: string): Promise<string> {
   let novo: string | null;
   try {
     novo = await atual.renovarToken();
-  } catch {
+  } catch (erro) {
+    if (erro instanceof ApiError && erro.causa === 'tempo') throw erro;
     return token;
   }
   if (novo === null) throw new ApiError(401, 'Sessão encerrada. Entre novamente.');
@@ -186,15 +195,18 @@ async function tokenParaRepetir(atual: ConfigApi, tokenUsado: string): Promise<s
 export async function request<T>(caminho: string, opcoes: OpcoesRequest = {}): Promise<T> {
   if (!config) throw new Error('configurarApi() precisa ser chamada antes de request()');
   const atual = config;
+  const geracao = atual.geracaoDaSessao();
 
   let token = rotaDeSessao(caminho) ? null : atual.obterToken();
   if (token && atual.tokenPertoDeVencer()) token = await renovarAntesDeEnviar(atual, token);
 
   let enviada = await enviar(atual, caminho, opcoes, token);
-  if (enviada.resposta.status === 401 && token) {
+  // Só repete se a sessão continua a mesma: depois de logout e novo login o 401 é de outro usuário e vai para quem
+  // chamou (repetir mandaria uma escrita com as credenciais da conta seguinte).
+  if (enviada.resposta.status === 401 && token && atual.geracaoDaSessao() === geracao) {
     // Uma única repetição: um segundo 401, já com o token novo, vai direto para quem chamou.
     const novo = await tokenParaRepetir(atual, token);
-    if (novo) enviada = await enviar(atual, caminho, opcoes, novo);
+    if (novo && atual.geracaoDaSessao() === geracao) enviada = await enviar(atual, caminho, opcoes, novo);
   }
   return interpretar<T>(enviada);
 }

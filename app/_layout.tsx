@@ -13,7 +13,7 @@ import { ConfiguracaoInvalida } from '@/components/ConfiguracaoInvalida';
 import { lerUrlDaApi } from '@/config/ambiente';
 import { queryClient } from '@/hooks/queryClient';
 import { usePreferencias } from '@/store/preferencias';
-import { pertoDeVencer, useSessao } from '@/store/sessao';
+import { geracaoDaSessao, pertoDeVencer, useSessao } from '@/store/sessao';
 import { FONTES } from '@/theme/carregarFontes';
 import { familia, fontesProntas } from '@/theme/familias';
 import { type Tema, useTema } from '@/theme/useTema';
@@ -35,6 +35,7 @@ configurarApi({
   tokenPertoDeVencer: () => pertoDeVencer(useSessao.getState().expiraEm),
   // A store serializa as renovações e, se o refresh for recusado, encerra a sessão (o app volta ao login).
   renovarToken: () => useSessao.getState().renovar(),
+  geracaoDaSessao,
 });
 
 function temaDeNavegacao(tema: Tema): Theme {

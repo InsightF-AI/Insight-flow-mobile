@@ -28,18 +28,21 @@ const fetchMock = jest.fn();
 const renovarToken = jest.fn<Promise<string | null>, []>();
 let token: string | null = null;
 let pertoDeVencer = false;
+let geracao = 0;
 
 beforeEach(() => {
   fetchMock.mockReset();
   renovarToken.mockReset();
   token = null;
   pertoDeVencer = false;
+  geracao = 0;
   globalThis.fetch = fetchMock as unknown as typeof fetch;
   configurarApi({
     baseUrl: 'http://api.teste/',
     obterToken: () => token,
     tokenPertoDeVencer: () => pertoDeVencer,
     renovarToken,
+    geracaoDaSessao: () => geracao,
   });
 });
 
@@ -183,7 +186,7 @@ describe('tempo limite', () => {
       await expect(promessa).rejects.toMatchObject({
         status: 0,
         causa: 'tempo',
-        message: 'O servidor demorou demais para responder',
+        message: 'O servidor demorou demais para responder (http://api.teste)',
       });
     } finally {
       jest.useRealTimers();
@@ -274,6 +277,28 @@ describe('renovação de sessão', () => {
     await expect(request('/watchlist')).rejects.toMatchObject({ status: 401 });
     expect(fetchMock).toHaveBeenCalledTimes(1);
     expect(renovarToken).not.toHaveBeenCalled();
+  });
+
+  it('sessão trocada com a requisição no ar: o 401 não é repetido nem renova', async () => {
+    token = 'velho';
+    fetchMock.mockImplementationOnce(async () => {
+      geracao += 1; // logout e login de outra conta enquanto a resposta voltava
+      token = 'de-outra-conta';
+      return resposta(401, { detail: 'Token invalido' });
+    });
+    await expect(request('/operacoes', { metodo: 'POST', corpo: {} })).rejects.toMatchObject({ status: 401 });
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(renovarToken).not.toHaveBeenCalled();
+  });
+
+  it('renovação antecipada que estoura o tempo não envia a requisição e devolve o erro de tempo', async () => {
+    token = 'velho';
+    pertoDeVencer = true;
+    renovarToken.mockRejectedValue(
+      new ApiError(0, 'O servidor demorou demais para responder (http://api.teste)', { causa: 'tempo' }),
+    );
+    await expect(request('/watchlist')).rejects.toMatchObject({ status: 0, causa: 'tempo' });
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 
   it('401 numa rota /auth/ não renova', async () => {

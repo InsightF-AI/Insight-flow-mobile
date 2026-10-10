@@ -17,6 +17,7 @@ beforeEach(() => {
     obterToken: () => 'tok',
     tokenPertoDeVencer: () => false,
     renovarToken: jest.fn(async () => null),
+    geracaoDaSessao: () => 0,
   });
 });
 

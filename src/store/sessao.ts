@@ -79,8 +79,17 @@ function autenticado(sessao: SessaoSalva) {
   };
 }
 
+// Cada hidratação, login e logout inicia uma nova "geração" da sessão (renovar NÃO inicia). O client e a renovação a
+// comparam para que respostas tardias de uma sessão anterior nunca toquem a atual.
+let geracao = 0;
+
+export function geracaoDaSessao(): number {
+  return geracao;
+}
+
 // Duas renovações com o mesmo refresh token são tratadas pelo backend como roubo e revogam a sessão inteira.
-let renovacaoEmAndamento: Promise<string | null> | null = null;
+// A renovação em andamento só é compartilhada dentro da mesma geração.
+let renovacaoEmAndamento: { geracao: number; promessa: Promise<string | null> } | null = null;
 
 export const useSessao = create<EstadoSessao>()((set, get) => ({
   ...ANONIMO,
@@ -89,6 +98,7 @@ export const useSessao = create<EstadoSessao>()((set, get) => ({
   hidratar: async () => {
     try {
       const sessao = lerSessao(await SecureStore.getItemAsync(CHAVE_SESSAO));
+      geracao += 1;
       set(sessao ? autenticado(sessao) : ANONIMO);
     } catch {
       set(ANONIMO);
@@ -100,11 +110,15 @@ export const useSessao = create<EstadoSessao>()((set, get) => ({
   entrar: async (tokens, email) => {
     const sessao = paraSessao(tokens, email);
     await SecureStore.setItemAsync(CHAVE_SESSAO, JSON.stringify(sessao));
+    geracao += 1;
     set(autenticado(sessao));
   },
 
   renovar: () => {
-    renovacaoEmAndamento ??= (async () => {
+    if (renovacaoEmAndamento?.geracao === geracao) return renovacaoEmAndamento.promessa;
+    const minhaGeracao = geracao;
+
+    const promessa: Promise<string | null> = (async () => {
       const { refreshToken, email } = get();
       if (!refreshToken || !email) return null;
 
@@ -113,31 +127,37 @@ export const useSessao = create<EstadoSessao>()((set, get) => ({
         tokens = await authApi.renovar(refreshToken);
       } catch (erro) {
         if (erro instanceof ApiError && erro.status === 401) {
-          // Refresh expirado, revogado ou já usado: não há o que revogar no servidor.
-          await get()
-            .sair({ revogarNoServidor: false })
-            .catch(() => {});
+          // Refresh expirado, revogado ou já usado: não há o que revogar no servidor. Só encerra se a sessão ainda for a
+          // que pediu a renovação: a resposta tardia de A não pode derrubar o B que entrou depois.
+          if (geracao === minhaGeracao) {
+            await get()
+              .sair({ revogarNoServidor: false })
+              .catch(() => {});
+          }
           return null;
         }
         throw erro;
       }
 
       // Logout (ou outro login) durante a renovação: não ressuscita a sessão antiga.
-      if (get().refreshToken !== refreshToken) return null;
+      if (geracao !== minhaGeracao) return null;
       const sessao = paraSessao(tokens, email);
       set(autenticado(sessao));
       // Se gravar falhar, a sessão segue em memória; ao reabrir o app o refresh antigo será recusado e pedirá login.
       await SecureStore.setItemAsync(CHAVE_SESSAO, JSON.stringify(sessao)).catch(() => {});
       return sessao.accessToken;
     })().finally(() => {
-      renovacaoEmAndamento = null;
+      if (renovacaoEmAndamento?.promessa === promessa) renovacaoEmAndamento = null;
     });
-    return renovacaoEmAndamento;
+
+    renovacaoEmAndamento = { geracao: minhaGeracao, promessa };
+    return promessa;
   },
 
   // Idempotente: limpa o estado antes de qualquer espera, então só a primeira chamada vê o refresh token.
   sair: async ({ revogarNoServidor = true } = {}) => {
     const { refreshToken } = get();
+    geracao += 1;
     set(ANONIMO);
     queryClient.clear();
     if (revogarNoServidor && refreshToken) void authApi.sair(refreshToken).catch(() => {});
