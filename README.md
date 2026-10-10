@@ -6,13 +6,13 @@ Cliente mobile (Android e iOS) do Sistema de Análise de Ativos do Mercado Finan
 
 ## Funcionalidades
 
-- Cadastro e login (token JWT guardado no SecureStore; token vencido volta ao login)
+- Cadastro e login com sessão renovada automaticamente (access token de 30 min e refresh token de 30 dias no SecureStore); sair revoga a sessão no servidor
 - Watchlist com cotação e variação do dia, e busca de ativos
 - Detalhe do ativo: gráfico de fechamento (1D a 5A), indicadores técnicos (SMA 20/50/200, RSI 14, MACD 12/26/9, Bollinger 20/2, volume relativo) e sinais ativos com o histórico da condição nos últimos 24 meses
 - Alertas de preço (criar, ativar/desativar, remover)
 - Notificações in-app, atualizadas a cada 60 s com o app aberto
 - Portfólio simulado: rentabilidade, comparação com CDI e Ibovespa, distribuição por classe, setor e moeda, posições e histórico de operações
-- Telas de IA (análise do ativo e chat) prontas com o aviso legal, aguardando os endpoints de IA do backend
+- Telas de IA (análise do ativo e chat) prontas com o aviso legal; a integração com os endpoints do backend é a etapa 7 do [plano](docs/PLANO.md)
 - Tema escuro (padrão) e claro, alternável no Perfil, com a mesma identidade visual do cliente web
 
 ## Stack
@@ -39,6 +39,8 @@ Expo SDK 57 (React Native 0.86, TypeScript), Expo Router, TanStack Query, Zustan
    No celular físico, libere a porta 8000 no firewall do Windows.
 
    Endereços `http://` funcionam no Expo Go e em desenvolvimento. Uma development build ou uma build de release exige HTTPS (ou liberar tráfego em texto claro no Android e uma exceção de ATS no iOS).
+
+   Se o endereço for inválido (por exemplo, terminando em `/api/v1`), o app abre numa tela que explica como corrigir. Passo a passo para testar no celular, incluindo firewall e IP: [`docs/PLANO.md` §9](docs/PLANO.md#9-como-testar-no-celular-ou-no-emulador).
 
 4. Inicie o Metro e abra no Expo Go (SDK 57) pelo QR code, ou pressione `a` para o emulador Android:
 
@@ -73,8 +75,6 @@ __tests__/telas/  testes de tela
 
 Design completo: [`docs/superpowers/specs/2026-09-25-app-mobile-mvp-design.md`](docs/superpowers/specs/2026-09-25-app-mobile-mvp-design.md).
 
-## Fora do escopo desta versão
+## Próximas etapas
 
-- Push nativo (precisa de endpoint de token no backend e de development build via EAS)
-- Endpoints de IA, refresh token e recuperação de senha (ainda não existem no backend)
-- Gráfico de candles
+O roteiro está em [`docs/PLANO.md`](docs/PLANO.md): dashboard e watchlist, gráfico de candles, alertas com WebSocket, portfólio, IA e push. Recuperação de senha não existe no backend.
