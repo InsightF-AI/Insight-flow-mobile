@@ -1375,12 +1375,14 @@ git commit -m "feat(tempo-real): hook que liga o WebSocket à sessão, ao cache 
 
 ```tsx
 import { render, screen, userEvent } from '@testing-library/react-native';
+import { AccessibilityInfo } from 'react-native';
 
 import { BannerNotificacao } from '@/components/BannerNotificacao';
 
 describe('BannerNotificacao', () => {
-  it('mostra título e mensagem como alerta acessível e abre ao toque', async () => {
+  it('anuncia o aviso para leitores de tela e abre ao toque', async () => {
     const user = userEvent.setup();
+    const anunciar = jest.spyOn(AccessibilityInfo, 'announceForAccessibility').mockImplementation(() => {});
     const aoPressionar = jest.fn();
     await render(
       <BannerNotificacao
@@ -1390,7 +1392,7 @@ describe('BannerNotificacao', () => {
         aoDispensar={jest.fn()}
       />,
     );
-    expect(screen.getByRole('alert')).toBeOnTheScreen();
+    expect(anunciar).toHaveBeenCalledWith('Alerta de preço · PETR4. PETR4 atingiu R$ 40,00');
     expect(screen.getByText('Alerta de preço · PETR4')).toBeOnTheScreen();
     await user.press(screen.getByRole('button', { name: 'Abrir: Alerta de preço · PETR4. PETR4 atingiu R$ 40,00' }));
     expect(aoPressionar).toHaveBeenCalledTimes(1);
@@ -1507,7 +1509,8 @@ Em `src/components/Icone.tsx`: acrescentar `X,` ao import de `lucide-react-nativ
 `src/components/BannerNotificacao.tsx`:
 
 ```tsx
-import { Pressable, StyleSheet, View } from 'react-native';
+import { useEffect } from 'react';
+import { AccessibilityInfo, Pressable, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Icone } from '@/components/Icone';
@@ -1526,9 +1529,12 @@ interface Props {
 export function BannerNotificacao({ titulo, mensagem, aoPressionar, aoDispensar }: Props) {
   const { cores, sombras } = useTema();
   const insets = useSafeAreaInsets();
+  // Aviso transitório: anuncia o texto em vez de depender de o leitor de tela focar o banner a tempo.
+  useEffect(() => {
+    AccessibilityInfo.announceForAccessibility(`${titulo}. ${mensagem}`);
+  }, [titulo, mensagem]);
   return (
     <View
-      role="alert"
       style={[
         estilos.contenedor,
         { top: insets.top + espaco.sm, backgroundColor: cores.superficieAlta, borderColor: cores.primaria, boxShadow: sombras.sm },

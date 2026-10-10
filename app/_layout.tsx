@@ -9,9 +9,12 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { configurarApi } from '@/api/client';
+import { BannerNotificacao } from '@/components/BannerNotificacao';
 import { ConfiguracaoInvalida } from '@/components/ConfiguracaoInvalida';
-import { lerUrlDaApi } from '@/config/ambiente';
+import { lerUrlDaApi, urlDoWebSocket } from '@/config/ambiente';
 import { queryClient } from '@/hooks/queryClient';
+import { useBannerNotificacao } from '@/hooks/useBannerNotificacao';
+import { useTempoReal } from '@/hooks/useTempoReal';
 import { usePreferencias } from '@/store/preferencias';
 import { geracaoDaSessao, pertoDeVencer, useSessao } from '@/store/sessao';
 import { FONTES } from '@/theme/carregarFontes';
@@ -37,6 +40,16 @@ configurarApi({
   renovarToken: () => useSessao.getState().renovar(),
   geracaoDaSessao,
 });
+
+// Com a sessão ativa: mantém o WebSocket de notificações aberto e mostra o banner de cada notificação recebida.
+function SessaoAtiva() {
+  useTempoReal(erroDeConfiguracao ? null : urlDoWebSocket(baseUrl));
+  const { banner, aoPressionar, aoDispensar } = useBannerNotificacao();
+  if (!banner) return null;
+  return (
+    <BannerNotificacao titulo={banner.titulo} mensagem={banner.mensagem} aoPressionar={aoPressionar} aoDispensar={aoDispensar} />
+  );
+}
 
 function temaDeNavegacao(tema: Tema): Theme {
   const base = tema.esquema === 'escuro' ? DarkTheme : DefaultTheme;
@@ -111,11 +124,14 @@ export default function RootLayout() {
                 <Stack.Screen name="ativo/[id]" options={{ title: 'Ativo' }} />
                 <Stack.Screen name="operacao/nova" options={{ title: 'Nova operação', presentation: 'modal' }} />
                 <Stack.Screen name="chat" options={{ title: 'Perguntar à IA' }} />
+                <Stack.Screen name="notificacoes" options={{ title: 'Notificações' }} />
+                <Stack.Screen name="notificacao/[id]" options={{ title: 'Notificação' }} />
               </Stack.Protected>
               <Stack.Protected guard={!autenticado}>
                 <Stack.Screen name="(auth)" options={{ headerShown: false }} />
               </Stack.Protected>
             </Stack>
+            {autenticado ? <SessaoAtiva /> : null}
           </ThemeProvider>
         </QueryClientProvider>
       </SafeAreaProvider>
