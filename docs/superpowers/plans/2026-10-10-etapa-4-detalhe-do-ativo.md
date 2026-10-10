@@ -2178,3 +2178,35 @@ EOF
 - [ ] **Step 3: Resumo para o usuário**
 
 Responder com: o que foi feito; o resultado da conferência contra a API; o que depende do aparelho (toque, desempenho do Skia em 1A/5A); menores adiados; e o próximo passo (Etapa 5: alertas e notificações).
+
+---
+
+## Registro da execução (10/10/2026)
+
+Executado inline, tarefa a tarefa, com revisão independente da branch inteira no fim. O código final difere do que está nas tarefas acima nos pontos abaixo (a revisão e a verificação com dados reais corrigiram o plano).
+
+**Resultado:** 57 suítes / 638 testes; `npm run verificar` verde. Os indicadores calculados no app batem com `/indicadores` da API local (SMA 20/50/200, RSI 14, Bollinger, MACD, tolerância 0,01) em PETR4, VALE3, BTC e ETH, inclusive com o período recortado e o 5A como aquecimento (`src/dominio/contratoIndicadores.test.ts`). Os desenhos foram conferidos com o Skia real (CanvasKit em Node) e saem corretos.
+
+**Decisões que divergem do plano**
+
+- **Task 2 — `prepararAnaliseTecnica`.** O código do plano devolvia `null` quando o aquecimento terminava antes do período e perdia candles recentes com o 5A em cache defasado. Passou a usar o prefixo do aquecimento (candles anteriores ao período, contíguos em até 10 dias) mais os candles exibidos, que são sempre os do período.
+- **Task 2 — texto vazio.** `Number('')` é 0: preço vazio descarta o ponto em vez de virar zero.
+- **Revisão — RSI e MACD.** São recursivos; calculados só sobre o período começavam em valores plausíveis porém errados (RSI 26,4 contra 33,3 oficial na captura da VALE3). Só são calculados com o aquecimento contíguo ou quando o período já começa no primeiro registro do histórico; fora disso ficam sem valor e o painel explica o motivo. No período 5A o próprio histórico é o completo.
+- **Task 5.** MACD e RSI usam `cores.primaria`/`cores.destaque` (não as cores das médias). Os gestos ficam em `useMemo` e a seleção acontece só em `onUpdate`/`onEnd`, para que tocar para rolar a tela não mova a mira.
+- **Task 6.** O 5A de aquecimento corre em paralelo ao histórico do período (não espera por ele).
+- **Task 8.** A captura usa PETR4, VALE3, BTC e ETH: cripto vem do catálogo de pares BRL da Binance (ticker `BTC`, não `BTC-USD`); a B3 só tem cerca de 64 pregões (sem SMA 200) e a cripto 1000 candles.
+- **Revisão — Skia.** `Path.moveTo/lineTo/addRect` estão deprecated no Skia 2.x; os caminhos saem do `PathBuilder` (`src/components/caminhosSkia.ts`).
+- **Revisão — selo.** "Na watchlist" deixou de usar verde.
+
+**Menores adiados (da revisão)**
+
+- A escala do gráfico degenera com série parada por resíduo de ponto flutuante (`maximo === minimo` exato; 20 ou mais pregões idênticos com a SMA ligada). Usar epsilon relativo.
+- Trocar de período zera as escolhas de SMA e Bollinger (o `key={periodo}` remonta o painel). Subir o estado para a tela.
+- O `aria-label` da linha de busca esconde de leitores de tela o selo "Na watchlist"/"Adicionar à watchlist".
+- Busca: com a watchlist carregando ou falhando, o diálogo pergunta se adiciona um ativo que já está nela; o `onPress` do `Alert` não tem guarda de `isPending`.
+- O volume de cripto é arredondado para inteiro (0,42 BTC aparece como "Volume 0").
+- O interruptor SMA 200 liga sem desenhar nada na B3; a leitura da mira não mostra as médias nem o Bollinger.
+- Testes: o `Tap` nunca é exercitado, não há teste de tela para a troca de período e a tolerância do contrato (0,01) é frouxa diante da concordância real (1e-14).
+- O aviso `act(...)` de `__tests__/telas/perfil.test.tsx` é anterior a esta etapa.
+
+**Não verificado (depende do aparelho):** se o arrasto horizontal convive com a rolagem vertical e o `RefreshControl` no Android e no iOS; quadros por segundo com 1000 candles e três painéis; contraste das linhas de Bollinger e de referência em captura de tela.

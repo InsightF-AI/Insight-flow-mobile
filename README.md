@@ -8,7 +8,7 @@ Cliente mobile (Android e iOS) do Sistema de Análise de Ativos do Mercado Finan
 
 - Cadastro e login com sessão renovada automaticamente (access token de 30 min e refresh token de 30 dias no SecureStore); sair revoga a sessão no servidor
 - Início: indicadores da carteira (patrimônio, resultado, variação do dia, sinais ativos), resumo diário por IA com aviso legal, watchlist com preço, variação, sinais e notificação por ativo, e sinais técnicos ativos com o histórico da condição. Busca de ativos com adição explícita à watchlist (o ativo só entra depois da confirmação)
-- Detalhe do ativo: gráfico de candles com volume (1D a 5A), médias móveis (SMA 20/50/200) e Bollinger alternáveis, leitura de abertura, máxima, mínima, fechamento e volume por toque, painéis de RSI (14, com 30 e 70) e MACD (12/26/9); indicadores técnicos oficiais da API; e sinais ativos com o valor do indicador no disparo e o histórico da condição (5, 20 e 60 pregões, "sem dados" quando não há)
+- Detalhe do ativo: gráfico de candles com volume (1D a 5A), médias móveis (SMA 20/50/200) e Bollinger alternáveis, leitura de abertura, máxima, mínima, fechamento e volume por toque, painéis de RSI (14, com 30 e 70) e MACD (12/26/9), que só aparecem com o histórico anterior ao período (o 5A) para não mostrar valores diferentes dos oficiais; indicadores técnicos oficiais da API; e sinais ativos com o valor do indicador no disparo e o histórico da condição (5, 20 e 60 pregões, "sem dados" quando não há)
 - Alertas de preço (criar, ativar/desativar, remover)
 - Notificações in-app, atualizadas a cada 60 s com o app aberto
 - Portfólio simulado: rentabilidade, comparação com CDI e Ibovespa, distribuição por classe, setor e moeda, posições e histórico de operações

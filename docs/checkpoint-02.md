@@ -15,7 +15,7 @@ WebAPI utilizada: `Insight-flow-backend` (FastAPI), repositório <https://github
 - Consumo de dados reais por `GET` nas telas de dados: watchlist, cotação, histórico de preços, indicadores técnicos, sinais e seu histórico (backtest), alertas, notificações, posições, rentabilidade, comparação com CDI e Ibovespa, e distribuição da carteira.
 - Operações com `POST`, `PATCH` e `DELETE`: adicionar e remover ativos da watchlist, ligar e desligar notificações, criar, ativar, desativar e remover alertas de preço, registrar e remover operações simuladas.
 - Tela **Início** (dashboard): indicadores da carteira, resumo diário gerado por IA (com o aviso legal obrigatório), watchlist com preço, variação e sinais, e sinais técnicos ativos com o histórico da mesma condição.
-- Tela de **detalhe do ativo** com gráfico de candles e volume, médias móveis e bandas de Bollinger que o usuário liga e desliga, leitura dos valores de cada dia ao tocar no gráfico, painéis de RSI e MACD, indicadores oficiais e sinais com o valor no disparo.
+- Tela de **detalhe do ativo** com gráfico de candles e volume, médias móveis e bandas de Bollinger que o usuário liga e desliga, leitura dos valores de cada dia ao tocar no gráfico, painéis de RSI e MACD (calculados no aplicativo com o mesmo histórico e as mesmas fórmulas do servidor, e conferidos com os valores oficiais da API), indicadores oficiais e sinais com o valor no disparo.
 - **Busca** de ativos com adição explícita à watchlist: o aplicativo pede confirmação antes de adicionar e mostra "Na watchlist" para os que já estão.
 - Tratamento explícito de carregamento, lista vazia, falha de comunicação e erro do servidor nas telas.
 - Identidade visual do cliente web (tema escuro e claro, fontes Inter e Space Grotesk).
