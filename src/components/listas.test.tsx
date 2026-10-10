@@ -105,3 +105,19 @@ it('LinhaResultadoBusca mostra o ativo encontrado', async () => {
   expect(screen.getByRole('button', { name: 'VALE3, Vale ON' })).toBeOnTheScreen();
   expect(screen.getByText('Ação · BRL')).toBeOnTheScreen();
 });
+
+describe('LinhaResultadoBusca (watchlist)', () => {
+  const encontrado = { ticker: 'VALE3', nome: 'Vale ON', tipo: 'ACAO' as const, moeda: 'BRL', setor: null };
+
+  it('fora da watchlist convida a adicionar', async () => {
+    await render(<LinhaResultadoBusca ativo={encontrado} aoPressionar={jest.fn()} />);
+    expect(screen.getByText('Adicionar à watchlist')).toBeOnTheScreen();
+    expect(screen.queryByText('Na watchlist')).not.toBeOnTheScreen();
+  });
+
+  it('na watchlist mostra o selo e não convida a adicionar', async () => {
+    await render(<LinhaResultadoBusca ativo={encontrado} naWatchlist aoPressionar={jest.fn()} />);
+    expect(screen.getByText('Na watchlist')).toBeOnTheScreen();
+    expect(screen.queryByText('Adicionar à watchlist')).not.toBeOnTheScreen();
+  });
+});
