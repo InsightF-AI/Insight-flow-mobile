@@ -5,6 +5,7 @@ import { Card } from '@/components/Card';
 import { Carregando } from '@/components/Carregando';
 import { Linha } from '@/components/Linha';
 import { Texto } from '@/components/Texto';
+import { valorNoDisparo } from '@/dominio/sinais';
 import { espaco } from '@/theme/escala';
 import { formatarDataHora, formatarPercentual } from '@/utils/formatacao';
 
@@ -15,7 +16,7 @@ interface Props {
 }
 
 function formatarRetorno(valor: Decimal | null): string {
-  return valor === null ? '—' : formatarPercentual(valor, 'pontos');
+  return valor === null ? 'sem dados' : formatarPercentual(valor, 'pontos');
 }
 
 function HistoricoDaCondicao({ backtest, carregando }: { backtest?: ResultadoBacktest; carregando: boolean }) {
@@ -45,12 +46,14 @@ function HistoricoDaCondicao({ backtest, carregando }: { backtest?: ResultadoBac
 }
 
 export function SinalCard({ sinal, backtest, carregandoBacktest }: Props) {
+  const disparo = valorNoDisparo(sinal);
   return (
     <Card titulo={sinal.regra_nome} icone="atividade" tomIcone="positivo">
       <Texto cor="secundario">{sinal.regra_descricao}</Texto>
       <Texto variante="legenda" cor="secundario">
         {`Ativo desde ${formatarDataHora(sinal.data_ativacao)}`}
       </Texto>
+      {disparo ? <Linha rotulo={`${disparo.rotulo} no disparo`} valor={disparo.valor} /> : null}
       <View style={estilos.historico}>
         <Texto variante="legenda" negrito>
           Histórico da condição (24 meses)

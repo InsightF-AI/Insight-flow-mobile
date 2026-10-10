@@ -30,11 +30,13 @@ export function useCotacoes(ativoIds: Uuid[]) {
   });
 }
 
-export function useHistorico(ativoId: Uuid, periodo: PeriodoHistorico) {
+/** `habilitado: false` adia a consulta (o histórico 5A de aquecimento só é pedido depois do período exibido). */
+export function useHistorico(ativoId: Uuid, periodo: PeriodoHistorico, opcoes: { habilitado?: boolean } = {}) {
   return useQuery<PontoHistorico[], ApiError>({
     queryKey: chaves.historico(ativoId, periodo),
     queryFn: () => ativosApi.historico(ativoId, periodo),
     placeholderData: keepPreviousData,
+    enabled: opcoes.habilitado ?? true,
   });
 }
 
