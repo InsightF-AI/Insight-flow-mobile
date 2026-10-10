@@ -12,7 +12,12 @@ beforeEach(() => {
   fetchMock.mockReset();
   fetchMock.mockResolvedValue({ ok: true, status: 200, json: () => Promise.resolve({}) });
   globalThis.fetch = fetchMock as unknown as typeof fetch;
-  configurarApi({ baseUrl: 'http://api', obterToken: () => 'tok', aoNaoAutorizado: jest.fn() });
+  configurarApi({
+    baseUrl: 'http://api',
+    obterToken: () => 'tok',
+    tokenPertoDeVencer: () => false,
+    renovarToken: jest.fn(async () => null),
+  });
 });
 
 const credenciais = { email: 'ana@exemplo.com', senha: 'segredo123' };

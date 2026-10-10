@@ -883,10 +883,13 @@ describe('tempo limite', () => {
       const promessa = request('/ativos/a-1/analise', { timeoutMs: 70_000 }).finally(() => {
         terminou = true;
       });
+      // O matcher é anexado antes de avançar o relógio: senão a rejeição ocorre sem tratador e o Jest reprova o teste.
+      const rejeitou = expect(promessa).rejects.toMatchObject({ causa: 'tempo' });
       await jest.advanceTimersByTimeAsync(20_000);
       expect(terminou).toBe(false);
       await jest.advanceTimersByTimeAsync(50_000);
-      await expect(promessa).rejects.toMatchObject({ causa: 'tempo' });
+      await rejeitou;
+      expect(terminou).toBe(true);
     } finally {
       jest.useRealTimers();
     }

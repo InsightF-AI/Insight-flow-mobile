@@ -32,13 +32,14 @@ try {
 configurarApi({
   baseUrl,
   obterToken: () => useSessao.getState().token,
-  // Token vencido ou inválido: volta ao login (não há refresh token no backend).
-  // `sair` propaga falhas do SecureStore e vários 401 podem disparar em paralelo: sem o `.catch` haveria rejeição não tratada.
-  aoNaoAutorizado: () => {
-    void useSessao
+  // Provisório até a sessão guardar o refresh token (Tarefa 7): 401 continua levando ao login.
+  tokenPertoDeVencer: () => false,
+  renovarToken: async () => {
+    await useSessao
       .getState()
       .sair()
       .catch(() => {});
+    return null;
   },
 });
 
