@@ -8,6 +8,8 @@ import { chaves } from '@/hooks/chaves';
 // Mesmo TTL do cache Redis de cotação atual no backend.
 const VALIDADE_COTACAO_MS = 60_000;
 const VALIDADE_BACKTEST_MS = 5 * 60_000;
+// Os sinais são reavaliados pelo servidor a cada 15 min (5 min para cripto); um minuto evita refazer a cada troca de aba.
+const VALIDADE_SINAIS_MS = 60_000;
 
 export function useCotacao(ativoId: Uuid | undefined) {
   return useQuery<CotacaoAtual, ApiError>({
@@ -50,6 +52,28 @@ export function useSinais(ativoId: Uuid) {
 export function useBacktests(ativoId: Uuid, regraIds: Uuid[]) {
   return useQueries({
     queries: regraIds.map((regraId) => ({
+      queryKey: chaves.backtest(ativoId, regraId),
+      queryFn: () => ativosApi.backtest(ativoId, regraId),
+      staleTime: VALIDADE_BACKTEST_MS,
+    })),
+  });
+}
+
+/** Sinais vigentes de vários ativos (tela Início). Mesma chave do detalhe: o cache é compartilhado. */
+export function useSinaisDosAtivos(ativoIds: Uuid[]) {
+  return useQueries({
+    queries: ativoIds.map((ativoId) => ({
+      queryKey: chaves.sinais(ativoId),
+      queryFn: () => ativosApi.sinais(ativoId),
+      staleTime: VALIDADE_SINAIS_MS,
+    })),
+  });
+}
+
+/** Backtest de vários pares ativo+regra (tela Início). Mesma chave do detalhe do ativo. */
+export function useBacktestsDosSinais(pares: { ativoId: Uuid; regraId: Uuid }[]) {
+  return useQueries({
+    queries: pares.map(({ ativoId, regraId }) => ({
       queryKey: chaves.backtest(ativoId, regraId),
       queryFn: () => ativosApi.backtest(ativoId, regraId),
       staleTime: VALIDADE_BACKTEST_MS,
