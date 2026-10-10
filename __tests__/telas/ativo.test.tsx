@@ -16,8 +16,13 @@ jest.mock('expo-router', () => ({
   // Renderiza o botão do cabeçalho para os testes poderem tocá-lo.
   Stack: { Screen: ({ options }: { options?: { headerRight?: () => unknown } }) => options?.headerRight?.() ?? null },
 }));
-// O gráfico usa Skia, que não roda no Jest.
-jest.mock('@/components/GraficoPreco', () => ({ GraficoPreco: () => null }));
+// O gráfico usa Skia, que não roda no Jest: o painel é um stub que mostra quantos candles recebeu.
+jest.mock('@/components/PainelTecnico', () => ({
+  PainelTecnico: ({ analise }: { analise: { candles: unknown[] } }) => {
+    const { Text } = jest.requireActual<typeof import('react-native')>('react-native');
+    return <Text>{`painel com ${analise.candles.length} candles`}</Text>;
+  },
+}));
 jest.mock('@/api/ativos', () => ({
   ativosApi: { cotacao: jest.fn(), historico: jest.fn(), indicadores: jest.fn(), sinais: jest.fn(), backtest: jest.fn() },
 }));
@@ -114,5 +119,72 @@ describe('botão de notificações do cabeçalho', () => {
     jest.mocked(watchlistApi.listar).mockResolvedValue([{ ...itemWatchlist, notificar: false }]);
     concluir({ ...itemWatchlist, notificar: false });
     expect(await screen.findByRole('button', { name: 'Ativar notificações' })).toBeOnTheScreen();
+  });
+});
+
+function pontoDoDia(dia: number, fechamento: number) {
+  const data = new Date(Date.UTC(2026, 8, dia)).toISOString();
+  return {
+    data,
+    abertura: String(fechamento),
+    maxima: String(fechamento + 1),
+    minima: String(fechamento - 1),
+    fechamento: String(fechamento),
+    volume: '100',
+  };
+}
+
+describe('gráfico técnico', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    jest.restoreAllMocks();
+    prepararAtivoNaWatchlist();
+  });
+
+  it('mostra o painel quando o histórico tem candles suficientes', async () => {
+    jest.mocked(ativosApi.historico).mockResolvedValue([pontoDoDia(1, 10), pontoDoDia(2, 11), pontoDoDia(3, 12)]);
+    await renderizar(<DetalheAtivo />);
+    expect(await screen.findByText('painel com 3 candles')).toBeOnTheScreen();
+  });
+
+  it('pede também o histórico 5A como aquecimento das médias', async () => {
+    jest.mocked(ativosApi.historico).mockResolvedValue([pontoDoDia(1, 10), pontoDoDia(2, 11)]);
+    await renderizar(<DetalheAtivo />);
+    await screen.findByText('painel com 2 candles');
+    expect(ativosApi.historico).toHaveBeenCalledWith('a-1', '1M');
+    await waitFor(() => expect(ativosApi.historico).toHaveBeenCalledWith('a-1', '5A'));
+  });
+
+  it('o gráfico aparece mesmo se o aquecimento 5A falhar', async () => {
+    jest.mocked(ativosApi.historico).mockImplementation(async (_id: string, periodo: string) => {
+      if (periodo === '5A') throw new ApiError(503, 'Fonte de dados de mercado indisponivel');
+      return [pontoDoDia(1, 10), pontoDoDia(2, 11)];
+    });
+    await renderizar(<DetalheAtivo />);
+    expect(await screen.findByText('painel com 2 candles')).toBeOnTheScreen();
+  });
+
+  it('1D explica que é um único ponto e não desenha candles', async () => {
+    const user = userEvent.setup();
+    jest.mocked(ativosApi.historico).mockImplementation(async (_id: string, periodo: string) =>
+      periodo === '1D' ? [pontoDoDia(3, 12)] : [pontoDoDia(1, 10), pontoDoDia(2, 11)],
+    );
+    await renderizar(<DetalheAtivo />);
+    await screen.findByText('painel com 2 candles');
+    await user.press(screen.getByRole('radio', { name: '1D' }));
+    expect(await screen.findByText(/1D mostra só a cotação atual/)).toBeOnTheScreen();
+    expect(screen.queryByText(/painel com/)).not.toBeOnTheScreen();
+  });
+
+  it('histórico com um único dia não desenha e explica', async () => {
+    jest.mocked(ativosApi.historico).mockResolvedValue([pontoDoDia(1, 10)]);
+    await renderizar(<DetalheAtivo />);
+    expect(await screen.findByText('Dados insuficientes para o gráfico neste período.')).toBeOnTheScreen();
+  });
+
+  it('erro do histórico mostra a mensagem do erro', async () => {
+    jest.mocked(ativosApi.historico).mockRejectedValue(new ApiError(404, 'Historico nao encontrado'));
+    await renderizar(<DetalheAtivo />);
+    expect(await screen.findByText('Histórico indisponível para este ativo.')).toBeOnTheScreen();
   });
 });
