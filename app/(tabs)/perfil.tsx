@@ -36,6 +36,8 @@ export default function Perfil() {
 
   function abrir(notificacao: Notificacao) {
     if (!notificacao.lida) marcarLida.mutate(notificacao.id);
+    // Resumo diário não tem ativo: por ora só marca como lida (a tela do resumo vem na etapa de notificações).
+    if (!notificacao.ativo_id) return;
     const ticker = ativos.get(notificacao.ativo_id)?.ticker;
     router.push({
       pathname: '/ativo/[id]',
@@ -114,7 +116,7 @@ export default function Perfil() {
       renderItem={({ item }) => (
         <ItemNotificacao
           notificacao={item}
-          ticker={ativos.get(item.ativo_id)?.ticker ?? null}
+          ticker={item.ativo_id ? (ativos.get(item.ativo_id)?.ticker ?? null) : null}
           aoPressionar={() => abrir(item)}
         />
       )}

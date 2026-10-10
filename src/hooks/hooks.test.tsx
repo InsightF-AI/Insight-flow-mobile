@@ -178,8 +178,8 @@ it('marcar notificação como lida invalida as notificações', async () => {
 
 it('useNaoLidas conta as não lidas e lista sem argumentos extras', async () => {
   const notificacoes: Notificacao[] = [
-    { id: 'n-1', ativo_id: 'a-1', tipo: 'SINAL_ATIVADO', mensagem: 'x', lida: false, criado_em: '2026-09-25T12:00:00Z' },
-    { id: 'n-2', ativo_id: 'a-1', tipo: 'ALERTA_DISPARADO', mensagem: 'y', lida: true, criado_em: '2026-09-25T12:00:00Z' },
+    { id: 'n-1', ativo_id: 'a-1', tipo: 'SINAL_ATIVADO', mensagem: 'x', contexto: {}, lida: false, criado_em: '2026-09-25T12:00:00Z' },
+    { id: 'n-2', ativo_id: 'a-1', tipo: 'ALERTA_DISPARADO', mensagem: 'y', contexto: {}, lida: true, criado_em: '2026-09-25T12:00:00Z' },
   ];
   jest.mocked(notificacoesApi.listar).mockResolvedValue(notificacoes);
   const { result } = await renderHook(() => useNaoLidas(), { wrapper: criarProvedor() });

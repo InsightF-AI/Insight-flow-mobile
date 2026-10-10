@@ -24,6 +24,7 @@ const naoLida: Notificacao = {
   ativo_id: 'a-1',
   tipo: 'SINAL_ATIVADO',
   mensagem: 'Sobrevenda RSI ativado em PETR4',
+  contexto: {},
   lida: false,
   criado_em: '2026-09-25T15:30:00Z',
 };
@@ -32,6 +33,7 @@ const lidaDeAtivoRemovido: Notificacao = {
   ativo_id: 'a-9',
   tipo: 'ALERTA_DISPARADO',
   mensagem: 'Preço atingiu o alvo',
+  contexto: {},
   lida: true,
   criado_em: '2026-09-24T15:30:00Z',
 };
@@ -58,6 +60,25 @@ it('mostra o e-mail e as notificações, com ticker quando conhecido', async () 
   expect(await screen.findByText('ana@exemplo.com')).toBeOnTheScreen();
   expect(await screen.findByText('Sinal técnico · PETR4')).toBeOnTheScreen();
   expect(screen.getByText('Alerta de preço')).toBeOnTheScreen();
+});
+
+it('resumo diário aparece com o título do tipo e o toque só marca como lida', async () => {
+  const user = userEvent.setup();
+  const resumo: Notificacao = {
+    id: 'n-3',
+    ativo_id: null,
+    tipo: 'RESUMO_DIARIO',
+    mensagem: 'Resumo diario da carteira',
+    contexto: { texto: 'A carteira fechou o dia estável.', aviso_legal: 'Análise gerada por IA.' },
+    lida: false,
+    criado_em: '2026-10-09T21:30:00Z',
+  };
+  jest.mocked(notificacoesApi.listar).mockResolvedValue([resumo]);
+  jest.mocked(notificacoesApi.marcarComoLida).mockResolvedValue({ ...resumo, lida: true });
+  await renderizar(<Perfil />);
+  await user.press(await screen.findByRole('button', { name: /Resumo diário/ }));
+  await waitFor(() => expect(notificacoesApi.marcarComoLida).toHaveBeenCalledWith('n-3'));
+  expect(router.push).not.toHaveBeenCalled();
 });
 
 it('tocar numa não lida marca como lida e abre o ativo', async () => {

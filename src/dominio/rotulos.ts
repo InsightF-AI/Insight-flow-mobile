@@ -6,6 +6,7 @@ export const ROTULO_TIPO_ATIVO: Record<TipoAtivo, string> = {
   ETF: 'ETF',
   BDR: 'BDR',
   CRIPTO: 'Cripto',
+  INDICE: 'Índice',
 };
 
 export const ROTULO_CLASSE_PLURAL: Record<TipoAtivo, string> = {
@@ -14,9 +15,11 @@ export const ROTULO_CLASSE_PLURAL: Record<TipoAtivo, string> = {
   ETF: 'ETFs',
   BDR: 'BDRs',
   CRIPTO: 'Criptomoedas',
+  INDICE: 'Índices',
 };
 
 export const ROTULO_TIPO_NOTIFICACAO: Record<TipoNotificacao, string> = {
   SINAL_ATIVADO: 'Sinal técnico',
   ALERTA_DISPARADO: 'Alerta de preço',
+  RESUMO_DIARIO: 'Resumo diário',
 };

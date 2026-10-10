@@ -39,7 +39,7 @@ it('valida os campos antes de chamar a API', async () => {
 
 it('login com sucesso inicia a sessão com o e-mail sem espaços', async () => {
   const user = userEvent.setup();
-  jest.mocked(authApi.login).mockResolvedValue({ access_token: 'tok', token_type: 'bearer' });
+  jest.mocked(authApi.login).mockResolvedValue({ access_token: 'tok', refresh_token: 'ref', token_type: 'bearer', expires_in: 1800 });
   await renderizar(<Login />);
   await user.type(screen.getByLabelText('E-mail'), ' ana@exemplo.com ');
   await user.type(screen.getByLabelText('Senha'), 'segredo123');
@@ -66,7 +66,7 @@ it('segundo toque enquanto a sessão é gravada não dispara outro login', async
   jest.mocked(SecureStore.setItemAsync).mockImplementationOnce(
     () => new Promise<void>((resolver) => (liberarArmazenamento = resolver)),
   );
-  jest.mocked(authApi.login).mockResolvedValue({ access_token: 'tok', token_type: 'bearer' });
+  jest.mocked(authApi.login).mockResolvedValue({ access_token: 'tok', refresh_token: 'ref', token_type: 'bearer', expires_in: 1800 });
   await renderizar(<Login />);
   await user.type(screen.getByLabelText('E-mail'), 'ana@exemplo.com');
   await user.type(screen.getByLabelText('Senha'), 'segredo123');
@@ -84,7 +84,7 @@ it('segundo toque enquanto a sessão é gravada não dispara outro login', async
 it('falha ao gravar a sessão reabilita o botão para nova tentativa', async () => {
   const user = userEvent.setup();
   jest.mocked(SecureStore.setItemAsync).mockRejectedValueOnce(new Error('falha no armazenamento'));
-  jest.mocked(authApi.login).mockResolvedValue({ access_token: 'tok', token_type: 'bearer' });
+  jest.mocked(authApi.login).mockResolvedValue({ access_token: 'tok', refresh_token: 'ref', token_type: 'bearer', expires_in: 1800 });
   await renderizar(<Login />);
   await user.type(screen.getByLabelText('E-mail'), 'ana@exemplo.com');
   await user.type(screen.getByLabelText('Senha'), 'segredo123');
