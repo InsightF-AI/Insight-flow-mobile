@@ -1444,8 +1444,10 @@ describe('com dados', () => {
     expect(await screen.findByText(`R$${NBSP}38,50`)).toBeOnTheScreen();
     expect(screen.getByText('▲ +2,00%')).toBeOnTheScreen();
     expect(await screen.findByText('1 sinal')).toBeOnTheScreen();
-    const nomes = screen.getAllByRole('button', { name: /^(PETR4|VALE3), (Petrobras PN|Vale ON)$/ }).map((b) => b.props['aria-label']);
-    expect(nomes).toEqual(['PETR4, Petrobras PN', 'VALE3, Vale ON']);
+    const linhas = screen.getAllByRole('button', { name: /^(PETR4|VALE3), (Petrobras PN|Vale ON)$/ });
+    expect(linhas).toHaveLength(2);
+    expect(linhas[0]).toHaveAccessibleName('PETR4, Petrobras PN');
+    expect(linhas[1]).toHaveAccessibleName('VALE3, Vale ON');
   });
 
   it('lista os sinais ativos com o histórico de 20 pregões e abre o ativo ao tocar', async () => {
