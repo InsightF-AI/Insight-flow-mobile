@@ -6,13 +6,13 @@ import { AVISO_IA } from '@/dominio/regulatorio';
 import { espaco, raio } from '@/theme/escala';
 import { useTema } from '@/theme/useTema';
 
-export function AvisoIA() {
+export function AvisoIA({ texto = AVISO_IA }: { texto?: string }) {
   const { cores, tons } = useTema();
   return (
     <View style={[estilos.aviso, { backgroundColor: tons.violetaFundo, borderColor: cores.ia }]}>
       <Icone nome="info" tamanho={16} cor="ia" />
       <Texto variante="legenda" cor="secundario" style={estilos.texto}>
-        {AVISO_IA}
+        {texto}
       </Texto>
     </View>
   );
