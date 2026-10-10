@@ -953,14 +953,14 @@ import { useBanner } from '@/store/banner';
 import { useConexaoTempoReal } from '@/store/tempoReal';
 import { criarProvedor, criarQueryClientDeTeste } from '@/test/renderizar';
 
-const conectar = jest.fn();
-const desconectar = jest.fn();
-let opcoesCapturadas: OpcoesTempoReal | null = null;
+const mockConectar = jest.fn();
+const mockDesconectar = jest.fn();
+let mockOpcoes: OpcoesTempoReal | null = null;
 
 jest.mock('@/api/tempoReal', () => ({
   criarClienteTempoReal: jest.fn((opcoes: OpcoesTempoReal) => {
-    opcoesCapturadas = opcoes;
-    return { conectar, desconectar };
+    mockOpcoes = opcoes;
+    return { conectar: mockConectar, desconectar: mockDesconectar };
   }),
 }));
 jest.mock('@/api/notificacoes', () => ({ notificacoesApi: { listar: jest.fn(), marcarComoLida: jest.fn() } }));
@@ -990,7 +990,7 @@ const remover = jest.fn();
 
 beforeEach(() => {
   jest.clearAllMocks();
-  opcoesCapturadas = null;
+  mockOpcoes = null;
   mudancaDeEstado = null;
   queryClient = criarQueryClientDeTeste();
   useBanner.setState({ atual: null });
@@ -1010,41 +1010,41 @@ async function montar(url: string | null = 'ws://servidor/api/v1/notificacoes/ws
 describe('useTempoReal', () => {
   it('conecta ao montar com o app em primeiro plano e desconecta ao desmontar', async () => {
     const { unmount } = await montar();
-    expect(conectar).toHaveBeenCalledTimes(1);
-    expect(opcoesCapturadas?.url).toBe('ws://servidor/api/v1/notificacoes/ws');
+    expect(mockConectar).toHaveBeenCalledTimes(1);
+    expect(mockOpcoes?.url).toBe('ws://servidor/api/v1/notificacoes/ws');
     await unmount();
-    expect(desconectar).toHaveBeenCalled();
+    expect(mockDesconectar).toHaveBeenCalled();
     expect(remover).toHaveBeenCalled();
     expect(useConexaoTempoReal.getState().estado).toBe('desconectado');
   });
 
   it('sem endereço (configuração inválida) não cria cliente', async () => {
     await montar(null);
-    expect(opcoesCapturadas).toBeNull();
-    expect(conectar).not.toHaveBeenCalled();
+    expect(mockOpcoes).toBeNull();
+    expect(mockConectar).not.toHaveBeenCalled();
   });
 
   it('o estado da conexão vai para a store (o polling de reserva depende dele)', async () => {
     await montar();
-    opcoesCapturadas?.aoMudarEstado?.('conectado');
+    mockOpcoes?.aoMudarEstado?.('conectado');
     expect(useConexaoTempoReal.getState().estado).toBe('conectado');
   });
 
   it('segundo plano fecha a conexão; voltar abre de novo', async () => {
     await montar();
-    conectar.mockClear();
+    mockConectar.mockClear();
     mudancaDeEstado?.('background');
-    expect(desconectar).toHaveBeenCalledTimes(1);
-    conectar.mockReturnValue(true);
+    expect(mockDesconectar).toHaveBeenCalledTimes(1);
+    mockConectar.mockReturnValue(true);
     mudancaDeEstado?.('active');
-    expect(conectar).toHaveBeenCalledTimes(1);
+    expect(mockConectar).toHaveBeenCalledTimes(1);
   });
 
   it('voltar ao primeiro plano com a conexão já ativa sincroniza pelo REST', async () => {
     queryClient.setQueryData(chaves.notificacoes, [notificacao('n-1', { lida: true })]);
     jest.mocked(notificacoesApi.listar).mockResolvedValue([notificacao('n-2')]);
     await montar();
-    conectar.mockReturnValue(false);
+    mockConectar.mockReturnValue(false);
     mudancaDeEstado?.('active');
     await waitFor(() => expect(notificacoesApi.listar).toHaveBeenCalledWith(true));
   });
@@ -1053,7 +1053,7 @@ describe('useTempoReal', () => {
     queryClient.setQueryData(chaves.notificacoes, [notificacao('n-1', { lida: true }), notificacao('n-2')]);
     jest.mocked(notificacoesApi.listar).mockResolvedValue([notificacao('n-2'), notificacao('n-3')]);
     await montar();
-    opcoesCapturadas?.aoAutenticar();
+    mockOpcoes?.aoAutenticar();
     await waitFor(() =>
       expect((queryClient.getQueryData(chaves.notificacoes) as Notificacao[]).map((n) => n.id).sort()).toEqual([
         'n-1',
