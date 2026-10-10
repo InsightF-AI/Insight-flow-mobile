@@ -32,3 +32,6 @@ Before writing or changing RNTL tests, read the relevant guide in
 Prefer those package docs over stale assumptions, and follow deprecation notices.
 
 Listas (FlatList) não exigem nada especial nos testes: o `afterEach` de `jest.setup.ts` aguarda o timer de lote do VirtualizedList antes do cleanup do RNTL. Por isso `jest.setup.ts` não pode importar `@testing-library/react-native` no topo (só `pure`, via require preguiçoso).
+
+## Expo muda a cada SDK
+Antes de usar uma API do Expo, EAS ou React Native, consulte a documentação da versão em uso (`https://docs.expo.dev/versions/v57.0.0/`; índice em `https://docs.expo.dev/llms.txt`) em vez de confiar na memória. Dependências novas entram com `npx expo install <pacote>`.
