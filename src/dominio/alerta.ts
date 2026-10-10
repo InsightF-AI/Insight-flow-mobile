@@ -1,5 +1,5 @@
 import type { CriarAlertaRequest, Decimal, TipoCondicaoAlerta } from '@/api/tipos';
-import { formatarMoeda, normalizarDecimal } from '@/utils/formatacao';
+import { formatarMoeda, formatarNumero, normalizarDecimal } from '@/utils/formatacao';
 
 export const ROTULO_CONDICAO: Record<TipoCondicaoAlerta, string> = {
   PRECO_MAIOR_IGUAL: 'Preço ≥',
@@ -34,4 +34,31 @@ export function validarAlerta(form: FormAlerta): ResultadoValidacaoAlerta {
 
   if (erros.ticker || erros.valorAlvo || valor === null) return { ok: false, erros };
   return { ok: true, dados: { ticker, tipo_condicao: form.tipoCondicao, valor_alvo: valor } };
+}
+
+export interface DistanciaAoAlvo {
+  atingido: boolean;
+  /** Quanto o preço ainda precisa andar, em % do preço atual (0 quando o alvo já foi alcançado). */
+  faltaPercentual: number;
+}
+
+/** Distância do preço atual ao alvo do alerta. `null` sem preço utilizável. */
+export function distanciaAoAlvo(
+  tipo: TipoCondicaoAlerta,
+  preco: Decimal | number,
+  alvo: Decimal | number,
+): DistanciaAoAlvo | null {
+  // `Number('')` é 0: texto em branco é ausência de preço, não zero.
+  if (typeof preco === 'string' && preco.trim() === '') return null;
+  const atual = Number(preco);
+  const valorAlvo = Number(alvo);
+  if (!Number.isFinite(atual) || !Number.isFinite(valorAlvo) || atual <= 0) return null;
+  const atingido = tipo === 'PRECO_MAIOR_IGUAL' ? atual >= valorAlvo : atual <= valorAlvo;
+  if (atingido) return { atingido: true, faltaPercentual: 0 };
+  const falta = tipo === 'PRECO_MAIOR_IGUAL' ? valorAlvo - atual : atual - valorAlvo;
+  return { atingido: false, faltaPercentual: (falta / atual) * 100 };
+}
+
+export function descreverDistancia(distancia: DistanciaAoAlvo): string {
+  return distancia.atingido ? 'Alvo atingido' : `Faltam ${formatarNumero(distancia.faltaPercentual)}% para o alvo`;
 }
