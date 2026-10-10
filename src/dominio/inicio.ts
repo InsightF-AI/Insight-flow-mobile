@@ -59,6 +59,26 @@ export interface DadoKpi {
 
 const LIMITE_ZERO_EM_REAIS = 0.005;
 
+const SEM_COTACAO: DadoKpi = { valor: 'indisponível', dica: 'Sem cotação das posições', cor: 'padrao' };
+
+/**
+ * O backend mantém o custo das posições sem cotação em /rentabilidade, mas omite o valor de mercado delas: com valor
+ * zero e custo positivo a fonte de dados está fora do ar, e o "prejuízo" de 100% não existe.
+ */
+function semValorDeMercado(r: Rentabilidade): boolean {
+  return paraNumero(r.valor_mercado_brl) === 0 && paraNumero(r.custo_base_brl) > 0;
+}
+
+/** /portfolio/posicoes omite o que não consegue cotar: lista vazia com custo positivo = tudo sem cotação. */
+export function posicoesSemCotacao(r: Rentabilidade | undefined, posicoes: Posicao[] | undefined): boolean {
+  return r !== undefined && posicoes !== undefined && posicoes.length === 0 && paraNumero(r.custo_base_brl) > 0;
+}
+
+/** Verde e vermelho só para positivo e negativo (o chip do KPI não pode ser verde com "—" ou "indisponível"). */
+export function tomDoKpi(cor: DadoKpi['cor']): 'positivo' | 'negativo' | 'neutro' {
+  return cor === 'padrao' ? 'neutro' : cor;
+}
+
 function corDoNumero(numero: number, limite: number): DadoKpi['cor'] {
   if (Math.abs(numero) < limite) return 'padrao';
   return numero > 0 ? 'positivo' : 'negativo';
@@ -66,6 +86,7 @@ function corDoNumero(numero: number, limite: number): DadoKpi['cor'] {
 
 export function kpiPatrimonio(r: Rentabilidade): DadoKpi {
   if (carteiraVazia(r)) return { valor: '—', dica: 'Registre uma operação simulada', cor: 'padrao' };
+  if (semValorDeMercado(r)) return { ...SEM_COTACAO };
   return {
     valor: formatarMoeda(r.valor_mercado_brl, 'BRL'),
     dica: `Custo ${formatarMoeda(r.custo_base_brl, 'BRL')}`,
@@ -74,7 +95,8 @@ export function kpiPatrimonio(r: Rentabilidade): DadoKpi {
 }
 
 export function kpiResultado(r: Rentabilidade): DadoKpi {
-  if (carteiraVazia(r)) return { valor: '—', cor: 'padrao' };
+  if (carteiraVazia(r)) return { valor: '—', dica: 'Registre uma operação simulada', cor: 'padrao' };
+  if (semValorDeMercado(r)) return { ...SEM_COTACAO };
   const lucro = paraNumero(r.lucro_nao_realizado_brl);
   return {
     valor: formatarMoeda(lucro, 'BRL'),
@@ -83,7 +105,8 @@ export function kpiResultado(r: Rentabilidade): DadoKpi {
   };
 }
 
-export function kpiVariacaoDoDia(v: VariacaoDoDia): DadoKpi {
+export function kpiVariacaoDoDia(v: VariacaoDoDia, semCotacaoNoServidor = false): DadoKpi {
+  if (semCotacaoNoServidor) return { ...SEM_COTACAO };
   if (v.total === 0) return { valor: '—', dica: 'Sem posições abertas', cor: 'padrao' };
   if (v.pontos === null) return { valor: 'indisponível', dica: 'Sem cotação das posições', cor: 'padrao' };
   const texto = formatarPercentual(v.pontos, 'pontos');
@@ -97,8 +120,18 @@ export function kpiVariacaoDoDia(v: VariacaoDoDia): DadoKpi {
   };
 }
 
-export function kpiSinais(contagem: { total: number; semDados: number }): DadoKpi {
-  const { total, semDados } = contagem;
+export function kpiSinais(contagem: {
+  total: number;
+  semDados: number;
+  ativos: number;
+  watchlistIndisponivel: boolean;
+}): DadoKpi {
+  const { total, semDados, ativos, watchlistIndisponivel } = contagem;
+  if (watchlistIndisponivel) return { valor: 'indisponível', dica: 'Watchlist indisponível', cor: 'padrao' };
+  // Zero só é um fato quando algum ativo respondeu: se todos falharam, não há número.
+  if (ativos > 0 && semDados === ativos) {
+    return { valor: 'indisponível', dica: 'Sinais indisponíveis no momento', cor: 'padrao' };
+  }
   if (semDados === 0) return { valor: String(total), cor: 'padrao' };
   return { valor: String(total), dica: `${semDados} ${semDados === 1 ? 'ativo' : 'ativos'} sem dados`, cor: 'padrao' };
 }

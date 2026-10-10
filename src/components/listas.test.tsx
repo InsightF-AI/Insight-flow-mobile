@@ -74,6 +74,25 @@ describe('LinhaAtivo', () => {
     expect(aoAlternar).toHaveBeenCalledTimes(1);
     expect(aoPressionar).not.toHaveBeenCalled();
   });
+
+  it('ocupado desabilita o sino de forma visível para leitores de tela', async () => {
+    const user = userEvent.setup();
+    const aoAlternar = jest.fn();
+    await render(
+      <LinhaAtivo
+        ativo={ativo}
+        estadoCotacao="carregando"
+        notificar
+        ocupado
+        aoAlternarNotificacao={aoAlternar}
+        aoPressionar={jest.fn()}
+      />,
+    );
+    const sino = screen.getByRole('switch', { name: 'Notificações de PETR4' });
+    expect(sino).toBeDisabled();
+    await user.press(sino);
+    expect(aoAlternar).not.toHaveBeenCalled();
+  });
 });
 
 it('LinhaResultadoBusca mostra o ativo encontrado', async () => {

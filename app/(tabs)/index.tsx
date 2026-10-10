@@ -1,6 +1,6 @@
 import type { UseQueryResult } from '@tanstack/react-query';
 import { router } from 'expo-router';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { Alert, StyleSheet, View } from 'react-native';
 
 import type { CotacaoAtual, Sinal, Uuid } from '@/api/tipos';
@@ -20,7 +20,9 @@ import {
   kpiSinais,
   kpiVariacaoDoDia,
   ordenarWatchlist,
+  posicoesSemCotacao,
   reunirSinais,
+  tomDoKpi,
   ultimoResumoDiario,
   variacaoDoDia,
 } from '@/dominio/inicio';
@@ -42,6 +44,8 @@ export default function Inicio() {
   const posicoes = usePosicoes();
   const notificacoes = useNotificacoes();
   const definirNotificacao = useDefinirNotificacao();
+  // O spinner do "puxar para atualizar" só liga quando o usuário puxa (não a cada releitura em segundo plano).
+  const [atualizando, setAtualizando] = useState(false);
 
   const itens = useMemo(() => ordenarWatchlist(watchlist.data ?? []), [watchlist.data]);
   const idsDaWatchlist = itens.map((item) => item.ativo.id);
@@ -63,12 +67,21 @@ export default function Inicio() {
     sinaisAtivos.map(({ ativo, sinal }) => ({ ativoId: ativo.id, regraId: sinal.regra_id })),
   );
 
-  const carregandoSinais = consultasSinais.some((consulta) => consulta.isPending);
-  const ativosSemSinais = consultasSinais.filter((consulta) => consulta.isError).length;
-  const carregandoVariacao =
-    posicoes.isPending || (posicoes.data ?? []).some((p) => cotacaoPorId.get(p.ativo_id)?.isPending ?? false);
+  // Erro só "apaga" a seção quando não há dado anterior: uma releitura que falha não esconde o que já está na tela.
+  const watchlistIndisponivel = watchlist.isError && watchlist.data === undefined;
+  const rentabilidadeIndisponivel = rentabilidade.isError && rentabilidade.data === undefined;
+  const posicoesIndisponiveis = posicoes.isError && posicoes.data === undefined;
 
-  function atualizar() {
+  // Sem a watchlist não há ativos para consultar: o bloco de sinais espera por ela, nunca mostra "0" nem "vazio".
+  const carregandoSinais = watchlist.isPending || consultasSinais.some((consulta) => consulta.isPending);
+  const ativosSemSinais = consultasSinais.filter((consulta) => consulta.isError).length;
+  const todosSemSinais = itens.length > 0 && ativosSemSinais === itens.length;
+  const carregandoVariacao =
+    posicoes.isPending ||
+    rentabilidade.isPending ||
+    (posicoes.data ?? []).some((p) => cotacaoPorId.get(p.ativo_id)?.isPending ?? false);
+
+  async function atualizar() {
     const consultas: { refetch: () => unknown }[] = [
       watchlist,
       rentabilidade,
@@ -78,7 +91,12 @@ export default function Inicio() {
       ...consultasSinais,
       ...backtests,
     ];
-    consultas.forEach((consulta) => void consulta.refetch());
+    setAtualizando(true);
+    try {
+      await Promise.allSettled(consultas.map((consulta) => consulta.refetch()));
+    } finally {
+      setAtualizando(false);
+    }
   }
 
   function alternarNotificacao(ativoId: Uuid, notificar: boolean) {
@@ -91,35 +109,42 @@ export default function Inicio() {
 
   const patrimonio = rentabilidade.data ? kpiPatrimonio(rentabilidade.data) : null;
   const resultado = rentabilidade.data ? kpiResultado(rentabilidade.data) : null;
-  const variacao = posicoes.data ? kpiVariacaoDoDia(variacaoDoDia(posicoes.data, cotacoesPorId)) : null;
-  const sinaisKpi = kpiSinais({ total: sinaisAtivos.length, semDados: ativosSemSinais });
+  const variacao = posicoes.data
+    ? kpiVariacaoDoDia(variacaoDoDia(posicoes.data, cotacoesPorId), posicoesSemCotacao(rentabilidade.data, posicoes.data))
+    : null;
+  const sinaisKpi = kpiSinais({
+    total: sinaisAtivos.length,
+    semDados: ativosSemSinais,
+    ativos: itens.length,
+    watchlistIndisponivel,
+  });
   const resumo = ultimoResumoDiario(notificacoes.data);
 
   return (
-    <Tela aoAtualizar={atualizar} atualizando={watchlist.isRefetching}>
+    <Tela aoAtualizar={() => void atualizar()} atualizando={atualizando}>
       <View style={estilos.kpis}>
         <Kpi
           rotulo="Patrimônio simulado"
           icone="carteira"
-          valor={rentabilidade.isError ? 'indisponível' : (patrimonio?.valor ?? '')}
+          valor={rentabilidadeIndisponivel ? 'indisponível' : (patrimonio?.valor ?? '')}
           dica={patrimonio?.dica}
           carregando={rentabilidade.isPending}
         />
         <Kpi
           rotulo="Resultado não realizado"
           icone="tendencia"
-          tomIcone={resultado?.cor === 'negativo' ? 'negativo' : 'positivo'}
+          tomIcone={tomDoKpi(resultado?.cor ?? 'padrao')}
           corValor={resultado?.cor}
-          valor={rentabilidade.isError ? 'indisponível' : (resultado?.valor ?? '')}
+          valor={rentabilidadeIndisponivel ? 'indisponível' : (resultado?.valor ?? '')}
           dica={resultado?.dica}
           carregando={rentabilidade.isPending}
         />
         <Kpi
           rotulo="Variação do dia"
           icone="atividade"
-          tomIcone={variacao?.cor === 'negativo' ? 'negativo' : 'positivo'}
+          tomIcone={tomDoKpi(variacao?.cor ?? 'padrao')}
           corValor={variacao?.cor}
-          valor={posicoes.isError ? 'indisponível' : (variacao?.valor ?? '')}
+          valor={posicoesIndisponiveis ? 'indisponível' : (variacao?.valor ?? '')}
           dica={variacao?.dica}
           carregando={carregandoVariacao}
         />
@@ -134,7 +159,7 @@ export default function Inicio() {
       </View>
 
       <ResumoDiarioCard
-        estado={notificacoes.isPending ? 'carregando' : notificacoes.isError ? 'erro' : 'ok'}
+        estado={notificacoes.data ? 'ok' : notificacoes.isError ? 'erro' : 'carregando'}
         erro={notificacoes.error}
         resumo={resumo}
         aoTentarNovamente={() => void notificacoes.refetch()}
@@ -150,10 +175,10 @@ export default function Inicio() {
           <Skeleton altura={72} />
         </>
       ) : null}
-      {watchlist.isError ? (
+      {watchlistIndisponivel ? (
         <ErroComRetry erro={watchlist.error} aoTentarNovamente={() => void watchlist.refetch()} />
       ) : null}
-      {watchlist.isSuccess && itens.length === 0 ? (
+      {watchlist.data !== undefined && itens.length === 0 ? (
         <EstadoVazio
           mensagem="Sua watchlist está vazia."
           acao={{ titulo: 'Buscar ativo', onPress: () => router.push('/buscar') }}
@@ -170,6 +195,7 @@ export default function Inicio() {
             estadoCotacao={estadoDaCotacao(cotacao)}
             sinais={sinais?.data?.length}
             notificar={item.notificar}
+            ocupado={definirNotificacao.isPending}
             aoAlternarNotificacao={() => alternarNotificacao(item.ativo.id, item.notificar)}
             aoPressionar={() =>
               router.push({ pathname: '/ativo/[id]', params: { id: item.ativo.id, ticker: item.ativo.ticker } })
@@ -181,13 +207,23 @@ export default function Inicio() {
       <Texto variante="subtitulo" role="heading">
         Sinais técnicos ativos
       </Texto>
-      {carregandoSinais && sinaisAtivos.length === 0 && idsDaWatchlist.length > 0 ? (
+      {carregandoSinais ? (
         <>
           <Skeleton altura={72} />
           <Skeleton altura={72} />
         </>
       ) : null}
-      {!carregandoSinais && sinaisAtivos.length === 0 ? (
+      {!carregandoSinais && watchlistIndisponivel ? (
+        <Texto cor="secundario">Sinais indisponíveis no momento.</Texto>
+      ) : null}
+      {!carregandoSinais && !watchlistIndisponivel && todosSemSinais ? (
+        <ErroComRetry
+          erro={consultasSinais.find((consulta) => consulta.isError)?.error}
+          mensagem="Sinais indisponíveis no momento."
+          aoTentarNovamente={() => consultasSinais.forEach((consulta) => void consulta.refetch())}
+        />
+      ) : null}
+      {!carregandoSinais && !watchlistIndisponivel && !todosSemSinais && sinaisAtivos.length === 0 ? (
         <EstadoVazio mensagem="Nenhum sinal técnico ativo no momento." />
       ) : null}
       {sinaisAtivos.map(({ ativo, sinal }, indice) => {

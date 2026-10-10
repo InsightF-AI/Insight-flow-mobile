@@ -38,7 +38,7 @@ export function ResumoDiarioCard({ estado, erro, resumo, aoTentarNovamente }: Pr
         </>
       ) : null}
       {estado === 'ok' && !resumo ? (
-        <EstadoVazio mensagem="Nenhum resumo gerado ainda. O servidor gera o resumo da carteira ao fim do pregão (18h30)." />
+        <EstadoVazio mensagem="Nenhum resumo gerado ainda. O resumo diário é gerado ao fim do pregão (18h30) para quem tem operações simuladas registradas." />
       ) : null}
     </Card>
   );

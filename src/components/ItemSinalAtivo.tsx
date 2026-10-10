@@ -35,7 +35,7 @@ export function ItemSinalAtivo({ ticker, regraNome, ativadoEm, backtest, carrega
         <Pill tom="amarelo">{regraNome}</Pill>
       </View>
       <Texto variante="legenda" cor="secundario">
-        {`Ativo desde ${formatarDataHora(ativadoEm)}`}
+        {`Ativado em ${formatarDataHora(ativadoEm)}`}
       </Texto>
       {carregandoBacktest ? (
         <Skeleton altura={12} largura="80%" />

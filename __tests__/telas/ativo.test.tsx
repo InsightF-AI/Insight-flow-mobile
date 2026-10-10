@@ -106,9 +106,9 @@ describe('botão de notificações do cabeçalho', () => {
     );
     await renderizar(<DetalheAtivo />);
 
-    const botao = await screen.findByRole('button', { name: 'Desativar notificações' });
-    await user.press(botao);
-    await user.press(screen.getByRole('button', { name: 'Desativar notificações' }));
+    await user.press(await screen.findByRole('button', { name: 'Desativar notificações' }));
+    // A alteração é otimista: o rótulo já vira, mas um segundo toque enquanto o PATCH não volta é ignorado.
+    await user.press(await screen.findByRole('button', { name: 'Ativar notificações' }));
 
     expect(watchlistApi.definirNotificacao).toHaveBeenCalledTimes(1);
     jest.mocked(watchlistApi.listar).mockResolvedValue([{ ...itemWatchlist, notificar: false }]);

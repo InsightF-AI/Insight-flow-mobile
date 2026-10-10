@@ -16,7 +16,9 @@ import {
   kpiSinais,
   kpiVariacaoDoDia,
   ordenarWatchlist,
+  posicoesSemCotacao,
   reunirSinais,
+  tomDoKpi,
   ultimoResumoDiario,
   variacaoDoDia,
 } from '@/dominio/inicio';
@@ -166,7 +168,11 @@ describe('KPIs', () => {
   });
 
   it('resultado de carteira vazia é traço', () => {
-    expect(kpiResultado(RENTABILIDADE_ZERADA)).toEqual({ valor: '—', cor: 'padrao' });
+    expect(kpiResultado(RENTABILIDADE_ZERADA)).toEqual({
+      valor: '—',
+      dica: 'Registre uma operação simulada',
+      cor: 'padrao',
+    });
   });
 
   it('variação do dia completa', () => {
@@ -199,9 +205,14 @@ describe('KPIs', () => {
   });
 
   it('sinais ativos informam os ativos sem dados', () => {
-    expect(kpiSinais({ total: 3, semDados: 0 })).toEqual({ valor: '3', cor: 'padrao' });
-    expect(kpiSinais({ total: 3, semDados: 1 })).toEqual({ valor: '3', dica: '1 ativo sem dados', cor: 'padrao' });
-    expect(kpiSinais({ total: 0, semDados: 2 }).dica).toBe('2 ativos sem dados');
+    const base = { ativos: 4, watchlistIndisponivel: false };
+    expect(kpiSinais({ ...base, total: 3, semDados: 0 })).toEqual({ valor: '3', cor: 'padrao' });
+    expect(kpiSinais({ ...base, total: 3, semDados: 1 })).toEqual({
+      valor: '3',
+      dica: '1 ativo sem dados',
+      cor: 'padrao',
+    });
+    expect(kpiSinais({ ...base, total: 0, semDados: 2 }).dica).toBe('2 ativos sem dados');
   });
 });
 
@@ -326,5 +337,65 @@ describe('descreverBacktest', () => {
     expect(descreverBacktest(backtest({ total_ocorrencias: 0, retorno_medio_20_pregoes: null }))).toBe(
       'Sem ocorrências nos últimos 24 meses',
     );
+  });
+});
+
+describe('fonte de dados fora do ar (o backend omite posições sem cotação)', () => {
+  const CUSTO_SEM_VALOR = rentabilidade({
+    custo_base_brl: '10000.00',
+    valor_mercado_brl: '0',
+    lucro_nao_realizado_brl: '-10000.00',
+    percentual: '-1',
+  });
+  const INDISPONIVEL = { valor: 'indisponível', dica: 'Sem cotação das posições', cor: 'padrao' };
+
+  it('patrimônio e resultado ficam "indisponível", não "R$ 0,00" nem -100%', () => {
+    expect(kpiPatrimonio(CUSTO_SEM_VALOR)).toEqual(INDISPONIVEL);
+    expect(kpiResultado(CUSTO_SEM_VALOR)).toEqual(INDISPONIVEL);
+  });
+
+  it('posicoesSemCotacao: há custo, mas a lista de posições veio vazia', () => {
+    expect(posicoesSemCotacao(CUSTO_SEM_VALOR, [])).toBe(true);
+    expect(posicoesSemCotacao(CUSTO_SEM_VALOR, [posicao('a-1', '3000.00')])).toBe(false);
+    expect(posicoesSemCotacao(RENTABILIDADE_ZERADA, [])).toBe(false);
+    expect(posicoesSemCotacao(undefined, [])).toBe(false);
+    expect(posicoesSemCotacao(CUSTO_SEM_VALOR, undefined)).toBe(false);
+  });
+
+  it('variação do dia sem cotação no servidor é "indisponível", não "Sem posições abertas"', () => {
+    expect(kpiVariacaoDoDia({ pontos: null, consideradas: 0, total: 0 }, true)).toEqual(INDISPONIVEL);
+  });
+});
+
+describe('sinais ativos sem dados', () => {
+  it('todos os ativos falharam: "indisponível", nunca "0"', () => {
+    expect(kpiSinais({ total: 0, semDados: 3, ativos: 3, watchlistIndisponivel: false })).toEqual({
+      valor: 'indisponível',
+      dica: 'Sinais indisponíveis no momento',
+      cor: 'padrao',
+    });
+  });
+
+  it('watchlist indisponível: "indisponível"', () => {
+    expect(kpiSinais({ total: 0, semDados: 0, ativos: 0, watchlistIndisponivel: true })).toEqual({
+      valor: 'indisponível',
+      dica: 'Watchlist indisponível',
+      cor: 'padrao',
+    });
+  });
+
+  it('watchlist vazia de verdade: zero é um fato', () => {
+    expect(kpiSinais({ total: 0, semDados: 0, ativos: 0, watchlistIndisponivel: false })).toEqual({
+      valor: '0',
+      cor: 'padrao',
+    });
+  });
+});
+
+describe('tomDoKpi', () => {
+  it('verde e vermelho só para positivo e negativo; o resto é neutro', () => {
+    expect(tomDoKpi('positivo')).toBe('positivo');
+    expect(tomDoKpi('negativo')).toBe('negativo');
+    expect(tomDoKpi('padrao')).toBe('neutro');
   });
 });

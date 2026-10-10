@@ -1,5 +1,6 @@
-import { screen, userEvent, waitFor, within } from '@testing-library/react-native';
+import { act, screen, userEvent, waitFor, within } from '@testing-library/react-native';
 import { router } from 'expo-router';
+import { Alert } from 'react-native';
 
 import { ativosApi } from '@/api/ativos';
 import { ApiError } from '@/api/client';
@@ -16,7 +17,8 @@ import type {
 } from '@/api/tipos';
 import { watchlistApi } from '@/api/watchlist';
 import { AVISO_IA } from '@/dominio/regulatorio';
-import { renderizar } from '@/test/renderizar';
+import { chaves } from '@/hooks/chaves';
+import { criarQueryClientDeTeste, renderizar } from '@/test/renderizar';
 
 import Inicio from '../../app/(tabs)/index';
 
@@ -206,7 +208,7 @@ describe('vazio', () => {
     const user = userEvent.setup();
     await renderizar(<Inicio />);
     expect(await screen.findByText('Sua watchlist está vazia.')).toBeOnTheScreen();
-    expect(await screen.findByText('Registre uma operação simulada')).toBeOnTheScreen();
+    expect(await screen.findAllByText('Registre uma operação simulada')).toHaveLength(2);
     expect(await screen.findByText('Sem posições abertas')).toBeOnTheScreen();
     expect(screen.getAllByText('—').length).toBeGreaterThanOrEqual(3);
     expect(screen.queryByText(`R$${NBSP}0,00`)).not.toBeOnTheScreen();
@@ -312,5 +314,111 @@ describe('independência entre ativos', () => {
     await renderizar(<Inicio />);
     expect(await screen.findByText('Sem cotação das posições')).toBeOnTheScreen();
     expect(screen.queryByText('0,00%')).not.toBeOnTheScreen();
+  });
+});
+
+describe('sinais sem dados (não inventa "0")', () => {
+  it('com a watchlist carregando, o KPI e o bloco mostram carregamento, nunca "0" nem "Nenhum sinal"', async () => {
+    jest.mocked(watchlistApi.listar).mockImplementation(() => new Promise<never>(() => {}));
+    await renderizar(<Inicio />);
+    expect(screen.queryByText('0')).not.toBeOnTheScreen();
+    expect(screen.queryByText('Nenhum sinal técnico ativo no momento.')).not.toBeOnTheScreen();
+  });
+
+  it('com a watchlist em erro, o KPI é "indisponível" e o bloco não diz que não há sinais', async () => {
+    jest.mocked(watchlistApi.listar).mockRejectedValue(new ApiError(500, 'Erro 500'));
+    await renderizar(<Inicio />);
+    expect(await screen.findByText('Sinais indisponíveis no momento.')).toBeOnTheScreen();
+    expect(screen.getByText('Watchlist indisponível')).toBeOnTheScreen();
+    expect(screen.queryByText('Nenhum sinal técnico ativo no momento.')).not.toBeOnTheScreen();
+    expect(screen.queryByText('0')).not.toBeOnTheScreen();
+  });
+
+  it('com todos os ativos sem dados de sinais, o KPI é "indisponível" e o bloco oferece tentar de novo', async () => {
+    prepararComDados();
+    jest.mocked(ativosApi.sinais).mockRejectedValue(new ApiError(500, 'Erro 500'));
+    await renderizar(<Inicio />);
+    expect(await screen.findByText('Sinais indisponíveis no momento.')).toBeOnTheScreen();
+    expect(screen.getByText('Sinais indisponíveis no momento')).toBeOnTheScreen();
+    expect(screen.queryByText('Nenhum sinal técnico ativo no momento.')).not.toBeOnTheScreen();
+    expect(screen.getByRole('button', { name: 'Tentar novamente' })).toBeOnTheScreen();
+  });
+});
+
+describe('fonte de dados fora do ar', () => {
+  it('posições sem cotação no servidor: nada de "Sem posições abertas", "R$ 0,00" nem -100%', async () => {
+    prepararComDados();
+    jest.mocked(portfolioApi.rentabilidade).mockResolvedValue({
+      custo_base_brl: '10000.00',
+      valor_mercado_brl: '0',
+      lucro_nao_realizado_brl: '-10000.00',
+      lucro_realizado_brl: '0',
+      percentual: '-1',
+    });
+    jest.mocked(portfolioApi.posicoes).mockResolvedValue([]);
+    await renderizar(<Inicio />);
+    expect(await screen.findAllByText('Sem cotação das posições')).toHaveLength(3);
+    expect(screen.queryByText('Sem posições abertas')).not.toBeOnTheScreen();
+    expect(screen.queryByText(`R$${NBSP}0,00`)).not.toBeOnTheScreen();
+    expect(screen.queryByText('-100,00%')).not.toBeOnTheScreen();
+  });
+});
+
+describe('sino de notificações', () => {
+  it('muda na hora e bloqueia, visivelmente, os outros sinos enquanto o servidor responde', async () => {
+    const user = userEvent.setup();
+    prepararComDados();
+    let responder: (valor: ItemWatchlist) => void = () => {};
+    jest.mocked(watchlistApi.definirNotificacao).mockReturnValue(
+      new Promise<ItemWatchlist>((resolver) => {
+        responder = resolver;
+      }),
+    );
+    await renderizar(<Inicio />);
+    await user.press(await screen.findByRole('switch', { name: 'Notificações de PETR4' }));
+    await waitFor(() => expect(screen.getByRole('switch', { name: 'Notificações de PETR4' })).not.toBeChecked());
+    expect(screen.getByRole('switch', { name: 'Notificações de VALE3' })).toBeDisabled();
+    responder(item('a-1', 'PETR4', 'Petrobras PN', false));
+    await waitFor(() => expect(screen.getByRole('switch', { name: 'Notificações de VALE3' })).toBeEnabled());
+  });
+
+  it('desfaz a mudança e avisa quando o servidor recusa', async () => {
+    const user = userEvent.setup();
+    const alerta = jest.spyOn(Alert, 'alert').mockImplementation(() => {});
+    prepararComDados();
+    jest.mocked(watchlistApi.definirNotificacao).mockRejectedValue(new ApiError(500, 'Erro 500'));
+    await renderizar(<Inicio />);
+    await user.press(await screen.findByRole('switch', { name: 'Notificações de PETR4' }));
+    await waitFor(() =>
+      expect(alerta).toHaveBeenCalledWith(
+        'Não foi possível alterar as notificações',
+        'Erro no servidor. Tente novamente em instantes.',
+      ),
+    );
+    await waitFor(() => expect(screen.getByRole('switch', { name: 'Notificações de PETR4' })).toBeChecked());
+  });
+});
+
+describe('falha em segundo plano não apaga o que já está na tela', () => {
+  it('resumo, KPIs e watchlist continuam visíveis quando a releitura falha', async () => {
+    prepararComDados();
+    const queryClient = criarQueryClientDeTeste();
+    await renderizar(<Inicio />, queryClient);
+    expect(await screen.findByText('A carteira variou +1,00% no dia.')).toBeOnTheScreen();
+    expect(await screen.findByText(`R$${NBSP}4.000,00`)).toBeOnTheScreen();
+    const semRede = new ApiError(0, 'Sem conexão com o servidor (http://api.teste)', { causa: 'rede' });
+    jest.mocked(notificacoesApi.listar).mockRejectedValue(semRede);
+    jest.mocked(portfolioApi.rentabilidade).mockRejectedValue(semRede);
+    jest.mocked(watchlistApi.listar).mockRejectedValue(semRede);
+    await act(async () => {
+      await queryClient.refetchQueries({ queryKey: chaves.notificacoes });
+      await queryClient.refetchQueries({ queryKey: chaves.rentabilidade });
+      await queryClient.refetchQueries({ queryKey: chaves.watchlist });
+    });
+    expect(screen.getByText('A carteira variou +1,00% no dia.')).toBeOnTheScreen();
+    expect(screen.getByText(`R$${NBSP}4.000,00`)).toBeOnTheScreen();
+    expect(screen.getByRole('button', { name: 'PETR4, Petrobras PN' })).toBeOnTheScreen();
+    expect(screen.queryByText('Resumo diário indisponível no momento.')).not.toBeOnTheScreen();
+    expect(screen.queryByRole('button', { name: 'Tentar novamente' })).not.toBeOnTheScreen();
   });
 });

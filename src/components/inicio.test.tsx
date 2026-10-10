@@ -77,6 +77,7 @@ describe('ResumoDiarioCard', () => {
   it('sem resumo explica quando ele é gerado e não mostra aviso de IA', async () => {
     await render(<ResumoDiarioCard estado="ok" resumo={null} aoTentarNovamente={jest.fn()} />);
     expect(screen.getByText(/Nenhum resumo gerado ainda/)).toBeOnTheScreen();
+    expect(screen.getByText(/operações simuladas/)).toBeOnTheScreen();
     expect(screen.queryByText(AVISO_IA)).not.toBeOnTheScreen();
   });
 
@@ -106,7 +107,7 @@ describe('ItemSinalAtivo', () => {
     );
     expect(screen.getByText('PETR4')).toBeOnTheScreen();
     expect(screen.getByText('Sobrevenda RSI')).toBeOnTheScreen();
-    expect(screen.getByText('Ativo desde 09/10/2026 10:00')).toBeOnTheScreen();
+    expect(screen.getByText('Ativado em 09/10/2026 10:00')).toBeOnTheScreen();
     expect(screen.getByText('14 ocorrências em 24 meses')).toBeOnTheScreen();
   });
 

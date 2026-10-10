@@ -22,6 +22,8 @@ interface Props {
   /** Estado das notificações do ativo; o sino só aparece com `aoAlternarNotificacao`. */
   notificar?: boolean;
   aoAlternarNotificacao?: () => void;
+  /** Há uma alteração de notificação em andamento: o sino fica desabilitado, de forma visível. */
+  ocupado?: boolean;
 }
 
 export function LinhaAtivo({
@@ -32,6 +34,7 @@ export function LinhaAtivo({
   sinais = 0,
   notificar = false,
   aoAlternarNotificacao,
+  ocupado = false,
 }: Props) {
   const { cores, sombras } = useTema();
   return (
@@ -76,8 +79,11 @@ export function LinhaAtivo({
           role="switch"
           aria-label={`Notificações de ${ativo.ticker}`}
           aria-checked={notificar}
+          aria-disabled={ocupado}
+          aria-busy={ocupado}
+          disabled={ocupado}
           onPress={aoAlternarNotificacao}
-          style={estilos.sino}
+          style={[estilos.sino, ocupado ? estilos.sinoOcupado : null]}
         >
           <Icone nome={notificar ? 'sino' : 'sino-desligado'} tamanho={20} cor={notificar ? 'primaria' : 'textoTerciario'} />
         </Pressable>
@@ -92,4 +98,5 @@ const estilos = StyleSheet.create({
   esquerda: { flex: 1, gap: 2, alignItems: 'flex-start' },
   direita: { alignItems: 'flex-end', gap: espaco.xs },
   sino: { minWidth: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center', marginRight: espaco.xs },
+  sinoOcupado: { opacity: 0.5 },
 });
