@@ -190,7 +190,7 @@ describe('variacaoDoDia', () => {
 describe('carteiraVazia', () => {
   it('verdadeiro quando tudo é zero, em qualquer grafia', () => {
     expect(carteiraVazia(RENTABILIDADE_ZERADA)).toBe(true);
-    expect(carteiraVazia(rentabilidade({ custo_base_brl: '0.00', valor_mercado_brl: '0.000', lucro_realizado_brl: '0' }))).toBe(false);
+    expect(carteiraVazia(rentabilidade({ custo_base_brl: '0.00', valor_mercado_brl: '0.000', lucro_realizado_brl: '0' }))).toBe(true);
   });
 
   it('falso quando só há lucro realizado (posições encerradas)', () => {
@@ -228,7 +228,7 @@ describe('KPIs', () => {
   });
 
   it('resultado quase zero é neutro e nunca "−0,00%"', () => {
-    const k = kpiResultado(rentabilidade({ lucro_nao_realizado_brl: '-0.001', percentual: '-0.0001' }));
+    const k = kpiResultado(rentabilidade({ lucro_nao_realizado_brl: '-0.001', percentual: '-0.00001' }));
     expect(k.cor).toBe('padrao');
     expect(k.dica).toBe('0,00%');
   });
