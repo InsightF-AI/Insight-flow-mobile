@@ -17,7 +17,7 @@ const armazenamento = (SecureStore as unknown as { __armazenamento: Map<string, 
 beforeEach(() => {
   jest.clearAllMocks();
   armazenamento.clear();
-  useSessao.setState({ status: 'anonimo', token: null, email: null });
+  useSessao.setState({ status: 'anonimo', token: null, refreshToken: null, expiraEm: null, email: null });
 });
 
 it('mostra o card do web com título, alternância de senha e aviso educacional', async () => {
@@ -47,6 +47,11 @@ it('login com sucesso inicia a sessão com o e-mail sem espaços', async () => {
   await waitFor(() => expect(useSessao.getState().status).toBe('autenticado'));
   expect(authApi.login).toHaveBeenCalledWith({ email: 'ana@exemplo.com', senha: 'segredo123' });
   expect(useSessao.getState().email).toBe('ana@exemplo.com');
+  expect(JSON.parse(armazenamento.get('insightflow.sessao') ?? '{}')).toMatchObject({
+    accessToken: 'tok',
+    refreshToken: 'ref',
+    email: 'ana@exemplo.com',
+  });
 });
 
 it('401 mostra mensagem de credenciais incorretas e mantém anônimo', async () => {

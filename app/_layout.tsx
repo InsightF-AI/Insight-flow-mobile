@@ -13,7 +13,7 @@ import { ConfiguracaoInvalida } from '@/components/ConfiguracaoInvalida';
 import { lerUrlDaApi } from '@/config/ambiente';
 import { queryClient } from '@/hooks/queryClient';
 import { usePreferencias } from '@/store/preferencias';
-import { useSessao } from '@/store/sessao';
+import { pertoDeVencer, useSessao } from '@/store/sessao';
 import { FONTES } from '@/theme/carregarFontes';
 import { familia, fontesProntas } from '@/theme/familias';
 import { type Tema, useTema } from '@/theme/useTema';
@@ -32,15 +32,9 @@ try {
 configurarApi({
   baseUrl,
   obterToken: () => useSessao.getState().token,
-  // Provisório até a sessão guardar o refresh token (Tarefa 7): 401 continua levando ao login.
-  tokenPertoDeVencer: () => false,
-  renovarToken: async () => {
-    await useSessao
-      .getState()
-      .sair()
-      .catch(() => {});
-    return null;
-  },
+  tokenPertoDeVencer: () => pertoDeVencer(useSessao.getState().expiraEm),
+  // A store serializa as renovações e, se o refresh for recusado, encerra a sessão (o app volta ao login).
+  renovarToken: () => useSessao.getState().renovar(),
 });
 
 function temaDeNavegacao(tema: Tema): Theme {

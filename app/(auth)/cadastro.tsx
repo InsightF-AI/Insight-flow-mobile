@@ -31,8 +31,8 @@ export default function Cadastro() {
     setErroGeral(null);
     setEnviando(true);
     try {
-      const { access_token } = await cadastro.mutateAsync({ nome: nome.trim(), email: email.trim(), senha });
-      await entrar(access_token, email.trim());
+      const tokens = await cadastro.mutateAsync({ nome: nome.trim(), email: email.trim(), senha });
+      await entrar(tokens, email.trim());
     } catch (erro) {
       if (ehStatus(erro, 409)) setErros({ email: 'E-mail já cadastrado' });
       else setErroGeral(mensagemDeErro(erro));

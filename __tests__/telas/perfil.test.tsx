@@ -3,6 +3,7 @@ import { router } from 'expo-router';
 import * as SecureStore from 'expo-secure-store';
 import { Alert } from 'react-native';
 
+import { authApi } from '@/api/auth';
 import { notificacoesApi } from '@/api/notificacoes';
 import type { Notificacao } from '@/api/tipos';
 import { watchlistApi } from '@/api/watchlist';
@@ -14,6 +15,7 @@ import { coresClaro, coresEscuro } from '@/theme/cores';
 import Perfil from '../../app/(tabs)/perfil';
 
 jest.mock('expo-router', () => ({ router: { push: jest.fn() } }));
+jest.mock('@/api/auth', () => ({ authApi: { sair: jest.fn(), renovar: jest.fn() } }));
 jest.mock('@/api/notificacoes', () => ({ notificacoesApi: { listar: jest.fn(), marcarComoLida: jest.fn() } }));
 jest.mock('@/api/watchlist', () => ({ watchlistApi: { listar: jest.fn() } }));
 
@@ -43,7 +45,8 @@ beforeEach(() => {
   jest.restoreAllMocks();
   armazenamento.clear();
   usePreferencias.setState({ tema: 'escuro' });
-  useSessao.setState({ status: 'autenticado', token: 'tok', email: 'ana@exemplo.com' });
+  useSessao.setState({ status: 'autenticado', token: 'tok', refreshToken: 'ref', expiraEm: null, email: 'ana@exemplo.com' });
+  jest.mocked(authApi.sair).mockResolvedValue(undefined);
   jest.mocked(watchlistApi.listar).mockResolvedValue([
     {
       ativo: { id: 'a-1', ticker: 'PETR4', nome: 'Petrobras PN', tipo: 'ACAO', setor: null, moeda: 'BRL' },
@@ -99,6 +102,7 @@ it('sair pede confirmação e encerra a sessão', async () => {
   await renderizar(<Perfil />);
   await user.press(await screen.findByRole('button', { name: 'Sair' }));
   await waitFor(() => expect(useSessao.getState().status).toBe('anonimo'));
+  expect(authApi.sair).toHaveBeenCalledWith('ref');
 });
 
 it('sair encerra a sessão mesmo se o armazenamento seguro falhar, sem rejeição não tratada', async () => {

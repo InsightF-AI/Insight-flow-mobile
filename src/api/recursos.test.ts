@@ -34,6 +34,8 @@ const operacao = {
 const casos: [string, () => Promise<unknown>, string, string, unknown][] = [
   ['auth.login', () => authApi.login(credenciais), 'POST', '/auth/login', credenciais],
   ['auth.cadastrar', () => authApi.cadastrar(cadastro), 'POST', '/usuarios', cadastro],
+  ['auth.renovar', () => authApi.renovar('ref-1'), 'POST', '/auth/refresh', { refresh_token: 'ref-1' }],
+  ['auth.sair', () => authApi.sair('ref-1'), 'POST', '/auth/logout', { refresh_token: 'ref-1' }],
   ['watchlist.listar', () => watchlistApi.listar(), 'GET', '/watchlist', undefined],
   ['watchlist.adicionar', () => watchlistApi.adicionar('PETR4'), 'POST', '/watchlist', { ticker: 'PETR4' }],
   ['watchlist.remover', () => watchlistApi.remover('a-1'), 'DELETE', '/watchlist/a-1', undefined],

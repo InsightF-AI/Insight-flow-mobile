@@ -26,7 +26,7 @@ async function preencher() {
 beforeEach(() => {
   jest.clearAllMocks();
   armazenamento.clear();
-  useSessao.setState({ status: 'anonimo', token: null, email: null });
+  useSessao.setState({ status: 'anonimo', token: null, refreshToken: null, expiraEm: null, email: null });
 });
 
 it('mostra o card do web com título, alternância de senha e link para entrar', async () => {

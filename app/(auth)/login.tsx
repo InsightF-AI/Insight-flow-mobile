@@ -30,8 +30,8 @@ export default function Login() {
     setErroGeral(null);
     setEnviando(true);
     try {
-      const { access_token } = await login.mutateAsync({ email: email.trim(), senha });
-      await entrar(access_token, email.trim());
+      const tokens = await login.mutateAsync({ email: email.trim(), senha });
+      await entrar(tokens, email.trim());
     } catch (erro) {
       setErroGeral(ehStatus(erro, 401) ? 'E-mail ou senha incorretos' : mensagemDeErro(erro));
     } finally {
