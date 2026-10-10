@@ -41,3 +41,28 @@ it('botão de remover chama aoRemover', async () => {
   await user.press(screen.getByRole('button', { name: 'Remover alerta de PETR4' }));
   expect(aoRemover).toHaveBeenCalled();
 });
+
+describe('ItemAlerta: preço atual e distância ao alvo', () => {
+  it('mostra o preço atual e quanto falta para o alvo', async () => {
+    await render(
+      <ItemAlerta alerta={alerta} cotacao={{ preco: '38' }} ocupado={false} aoAlternar={jest.fn()} aoRemover={jest.fn()} />,
+    );
+    expect(screen.getByText(/Preço atual/)).toBeOnTheScreen();
+    expect(screen.getByText('Faltam 5,26% para o alvo')).toBeOnTheScreen();
+  });
+
+  it('alvo alcançado diz "Alvo atingido"', async () => {
+    await render(
+      <ItemAlerta alerta={alerta} cotacao={{ preco: '41' }} ocupado={false} aoAlternar={jest.fn()} aoRemover={jest.fn()} />,
+    );
+    expect(screen.getByText('Alvo atingido')).toBeOnTheScreen();
+  });
+
+  it('sem cotação não inventa distância', async () => {
+    await render(
+      <ItemAlerta alerta={alerta} cotacaoIndisponivel ocupado={false} aoAlternar={jest.fn()} aoRemover={jest.fn()} />,
+    );
+    expect(screen.getByText('Preço atual indisponível')).toBeOnTheScreen();
+    expect(screen.queryByText(/Faltam/)).not.toBeOnTheScreen();
+  });
+});
