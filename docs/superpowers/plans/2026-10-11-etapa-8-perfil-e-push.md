@@ -1655,7 +1655,7 @@ Claude-Session: https://claude.ai/code/session_01RRDxY4Beh38T5NvK5ajVZp"
 `src/components/perfil.test.tsx`:
 
 ```tsx
-import { render, screen, userEvent } from '@testing-library/react-native';
+import { fireEvent, render, screen, userEvent } from '@testing-library/react-native';
 
 import { ApiError } from '@/api/client';
 import type { ItemWatchlist } from '@/api/tipos';
@@ -1682,10 +1682,9 @@ describe('CardPush', () => {
   });
 
   it('alternar chama aoAlternar com o novo valor', async () => {
-    const user = userEvent.setup();
     await render(<CardPush {...propsPush} situacao="desligado" ligado={false} />);
 
-    await user.press(screen.getByRole('switch', { name: 'Notificações push' }));
+    await fireEvent(screen.getByRole('switch', { name: 'Notificações push' }), 'valueChange', true);
 
     expect(propsPush.aoAlternar).toHaveBeenCalledWith(true);
   });
@@ -1742,10 +1741,9 @@ describe('CardNotificarPorAtivo', () => {
 
   it('alternar devolve o ativo e o novo valor', async () => {
     const aoAlternar = jest.fn();
-    const user = userEvent.setup();
     await render(<CardNotificarPorAtivo itens={itens} aoAlternar={aoAlternar} aoTentarNovamente={jest.fn()} />);
 
-    await user.press(screen.getByRole('switch', { name: 'Notificar VALE3' }));
+    await fireEvent(screen.getByRole('switch', { name: 'Notificar VALE3' }), 'valueChange', true);
 
     expect(aoAlternar).toHaveBeenCalledWith('a-2', true);
   });
@@ -1808,7 +1806,7 @@ describe('CardServidor', () => {
 `__tests__/telas/perfilPush.test.tsx`:
 
 ```tsx
-import { screen, userEvent, waitFor } from '@testing-library/react-native';
+import { fireEvent, screen, userEvent, waitFor } from '@testing-library/react-native';
 import { Alert, Linking } from 'react-native';
 
 import { authApi } from '@/api/auth';
@@ -1859,11 +1857,10 @@ beforeEach(() => {
 
 describe('push', () => {
   it('mostra o estado e desliga: remove o aparelho no servidor e guarda a preferência', async () => {
-    const user = userEvent.setup();
     await renderizar(<Perfil />);
 
     expect(await screen.findByText('Ligadas neste aparelho')).toBeOnTheScreen();
-    await user.press(screen.getByRole('switch', { name: 'Notificações push' }));
+    await fireEvent(screen.getByRole('switch', { name: 'Notificações push' }), 'valueChange', false);
 
     await waitFor(() => expect(dispositivosApi.remover).toHaveBeenCalledWith('ExponentPushToken[abc]'));
     expect(usePreferencias.getState().pushLigado).toBe(false);
@@ -1871,12 +1868,11 @@ describe('push', () => {
   });
 
   it('ligar de novo registra o aparelho', async () => {
-    const user = userEvent.setup();
     usePreferencias.setState({ pushLigado: false });
     usePush.setState({ situacao: 'desligado', token: null });
     await renderizar(<Perfil />);
 
-    await user.press(await screen.findByRole('switch', { name: 'Notificações push' }));
+    await fireEvent(await screen.findByRole('switch', { name: 'Notificações push' }), 'valueChange', true);
 
     await waitFor(() => expect(dispositivosApi.registrar).toHaveBeenCalledWith('ExponentPushToken[abc]'));
     expect(await screen.findByText('Ligadas neste aparelho')).toBeOnTheScreen();
@@ -1904,12 +1900,11 @@ describe('push', () => {
 
 describe('notificar por ativo', () => {
   it('altera no servidor e a falha devolve o interruptor', async () => {
-    const user = userEvent.setup();
     jest.spyOn(Alert, 'alert').mockImplementation(() => {});
     jest.mocked(watchlistApi.definirNotificacao).mockRejectedValue(new Error('falhou'));
     await renderizar(<Perfil />);
 
-    await user.press(await screen.findByRole('switch', { name: 'Notificar PETR4' }));
+    await fireEvent(await screen.findByRole('switch', { name: 'Notificar PETR4' }), 'valueChange', false);
 
     await waitFor(() => expect(watchlistApi.definirNotificacao).toHaveBeenCalledWith('a-1', false));
     await waitFor(() => expect(screen.getByRole('switch', { name: 'Notificar PETR4' })).toBeChecked());
@@ -2043,6 +2038,7 @@ export function CardPush({ situacao, motivo, erro, ligado, ocupado, aoAlternar, 
           value={ligado}
           onValueChange={aoAlternar}
           disabled={indisponivel || ocupado}
+          aria-disabled={indisponivel || ocupado}
           trackColor={{ true: cores.primaria, false: cores.bordaForte }}
         />
       </View>

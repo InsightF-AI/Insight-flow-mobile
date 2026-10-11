@@ -16,6 +16,15 @@ import Perfil from '../../app/(tabs)/perfil';
 jest.mock('expo-router', () => ({ router: { push: jest.fn() } }));
 jest.mock('@/api/auth', () => ({ authApi: { sair: jest.fn(), renovar: jest.fn() } }));
 jest.mock('@/api/notificacoes', () => ({ notificacoesApi: { listar: jest.fn(), marcarComoLida: jest.fn() } }));
+jest.mock('@/api/watchlist', () => ({
+  watchlistApi: { listar: jest.fn(async () => []), definirNotificacao: jest.fn(), remover: jest.fn() },
+}));
+jest.mock('@/api/dispositivos', () => ({ dispositivosApi: { registrar: jest.fn(), remover: jest.fn() } }));
+jest.mock('@/notificacoes/push', () => ({
+  lerSuporte: jest.fn(() => ({ suportado: false, motivo: 'expo-go' })),
+  prepararPush: jest.fn(),
+  configurarExibicaoEmPrimeiroPlano: jest.fn(async () => undefined),
+}));
 
 const armazenamento = (SecureStore as unknown as { __armazenamento: Map<string, string> }).__armazenamento;
 
