@@ -1,7 +1,7 @@
 import { ApiError } from '@/api/client';
 import type { DataISO, Decimal, TipoOperacao } from '@/api/tipos';
 import { mensagemDeErro } from '@/utils/erros';
-import { dataParaISOLocal, normalizarDecimal } from '@/utils/formatacao';
+import { dataParaISOLocal, formatarQuantidade, normalizarDecimal } from '@/utils/formatacao';
 
 export interface FormOperacao {
   tipo: TipoOperacao;
@@ -28,20 +28,52 @@ function decimalPositivo(entrada: string): Decimal | null {
   return decimal !== null && Number(decimal) > 0 ? decimal : null;
 }
 
-export function validarOperacao(form: FormOperacao, hoje: Date = new Date()): ResultadoValidacaoOperacao {
+export interface RestricoesOperacao {
+  /** Tickers que o usuário pode operar (a watchlist). Ausente = sem restrição. */
+  tickersPermitidos?: readonly string[];
+  /** Quantidade em carteira. Só limita venda feita hoje; null/ausente = desconhecida, o servidor decide. */
+  disponivel?: number | null;
+}
+
+const TOLERANCIA_DA_QUANTIDADE = 1e-8;
+
+export function validarOperacao(
+  form: FormOperacao,
+  hoje: Date = new Date(),
+  restricoes: RestricoesOperacao = {},
+): ResultadoValidacaoOperacao {
   const erros: ErrosOperacao = {};
   const ticker = form.ticker.trim().toUpperCase();
   const quantidade = decimalPositivo(form.quantidade);
   const precoUnitario = decimalPositivo(form.precoUnitario);
   const data = dataParaISOLocal(form.data);
+  const dataDeHoje = dataParaISOLocal(hoje);
 
   if (!ticker) erros.ticker = 'Informe o ticker do ativo';
+  else if (restricoes.tickersPermitidos && !restricoes.tickersPermitidos.some((t) => t.toUpperCase() === ticker)) {
+    erros.ticker = 'Escolha um ativo da sua watchlist';
+  }
   if (quantidade === null) erros.quantidade = 'Informe uma quantidade maior que zero';
   if (precoUnitario === null) erros.precoUnitario = 'Informe um preço maior que zero';
   // Strings AAAA-MM-DD comparam na mesma ordem que as datas.
-  if (data > dataParaISOLocal(hoje)) erros.data = 'A data não pode ser futura';
+  if (data > dataDeHoje) erros.data = 'A data não pode ser futura';
 
-  if (!ticker || quantidade === null || precoUnitario === null || erros.data) return { ok: false, erros };
+  // Venda feita hoje: a posição na data é a de agora. Com data passada ela pode ser outra e o servidor decide.
+  const disponivel = restricoes.disponivel;
+  if (
+    form.tipo === 'VENDA' &&
+    quantidade !== null &&
+    data === dataDeHoje &&
+    disponivel !== undefined &&
+    disponivel !== null
+  ) {
+    if (disponivel <= TOLERANCIA_DA_QUANTIDADE) erros.quantidade = 'Sem posição em carteira neste ativo';
+    else if (Number(quantidade) > disponivel + TOLERANCIA_DA_QUANTIDADE) {
+      erros.quantidade = `Maior que a quantidade disponível (${formatarQuantidade(disponivel)})`;
+    }
+  }
+
+  if (Object.keys(erros).length > 0 || quantidade === null || precoUnitario === null) return { ok: false, erros };
   return { ok: true, dados: { ticker, tipo: form.tipo, quantidade, precoUnitario, data } };
 }
 

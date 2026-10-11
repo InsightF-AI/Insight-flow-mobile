@@ -42,10 +42,10 @@ describe('mapaAtivos', () => {
     adicionado_em: '2026-09-25T12:00:00Z',
   };
 
-  it('junta posições e watchlist; a watchlist traz a moeda', () => {
+  it('junta posições e watchlist; a watchlist traz a moeda e o tipo', () => {
     const mapa = mapaAtivos([posicao], [itemWatchlist]);
     expect(mapa.get('a-1')).toEqual({ ticker: 'PETR4' });
-    expect(mapa.get('a-2')).toEqual({ ticker: 'AAPL34', moeda: 'USD' });
+    expect(mapa.get('a-2')).toEqual({ ticker: 'AAPL34', moeda: 'USD', tipo: 'BDR' });
   });
 
   it('aceita consultas ainda sem dados', () => {

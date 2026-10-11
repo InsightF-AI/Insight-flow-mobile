@@ -105,6 +105,17 @@ export function kpiResultado(r: Rentabilidade): DadoKpi {
   };
 }
 
+/** Lucro de vendas já registradas: independe de haver cotação das posições abertas. */
+export function kpiLucroRealizado(r: Rentabilidade): DadoKpi {
+  if (carteiraVazia(r)) return { valor: '—', dica: 'Registre uma operação simulada', cor: 'padrao' };
+  const lucro = paraNumero(r.lucro_realizado_brl);
+  return {
+    valor: formatarMoeda(lucro, 'BRL'),
+    dica: 'Em vendas já registradas',
+    cor: corDoNumero(lucro, LIMITE_ZERO_EM_REAIS),
+  };
+}
+
 export function kpiVariacaoDoDia(v: VariacaoDoDia, semCotacaoNoServidor = false): DadoKpi {
   if (semCotacaoNoServidor) return { ...SEM_COTACAO };
   if (v.total === 0) return { valor: '—', dica: 'Sem posições abertas', cor: 'padrao' };
