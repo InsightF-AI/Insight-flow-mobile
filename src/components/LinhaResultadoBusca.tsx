@@ -20,6 +20,9 @@ export function LinhaResultadoBusca({ ativo, aoPressionar, naWatchlist = false }
     <Pressable
       role="button"
       aria-label={`${ativo.ticker}, ${ativo.nome}`}
+      accessibilityHint={
+        naWatchlist ? 'Já está na sua watchlist. Toque para abrir o ativo.' : 'Toque para adicionar à watchlist.'
+      }
       onPress={aoPressionar}
       style={({ pressed }) => [estilos.linha, { borderColor: cores.borda, opacity: pressed ? 0.85 : 1 }]}
     >

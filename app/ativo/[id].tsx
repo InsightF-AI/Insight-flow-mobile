@@ -19,7 +19,7 @@ import { SinalCard } from '@/components/SinalCard';
 import { Tela } from '@/components/Tela';
 import { Texto } from '@/components/Texto';
 import { VariacaoBadge } from '@/components/VariacaoBadge';
-import { prepararAnaliseTecnica } from '@/dominio/candles';
+import { prepararAnaliseTecnica, SOBREPOSICOES_PADRAO, type Sobreposicoes } from '@/dominio/candles';
 import { descreverIndicadores } from '@/dominio/indicadores';
 import { ROTULO_TIPO_ATIVO } from '@/dominio/rotulos';
 import { useAnaliseIA } from '@/hooks/useAnaliseIA';
@@ -46,6 +46,8 @@ export default function DetalheAtivo() {
   const titulo = ativo?.ticker ?? tickerParam ?? 'Ativo';
 
   const [periodo, setPeriodo] = useState<PeriodoHistorico>('1M');
+  // O painel é remontado a cada período: as médias e o Bollinger escolhidos ficam aqui, para não voltarem ao padrão.
+  const [sobreposicoes, setSobreposicoes] = useState<Sobreposicoes>(SOBREPOSICOES_PADRAO);
   const cotacao = useCotacao(id);
   const historico = useHistorico(id, periodo);
   // Médias e RSI precisam de registros anteriores ao período: o histórico 5A (o máximo do backend) aquece o cálculo.
@@ -152,7 +154,13 @@ export default function DetalheAtivo() {
             >
               {() =>
                 analise ? (
-                  <PainelTecnico key={periodo} analise={analise} moeda={ativo?.moeda} />
+                  <PainelTecnico
+                    key={periodo}
+                    analise={analise}
+                    moeda={ativo?.moeda}
+                    sobreposicoesIniciais={sobreposicoes}
+                    aoMudarSobreposicoes={setSobreposicoes}
+                  />
                 ) : (
                   <EstadoVazio
                     mensagem={

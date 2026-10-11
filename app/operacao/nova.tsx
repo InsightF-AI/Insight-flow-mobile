@@ -48,6 +48,13 @@ export default function NovaOperacao() {
   const disponivel =
     itemEscolhido && operacoes.data ? quantidadeDisponivel(operacoes.data, itemEscolhido.ativo.id) : null;
 
+  // O erro de quantidade de uma venda não vale para a compra (e vice-versa): some junto com a troca.
+  function aoMudarTipo(novo: TipoOperacao) {
+    setTipo(novo);
+    setErros((atuais) => ({ ...atuais, quantidade: undefined }));
+    setErroGeral(null);
+  }
+
   async function aoRegistrar() {
     setErroGeral(null);
     const resultado = validarOperacao({ tipo, ticker, quantidade, precoUnitario, data }, new Date(), {
@@ -108,7 +115,7 @@ export default function NovaOperacao() {
   return (
     <Tela>
       <Texto cor="secundario">Operação simulada: nenhuma ordem real é enviada a corretoras.</Texto>
-      <SeletorSegmentado rotulo="Tipo da operação" opcoes={TIPOS} selecionado={tipo} aoSelecionar={setTipo} />
+      <SeletorSegmentado rotulo="Tipo da operação" opcoes={TIPOS} selecionado={tipo} aoSelecionar={aoMudarTipo} />
       <Campo
         rotulo="Ativo (ticker)"
         valor={ticker}

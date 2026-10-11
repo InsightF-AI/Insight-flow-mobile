@@ -157,6 +157,31 @@ describe('PainelTecnico', () => {
     expect(screen.getByText('RSI (14): 40,0')).toBeOnTheScreen();
   });
 
+  it('volume pequeno (cripto) não vira "Volume 0"', async () => {
+    const base = analise();
+    const candles = base.candles.map((c) => ({ ...c, volume: 0.42 }));
+    await render(<PainelTecnico analise={{ ...base, candles }} moeda="BRL" />);
+    expect(screen.getByText('Volume 0,42')).toBeOnTheScreen();
+  });
+
+  it('começa com as médias que o pai guardou e avisa cada mudança', async () => {
+    const user = userEvent.setup();
+    const aoMudar = jest.fn();
+    await render(
+      <PainelTecnico
+        analise={analise()}
+        moeda="BRL"
+        sobreposicoesIniciais={{ sma20: false, sma50: true, sma200: true, bollinger: true }}
+        aoMudarSobreposicoes={aoMudar}
+      />,
+    );
+    expect(screen.getByRole('switch', { name: 'SMA 20' })).not.toBeChecked();
+    expect(screen.getByRole('switch', { name: 'SMA 200' })).toBeChecked();
+    expect(screen.getByRole('switch', { name: 'Bollinger' })).toBeChecked();
+    await user.press(screen.getByRole('switch', { name: 'SMA 20' }));
+    expect(aoMudar).toHaveBeenLastCalledWith({ sma20: true, sma50: true, sma200: true, bollinger: true });
+  });
+
   it('médias e Bollinger são alternáveis; SMA 20 e SMA 50 começam ligadas', async () => {
     const user = userEvent.setup();
     await render(<PainelTecnico analise={analise()} moeda="BRL" />);

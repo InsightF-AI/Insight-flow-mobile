@@ -4,13 +4,11 @@ import { type LayoutChangeEvent, StyleSheet, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 
 import { caminhoDeLinhas, caminhoDeRetangulos, reta } from '@/components/caminhosSkia';
-import type { AnaliseTecnica } from '@/dominio/candles';
+import type { AnaliseTecnica, Sobreposicoes } from '@/dominio/candles';
 import { criarGeometriaCandles, indiceDoX, type Ponto, segmentosDaSerie } from '@/dominio/geometriaGrafico';
 import type { Serie } from '@/dominio/series';
 import { useTema } from '@/theme/useTema';
 import { formatarData } from '@/utils/formatacao';
-
-export type Sobreposicoes = { sma20: boolean; sma50: boolean; sma200: boolean; bollinger: boolean };
 
 interface Props {
   analise: AnaliseTecnica;

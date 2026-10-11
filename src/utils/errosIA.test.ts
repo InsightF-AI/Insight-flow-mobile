@@ -11,6 +11,8 @@ describe('formatarEspera', () => {
     [60, 'cerca de 1 min'],
     [61, 'cerca de 2 min'],
     [120, 'cerca de 2 min'],
+    [3541, 'cerca de 1 h'],
+    [3599, 'cerca de 1 h'],
     [3600, 'cerca de 1 h'],
     [7300, 'cerca de 3 h'],
   ])('%d s vira "%s"', (segundos, esperado) => {
