@@ -1,8 +1,7 @@
-<!--
-Rascunho do comentário de status para a issue #9 do backend ("[Mobile] Criação do Aplicativo (Versão Celular)").
-Mesmo formato que o time do desktop usou na #10. NÃO foi publicado: o responsável pelo card revisa e cola.
-Atualizado em 11/10/2026 (PRs #1 a #11 do repositório mobile).
--->
+> **Publicado em 11/10/2026** na issue #9 do backend, por @brunoosouza09: https://github.com/InsightF-AI/Insight-flow-backend/issues/9#issuecomment-6113166864
+> Este arquivo guarda o texto como registro. Para atualizar o status, comente de novo na issue com o que mudou.
+
+---
 
 @Vinicius11s segue o status da #9:
 

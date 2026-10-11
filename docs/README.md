@@ -51,7 +51,7 @@ Ordem e forma de mesclar: [`CONTRIBUTING.md`](../CONTRIBUTING.md#pull-requests-e
 | Push com o app fechado (Etapa 8, parte B) | Depende da decisão D8: conta Expo/EAS, projeto Firebase (Android) e conta Apple Developer (iOS) |
 | "Ponto de partida (Checkpoint 01)" em `checkpoint-02.md` | A preencher pelo estudante: o Termo do Checkpoint 01 cita o app "Controle de Gastos" |
 | CI do GitHub | O workflow `.github/workflows/ci.yml` não teve nenhuma execução neste repositório (o backend e o desktop têm); conferir em Settings → Actions |
-| Status na issue #9 do backend | Rascunho em [`entregas/checkpoint-02/status-issue-9.md`](entregas/checkpoint-02/status-issue-9.md) |
+| Status na issue #9 do backend | **Publicado em 11/10/2026** ([comentário](https://github.com/InsightF-AI/Insight-flow-backend/issues/9#issuecomment-6113166864)); o texto está em [`entregas/checkpoint-02/status-issue-9.md`](entregas/checkpoint-02/status-issue-9.md) |
 
 Os menores adiados de cada etapa estão no "Registro da execução" do plano correspondente; os que continuam abertos depois
 do polimento estão em [`superpowers/plans/2026-10-11-polimento-menores.md`](superpowers/plans/2026-10-11-polimento-menores.md).
