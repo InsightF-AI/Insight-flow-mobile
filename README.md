@@ -77,6 +77,10 @@ __tests__/telas/  testes de tela
 
 Design completo: [`docs/superpowers/specs/2026-09-25-app-mobile-mvp-design.md`](docs/superpowers/specs/2026-09-25-app-mobile-mvp-design.md).
 
+## Teste no aparelho
+
+O que só o celular confere (toque, rolagem, teclado, rede real, leitores de tela e push) está em [`docs/roteiro-de-teste-no-aparelho.md`](docs/roteiro-de-teste-no-aparelho.md), com o resultado esperado de cada passo.
+
 ## Próximas etapas
 
 O roteiro está em [`docs/PLANO.md`](docs/PLANO.md): da Etapa 8 só falta o que depende da decisão D8 (projeto EAS, chave FCM, development build e o teste do push em aparelho); o dashboard, o gráfico de candles, a busca, os alertas com WebSocket, a carteira, a análise e o chat por IA, o perfil e o cliente de push já estão prontos. Recuperação de senha não existe no backend.
