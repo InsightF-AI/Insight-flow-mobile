@@ -3012,3 +3012,30 @@ git commit -m "docs: tempo real, notificações e alertas no README, no plano e 
 ```
 
 Depois: pacote de revisão da branch inteira, revisor independente (opus, somente leitura), uma rodada de correções com teste RED→GREEN, "Registro da execução" no fim deste plano, `git push -u origin feature/etapa-5-alertas-notificacoes` e `gh pr create --base feature/etapa-4-detalhe-do-ativo` (sem merge, sem trocar bases).
+
+---
+
+## Registro da execução (10/10/2026)
+
+Executado inline, tarefa a tarefa, com revisão independente da branch inteira no fim. O código final difere do que está nas tarefas acima nos pontos abaixo.
+
+**Resultado:** 64 suítes / 714 testes; `npm run verificar` verde. Conferido com o backend local: `autenticar` → `autenticado`; reautenticação na mesma conexão; `ping` em 30 s; token inválido e falta de autenticação em 10 s fecham com `4401`; um alerta de BTC já satisfeito virou uma notificação `ALERTA_DISPARADO` entregue pelo WebSocket em 200 s, com os sete campos do tipo `Notificacao`.
+
+**Decisões que divergem do plano**
+
+- **Testes com `jest.mock`.** As variáveis usadas dentro da fábrica precisam do prefixo `mock` (`mockConectar`, `mockDesconectar`, `mockOpcoes`, `mockIdDaRota`); o plano as trazia sem ele.
+- **Task 4 — banner.** O banner anuncia o aviso com `AccessibilityInfo.announceForAccessibility` em vez de `role="alert"` na `View` (uma `View` não acessível não é achada por papel, e torná-la acessível esconderia os botões internos do leitor de tela).
+- **Revisão — banner de outra conta.** O banner pendente passou a ser descartado ao desmontar a sessão ativa: antes, sair em até 6 s e entrar em outra conta mostrava de novo o aviso da conta anterior.
+- **Revisão — sincronização tardia.** A resposta do `GET` de sincronização é descartada quando a sessão mudou durante a espera (antes repunha no cache já limpo as notificações da conta anterior).
+- **Revisão — reconexão.** A espera e o contador de 4401 só voltam ao mínimo depois de 30 s de conexão estável (`ESTABILIDADE_MS`). Zerar já no `autenticado` fazia um servidor que autentica e cai logo depois ser martelado (53 conexões por minuto; 100 renovações de refresh token por minuto com 4401).
+
+**Menores adiados (da revisão)**
+
+- "Marcar todas como lidas" sem rede deixa o selo em zero enquanto o servidor ainda tem não lidas: a atualização otimista não tem rollback e a mescla mantém `lida` verdadeiro. O `Alert` de falha parcial também não aparece se a pessoa sair da tela antes de terminar.
+- Uma notificação recebida pelo WebSocket some da caixa se um `GET` completo já em voo responde sem ela (o `queryFn` substitui a lista inteira).
+- Os testes do cliente WebSocket não seguram as guardas de corrida de geração (remover qualquer uma delas não quebra teste; as sondas do revisor mostraram o código correto).
+- O `as Notificacao` do cliente aceita um objeto malformado no cache (hoje o backend sempre serializa os sete campos).
+- Acessibilidade: o selo da aba Alertas não entra no nome acessível no iOS (`tabBarAccessibilityLabel`), e dois banners seguidos com o mesmo texto não são reanunciados.
+- O aviso `act(...)` de `__tests__/telas/perfil.test.tsx` é anterior a esta etapa.
+
+**Não verificado (depende do aparelho):** comportamento do `WebSocket` nativo do React Native no Android e no iOS (ordem de `onerror`/`onclose`, fechamento em segundo plano, o sistema matando o socket, `ws://` em build de produção); banner sobre modal nativo (`operacao/nova`); tempo real do anúncio com VoiceOver e TalkBack.
