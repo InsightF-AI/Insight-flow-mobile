@@ -1,10 +1,10 @@
 import type { UseQueryResult } from '@tanstack/react-query';
 import { router } from 'expo-router';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Alert, StyleSheet, View } from 'react-native';
 
 import type { ApiError } from '@/api/client';
-import type { Comparativo, Operacao } from '@/api/tipos';
+import type { Comparativo, CotacaoAtual, Operacao, Uuid } from '@/api/tipos';
 import { BotaoFlutuante } from '@/components/BotaoFlutuante';
 import { Card } from '@/components/Card';
 import { Carregando } from '@/components/Carregando';
@@ -14,13 +14,33 @@ import { EstadoVazio } from '@/components/EstadoVazio';
 import { GraficoDistribuicao } from '@/components/GraficoDistribuicao';
 import { ItemOperacao } from '@/components/ItemOperacao';
 import { ItemPosicao } from '@/components/ItemPosicao';
+import { Kpi } from '@/components/Kpi';
 import { Linha } from '@/components/Linha';
 import { SeletorSegmentado } from '@/components/SeletorSegmentado';
 import { Tela } from '@/components/Tela';
 import { Texto } from '@/components/Texto';
-import { VariacaoBadge } from '@/components/VariacaoBadge';
+import {
+  kpiLucroRealizado,
+  kpiPatrimonio,
+  kpiResultado,
+  kpiVariacaoDoDia,
+  posicoesSemCotacao,
+  tomDoKpi,
+  variacaoDoDia,
+} from '@/dominio/inicio';
 import { mensagemErroOperacao } from '@/dominio/operacao';
-import { type DimensaoDistribuicao, mapaAtivos, prepararDistribuicao } from '@/dominio/portfolio';
+import {
+  ativosSemCotacao,
+  type DimensaoDistribuicao,
+  descreverDadosParciais,
+  type FiltroPosicoes,
+  filtrarPosicoes,
+  filtrosDasPosicoes,
+  mapaAtivos,
+  prepararDistribuicao,
+  rotuloDoFiltro,
+} from '@/dominio/portfolio';
+import { useCotacoes } from '@/hooks/useAtivo';
 import {
   useBenchmark,
   useDistribuicao,
@@ -33,7 +53,7 @@ import { useWatchlist } from '@/hooks/useWatchlist';
 import { espaco } from '@/theme/escala';
 import { useTema } from '@/theme/useTema';
 import { ehStatus } from '@/utils/erros';
-import { formatarMoeda, formatarPercentual } from '@/utils/formatacao';
+import { formatarPercentual } from '@/utils/formatacao';
 
 const DIMENSOES: readonly { valor: DimensaoDistribuicao; rotulo: string }[] = [
   { valor: 'classe', rotulo: 'Classe' },
@@ -75,10 +95,22 @@ export default function Portfolio() {
   const watchlist = useWatchlist();
   const removerOperacao = useRemoverOperacao();
   const [dimensao, setDimensao] = useState<DimensaoDistribuicao>('classe');
+  const [filtro, setFiltro] = useState<FiltroPosicoes>('TODAS');
   const ativos = mapaAtivos(posicoes.data, watchlist.data);
 
+  // Variação do dia por posição: mesma chave de cotação do Início, então não repete a consulta.
+  const idsDasPosicoes = useMemo(() => (posicoes.data ?? []).map((posicao) => posicao.ativo_id), [posicoes.data]);
+  const consultasCotacao = useCotacoes(idsDasPosicoes);
+  const cotacaoPorAtivo = new Map<Uuid, (typeof consultasCotacao)[number]>();
+  idsDasPosicoes.forEach((id, indice) => cotacaoPorAtivo.set(id, consultasCotacao[indice]));
+  const cotacoesPorId = new Map<Uuid, CotacaoAtual | undefined>(
+    idsDasPosicoes.map((id, indice) => [id, consultasCotacao[indice]?.data]),
+  );
+
   function atualizar() {
-    for (const consulta of [operacoes, rentabilidade, cdi, ibovespa, distribuicao, posicoes]) void consulta.refetch();
+    for (const consulta of [operacoes, rentabilidade, cdi, ibovespa, distribuicao, posicoes, ...consultasCotacao]) {
+      void consulta.refetch();
+    }
   }
 
   function confirmarRemocao(operacao: Operacao) {
@@ -110,24 +142,73 @@ export default function Portfolio() {
     );
   }
 
+  const semCotacaoNoServidor = posicoesSemCotacao(rentabilidade.data, posicoes.data);
+  const rentabilidadeIndisponivel = rentabilidade.isError && rentabilidade.data === undefined;
+  const patrimonio = rentabilidade.data ? kpiPatrimonio(rentabilidade.data) : null;
+  const resultado = rentabilidade.data ? kpiResultado(rentabilidade.data) : null;
+  const realizado = rentabilidade.data ? kpiLucroRealizado(rentabilidade.data) : null;
+  const variacao = posicoes.data
+    ? kpiVariacaoDoDia(variacaoDoDia(posicoes.data, cotacoesPorId), semCotacaoNoServidor)
+    : null;
+  const carregandoVariacao = posicoes.isPending || consultasCotacao.some((consulta) => consulta.isPending);
+
+  const avisoDeDadosParciais = posicoes.data
+    ? descreverDadosParciais(ativosSemCotacao(operacoes.data, posicoes.data), ativos)
+    : null;
+
+  const filtros = filtrosDasPosicoes(posicoes.data ?? [], ativos);
+  const filtroAtivo = filtros.includes(filtro) ? filtro : 'TODAS';
+
   return (
     <View style={estilos.tela}>
       <Tela aoAtualizar={atualizar} atualizando={operacoes.isRefetching}>
-        <Card titulo="Resumo da carteira" icone="carteira">
-          <EstadoConsulta consulta={rentabilidade}>
-            {(dados) => (
-              <>
-                <View style={estilos.destaque}>
-                  <Texto variante="destaque">{formatarMoeda(dados.valor_mercado_brl, 'BRL')}</Texto>
-                  <VariacaoBadge valor={dados.percentual} escala="fracao" />
-                </View>
-                <Linha rotulo="Custo base" valor={formatarMoeda(dados.custo_base_brl, 'BRL')} />
-                <Linha rotulo="Lucro não realizado" valor={formatarMoeda(dados.lucro_nao_realizado_brl, 'BRL')} />
-                <Linha rotulo="Lucro realizado" valor={formatarMoeda(dados.lucro_realizado_brl, 'BRL')} />
-              </>
-            )}
-          </EstadoConsulta>
-        </Card>
+        <Texto variante="legenda" cor="secundario">
+          Carteira simulada: as operações ficam só aqui e nenhuma ordem é enviada a corretoras. Ferramenta educacional
+          de análise, não constitui recomendação de investimento.
+        </Texto>
+
+        {avisoDeDadosParciais ? (
+          <Card titulo="Dados parciais" icone="info" tomIcone="destaque">
+            <Texto role="alert">{avisoDeDadosParciais}</Texto>
+          </Card>
+        ) : null}
+
+        <View style={estilos.kpis}>
+          <Kpi
+            rotulo="Patrimônio simulado"
+            icone="carteira"
+            valor={rentabilidadeIndisponivel ? 'indisponível' : (patrimonio?.valor ?? '')}
+            dica={patrimonio?.dica}
+            carregando={rentabilidade.isPending}
+          />
+          <Kpi
+            rotulo="Resultado não realizado"
+            icone="tendencia"
+            tomIcone={tomDoKpi(resultado?.cor ?? 'padrao')}
+            corValor={resultado?.cor}
+            valor={rentabilidadeIndisponivel ? 'indisponível' : (resultado?.valor ?? '')}
+            dica={resultado?.dica}
+            carregando={rentabilidade.isPending}
+          />
+          <Kpi
+            rotulo="Lucro realizado"
+            icone="carteira"
+            tomIcone={tomDoKpi(realizado?.cor ?? 'padrao')}
+            corValor={realizado?.cor}
+            valor={rentabilidadeIndisponivel ? 'indisponível' : (realizado?.valor ?? '')}
+            dica={realizado?.dica}
+            carregando={rentabilidade.isPending}
+          />
+          <Kpi
+            rotulo="Variação do dia"
+            icone="atividade"
+            tomIcone={tomDoKpi(variacao?.cor ?? 'padrao')}
+            corValor={variacao?.cor}
+            valor={posicoes.isError && posicoes.data === undefined ? 'indisponível' : (variacao?.valor ?? '')}
+            dica={variacao?.dica}
+            carregando={carregandoVariacao}
+          />
+        </View>
 
         <Card titulo="Comparativo desde a 1ª operação" icone="tendencia">
           <ComparativoBenchmarks cdi={cdi} ibovespa={ibovespa} />
@@ -154,15 +235,43 @@ export default function Portfolio() {
 
         <Card titulo="Posições" icone="lista">
           <EstadoConsulta consulta={posicoes}>
-            {(lista) =>
-              lista.length > 0 ? (
-                lista.map((posicao) => (
-                  <ItemPosicao key={posicao.ativo_id} posicao={posicao} moeda={ativos.get(posicao.ativo_id)?.moeda} />
-                ))
-              ) : (
-                <EstadoVazio mensagem="Nenhuma posição em aberto." />
-              )
-            }
+            {(lista) => {
+              if (lista.length === 0) return <EstadoVazio mensagem="Nenhuma posição em aberto." />;
+              return (
+                <>
+                  {filtros.length > 1 ? (
+                    <SeletorSegmentado
+                      rotulo="Filtrar posições por classe"
+                      opcoes={filtros.map((valor) => ({ valor, rotulo: rotuloDoFiltro(valor) }))}
+                      selecionado={filtroAtivo}
+                      aoSelecionar={setFiltro}
+                    />
+                  ) : null}
+                  {filtrarPosicoes(lista, ativos, filtroAtivo).map((posicao) => {
+                    const consulta = cotacaoPorAtivo.get(posicao.ativo_id);
+                    const variacaoDaPosicao = consulta?.data
+                      ? consulta.data.variacao_percentual
+                      : consulta?.isError
+                        ? null
+                        : undefined;
+                    return (
+                      <ItemPosicao
+                        key={posicao.ativo_id}
+                        posicao={posicao}
+                        moeda={ativos.get(posicao.ativo_id)?.moeda}
+                        variacaoDoDia={variacaoDaPosicao}
+                        aoPressionar={() =>
+                          router.push({
+                            pathname: '/ativo/[id]',
+                            params: { id: posicao.ativo_id, ticker: posicao.ticker },
+                          })
+                        }
+                      />
+                    );
+                  })}
+                </>
+              );
+            }}
           </EstadoConsulta>
         </Card>
 
@@ -191,6 +300,6 @@ export default function Portfolio() {
 
 const estilos = StyleSheet.create({
   tela: { flex: 1 },
-  destaque: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: espaco.md },
+  kpis: { flexDirection: 'row', flexWrap: 'wrap', gap: espaco.md },
   espacoDoBotao: { height: 72 },
 });

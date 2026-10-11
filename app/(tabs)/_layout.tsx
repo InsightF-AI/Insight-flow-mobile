@@ -51,7 +51,7 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="portfolio"
         options={{
-          title: 'Portfólio',
+          title: 'Carteira',
           tabBarIcon: ({ color, size }) => <Icone nome="grafico-pizza" corExata={color} tamanho={size} />,
           headerRight: () => (
             <BotaoCabecalho icone="mensagem" rotulo="Perguntar à IA" onPress={() => router.push('/chat')} />

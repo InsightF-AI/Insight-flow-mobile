@@ -789,8 +789,8 @@ describe('com operações', () => {
     await renderizar(<Portfolio />);
 
     expect(await screen.findByText('Patrimônio simulado')).toBeOnTheScreen();
-    // Resultado não realizado: R$ 30,00 e 0,1 (fração) → +10,00%
-    expect(await screen.findByText('+10,00%')).toBeOnTheScreen();
+    // 0,1 (fração) → +10,00%: na dica do Resultado não realizado e na linha da carteira do comparativo.
+    expect(await screen.findAllByText('+10,00%')).toHaveLength(2);
     expect(screen.getByText(`R$${NBSP}12,50`)).toBeOnTheScreen();
     // Comparativo: CDI null → indisponível; Ibovespa 0,02 (fração) → +2,00%
     expect(await screen.findByText('+2,00%')).toBeOnTheScreen();
@@ -821,7 +821,7 @@ describe('com operações', () => {
     const user = userEvent.setup();
     prepararCarteiraCompleta();
     await renderizar(<Portfolio />);
-    await user.press(await screen.findByRole('button', { name: /PETR4/ }));
+    await user.press(await screen.findByRole('button', { name: /^PETR4/ }));
     expect(router.push).toHaveBeenCalledWith({ pathname: '/ativo/[id]', params: { id: 'a-1', ticker: 'PETR4' } });
   });
 });
@@ -856,10 +856,10 @@ describe('filtro das posições por classe', () => {
     prepararDuasClasses();
     await renderizar(<Portfolio />);
     await user.press(await screen.findByRole('radio', { name: 'Cripto' }));
-    expect(screen.queryByRole('button', { name: /PETR4/ })).not.toBeOnTheScreen();
-    expect(screen.getByRole('button', { name: /BTC/ })).toBeOnTheScreen();
+    expect(screen.queryByRole('button', { name: /^PETR4/ })).not.toBeOnTheScreen();
+    expect(screen.getByRole('button', { name: /^BTC/ })).toBeOnTheScreen();
     await user.press(screen.getByRole('radio', { name: 'Todas' }));
-    expect(screen.getByRole('button', { name: /PETR4/ })).toBeOnTheScreen();
+    expect(screen.getByRole('button', { name: /^PETR4/ })).toBeOnTheScreen();
   });
 
   it('com uma classe só não mostra o filtro', async () => {
