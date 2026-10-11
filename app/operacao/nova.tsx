@@ -5,17 +5,20 @@ import type { TipoOperacao } from '@/api/tipos';
 import { Botao } from '@/components/Botao';
 import { Campo } from '@/components/Campo';
 import { CampoData } from '@/components/CampoData';
+import { Carregando } from '@/components/Carregando';
+import { ErroComRetry } from '@/components/ErroComRetry';
+import { EstadoVazio } from '@/components/EstadoVazio';
 import { SeletorSegmentado } from '@/components/SeletorSegmentado';
 import { SugestoesTicker } from '@/components/SugestoesTicker';
 import { Tela } from '@/components/Tela';
 import { Texto } from '@/components/Texto';
 import { type ErrosOperacao, mensagemErroOperacao, validarOperacao } from '@/dominio/operacao';
+import { quantidadeDisponivel } from '@/dominio/portfolio';
 import { useCotacao } from '@/hooks/useAtivo';
-import { useRegistrarOperacao } from '@/hooks/usePortfolio';
-import { useResolverAtivo } from '@/hooks/useResolverAtivo';
+import { useOperacoes, useRegistrarOperacao } from '@/hooks/usePortfolio';
 import { useWatchlist } from '@/hooks/useWatchlist';
 import { ehStatus } from '@/utils/erros';
-import { formatarMoeda } from '@/utils/formatacao';
+import { formatarMoeda, formatarQuantidade } from '@/utils/formatacao';
 
 // Tipo da operação simulada que o próprio usuário registra (rótulos permitidos pela RN-01).
 const TIPOS: readonly { valor: TipoOperacao; rotulo: string }[] = [
@@ -25,7 +28,7 @@ const TIPOS: readonly { valor: TipoOperacao; rotulo: string }[] = [
 
 export default function NovaOperacao() {
   const watchlist = useWatchlist();
-  const resolver = useResolverAtivo();
+  const operacoes = useOperacoes();
   const registrar = useRegistrarOperacao();
   const [tipo, setTipo] = useState<TipoOperacao>('COMPRA');
   const [ticker, setTicker] = useState('');
@@ -35,26 +38,36 @@ export default function NovaOperacao() {
   const [erros, setErros] = useState<ErrosOperacao>({});
   const [erroGeral, setErroGeral] = useState<string | null>(null);
 
-  // Atalho de preço só para ativos já na watchlist: digitar um ticker não deve adicioná-lo.
+  const itens = watchlist.data ?? [];
+  // O ativo da operação precisa estar na watchlist: digitar um ticker nunca o adiciona em silêncio (decisão D6).
   const tickerNormalizado = ticker.trim().toUpperCase();
-  const itemConhecido = watchlist.data?.find((item) => item.ativo.ticker.toUpperCase() === tickerNormalizado);
-  const cotacao = useCotacao(itemConhecido?.ativo.id);
+  const itemEscolhido = itens.find((item) => item.ativo.ticker.toUpperCase() === tickerNormalizado);
+  const cotacao = useCotacao(itemEscolhido?.ativo.id);
   const precoAtual = cotacao.data?.preco;
-  const enviando = resolver.isPending || registrar.isPending;
+  // Saldo vindo das operações (não de /portfolio/posicoes: ela omite o ativo sem cotação). null = ainda não se sabe.
+  const disponivel =
+    itemEscolhido && operacoes.data ? quantidadeDisponivel(operacoes.data, itemEscolhido.ativo.id) : null;
 
   async function aoRegistrar() {
     setErroGeral(null);
-    const resultado = validarOperacao({ tipo, ticker, quantidade, precoUnitario, data });
+    const resultado = validarOperacao({ tipo, ticker, quantidade, precoUnitario, data }, new Date(), {
+      tickersPermitidos: itens.map((item) => item.ativo.ticker),
+      disponivel: tipo === 'VENDA' ? disponivel : null,
+    });
     if (!resultado.ok) {
       setErros(resultado.erros);
       return;
     }
     setErros({});
     const { dados } = resultado;
+    const ativo = itens.find((item) => item.ativo.ticker.toUpperCase() === dados.ticker);
+    if (!ativo) {
+      setErros({ ticker: 'Escolha um ativo da sua watchlist' });
+      return;
+    }
     try {
-      const { ativoId } = await resolver.mutateAsync(dados.ticker);
       await registrar.mutateAsync({
-        ativo_id: ativoId,
+        ativo_id: ativo.ativo.id,
         tipo: dados.tipo,
         quantidade: dados.quantidade,
         preco_unitario: dados.precoUnitario,
@@ -65,6 +78,31 @@ export default function NovaOperacao() {
       if (ehStatus(erro, 404)) setErros({ ticker: 'Ativo não encontrado' });
       else setErroGeral(mensagemErroOperacao(erro, 'registrar'));
     }
+  }
+
+  if (watchlist.isPending) {
+    return (
+      <Tela>
+        <Carregando />
+      </Tela>
+    );
+  }
+  if (watchlist.isError) {
+    return (
+      <Tela>
+        <ErroComRetry erro={watchlist.error} aoTentarNovamente={() => void watchlist.refetch()} />
+      </Tela>
+    );
+  }
+  if (itens.length === 0) {
+    return (
+      <Tela>
+        <EstadoVazio
+          mensagem="Para registrar uma operação, o ativo precisa estar na sua watchlist. Busque o ativo e adicione-o primeiro."
+          acao={{ titulo: 'Buscar ativo', onPress: () => router.push('/buscar') }}
+        />
+      </Tela>
+    );
   }
 
   return (
@@ -79,7 +117,7 @@ export default function NovaOperacao() {
         autoCapitalize="characters"
         placeholder="Ex.: PETR4"
       />
-      <SugestoesTicker tickers={watchlist.data?.map((item) => item.ativo.ticker) ?? []} aoEscolher={setTicker} />
+      <SugestoesTicker tickers={itens.map((item) => item.ativo.ticker)} aoEscolher={setTicker} />
       <Campo
         rotulo="Quantidade"
         valor={quantidade}
@@ -88,6 +126,13 @@ export default function NovaOperacao() {
         keyboardType="decimal-pad"
         placeholder="Ex.: 100"
       />
+      {tipo === 'VENDA' && itemEscolhido && disponivel !== null ? (
+        <Texto variante="legenda" cor="secundario">
+          {disponivel > 0
+            ? `Disponível para venda: ${formatarQuantidade(disponivel)}`
+            : 'Sem posição em carteira neste ativo.'}
+        </Texto>
+      ) : null}
       <Campo
         rotulo="Preço unitário"
         valor={precoUnitario}
@@ -99,7 +144,7 @@ export default function NovaOperacao() {
       {precoAtual ? (
         <Botao
           variante="secundario"
-          titulo={`Usar cotação atual (${formatarMoeda(precoAtual, itemConhecido?.ativo.moeda)})`}
+          titulo={`Usar cotação atual (${formatarMoeda(precoAtual, itemEscolhido?.ativo.moeda)})`}
           onPress={() => setPrecoUnitario(precoAtual.replace('.', ','))}
         />
       ) : null}
@@ -109,7 +154,7 @@ export default function NovaOperacao() {
           {erroGeral}
         </Texto>
       ) : null}
-      <Botao titulo="Registrar operação" onPress={aoRegistrar} carregando={enviando} />
+      <Botao titulo="Registrar operação" onPress={aoRegistrar} carregando={registrar.isPending} />
     </Tela>
   );
 }
