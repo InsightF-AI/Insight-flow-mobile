@@ -679,7 +679,8 @@ const analise: AnaliseIA = {
 
 // Padrões do app em produção: repetição de 5xx ligada. A IA não pode repetir sozinha (cada chamada gasta cota).
 function clienteComRepeticao() {
-  return new QueryClient({ defaultOptions: { queries: { retry: 3, retryDelay: 1 } } });
+  // gcTime infinito: o padrão (5 min) deixa um timer aberto e o Jest não encerra o processo.
+  return new QueryClient({ defaultOptions: { queries: { retry: 3, retryDelay: 1, gcTime: Infinity } } });
 }
 
 beforeEach(() => {
@@ -1634,7 +1635,7 @@ describe('SugestoesChat', () => {
 
 ```tsx
 import * as Clipboard from 'expo-clipboard';
-import { screen, userEvent, waitFor } from '@testing-library/react-native';
+import { act, fireEvent, screen, userEvent, waitFor } from '@testing-library/react-native';
 import { Alert } from 'react-native';
 
 import { ApiError } from '@/api/client';
@@ -1735,10 +1736,10 @@ describe('conversa', () => {
   });
 
   it('pergunta acima de 2000 caracteres mostra o limite e não envia', async () => {
-    const user = userEvent.setup();
     await renderizar(<Chat />);
 
-    await digitar(user, 'x'.repeat(2001));
+    // Digitar 2001 caracteres um a um estoura o tempo do teste: o evento de texto entra de uma vez.
+    await fireEvent.changeText(screen.getByLabelText('Mensagem para a IA'), 'x'.repeat(2001));
 
     expect(screen.getByText('A pergunta tem 2001 caracteres; o limite é 2000.')).toBeOnTheScreen();
     expect(screen.getByRole('button', { name: 'Enviar' })).toBeDisabled();
@@ -1829,7 +1830,9 @@ describe('copiar e limpar', () => {
     expect(screen.getByText('Resposta.')).toBeOnTheScreen();
 
     const botoes = alerta.mock.calls[0][2] ?? [];
-    botoes.find((b) => b.text === 'Limpar')?.onPress?.();
+    await act(async () => {
+      botoes.find((b) => b.text === 'Limpar')?.onPress?.();
+    });
 
     await waitFor(() => expect(screen.queryByText('Resposta.')).not.toBeOnTheScreen());
     expect(screen.getByRole('button', { name: SUGESTOES_DO_CHAT[0] })).toBeOnTheScreen();

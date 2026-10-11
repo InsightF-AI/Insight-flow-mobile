@@ -21,7 +21,8 @@ const analise: AnaliseIA = {
 
 // Padrões do app em produção: repetição de 5xx ligada. A IA não pode repetir sozinha (cada chamada gasta cota).
 function clienteComRepeticao() {
-  return new QueryClient({ defaultOptions: { queries: { retry: 3, retryDelay: 1 } } });
+  // gcTime infinito: o padrão (5 min) deixa um timer aberto e o Jest não encerra o processo.
+  return new QueryClient({ defaultOptions: { queries: { retry: 3, retryDelay: 1, gcTime: Infinity } } });
 }
 
 beforeEach(() => {
