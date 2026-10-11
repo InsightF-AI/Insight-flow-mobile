@@ -110,7 +110,16 @@ export default function Perfil() {
         erro={erroDoPush}
         ligado={pushEfetivo}
         ocupado={situacaoDoPush === 'verificando'}
-        aoAlternar={(ligar) => void (ligar ? ligarPush() : desligarPush())}
+        aoAlternar={(ligar) => {
+          if (ligar) {
+            void ligarPush();
+            return;
+          }
+          // O aparelho só sai do push quando o servidor confirma: sem isso a escolha não muda e o usuário é avisado.
+          desligarPush().catch((erro) =>
+            Alert.alert('Não foi possível desligar as notificações push', mensagemDeErro(erro)),
+          );
+        }}
         aoTentarNovamente={() => void sincronizarPush({ pedirPermissao: true })}
         aoAbrirConfiguracoes={() => void Linking.openSettings()}
       />
@@ -118,11 +127,11 @@ export default function Perfil() {
         itens={watchlist.data}
         carregando={watchlist.isPending}
         erro={watchlist.error}
+        // `mutateAsync` avisa a falha de cada alteração (o `onError` de `mutate` só vale para a última chamada).
         aoAlternar={(ativoId, notificar) =>
-          definirNotificacao.mutate(
-            { ativoId, notificar },
-            { onError: (erro) => Alert.alert('Não foi possível alterar as notificações', mensagemDeErro(erro)) },
-          )
+          void definirNotificacao
+            .mutateAsync({ ativoId, notificar })
+            .catch((erro) => Alert.alert('Não foi possível alterar as notificações', mensagemDeErro(erro)))
         }
         aoTentarNovamente={() => void watchlist.refetch()}
       />

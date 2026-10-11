@@ -165,15 +165,6 @@ describe('ligar e desligar', () => {
     expect(armazenamento.get('insightflow.push')).toBe('0');
     expect(usePush.getState()).toMatchObject({ situacao: 'desligado', token: null });
   });
-
-  it('desligar vale mesmo que o servidor não responda', async () => {
-    await usePush.getState().sincronizar();
-    jest.mocked(dispositivosApi.remover).mockRejectedValue(new ApiError(0, 'Sem conexão', { causa: 'rede' }));
-
-    await expect(usePush.getState().desligar()).resolves.toBeUndefined();
-
-    expect(usePush.getState().situacao).toBe('desligado');
-  });
 });
 
 describe('desregistrar (antes do logout)', () => {

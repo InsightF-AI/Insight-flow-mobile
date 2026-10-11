@@ -266,7 +266,7 @@ O celular não enxerga o `localhost` do PC: o app precisa do **IP do PC na rede*
 O Expo Go não recebe push remoto no Android: é preciso uma **development build**.
 
 1. `expo-notifications` e `expo-device` já estão instalados. Instalar `expo-dev-client` e `expo-build-properties` com `npx expo install` (depois disso o `npx expo start` abre em development build; para voltar ao Expo Go, `npx expo start --go`).
-2. `eas init` (gera o `projectId`) e cadastrar a chave FCM V1 com `eas credentials`. O `app.config.ts` lê o projeto de `EAS_PROJECT_ID`: `EAS_PROJECT_ID=<uuid> npx expo start --dev-client` (ou, no EAS, uma variável de ambiente do perfil de build). Sem ele o Perfil mostra "projeto Expo não configurado" e nada é registrado.
+2. `eas init` (gera o `projectId`) e cadastrar a chave FCM V1 com `eas credentials`. O `app.config.ts` lê o projeto de `EAS_PROJECT_ID`: coloque `EAS_PROJECT_ID=<uuid>` no `.env` (o Expo CLI o carrega; funciona igual no PowerShell e no bash) ou, no EAS, numa variável de ambiente do perfil de build. O `eas build` precisa do `projectId` resolvido na avaliação local da configuração. Sem ele o Perfil mostra "Falta configurar o projeto Expo (EAS)" e nada é registrado.
 3. `eas build --profile development --platform android` e instalar o APK.
 4. `npx expo start --dev-client`.
 5. O perfil `development` libera tráfego `http://` no Android (`usesCleartextTraffic`); produção usa HTTPS.

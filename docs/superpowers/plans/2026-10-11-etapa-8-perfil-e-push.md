@@ -1119,15 +1119,6 @@ describe('ligar e desligar', () => {
     expect(armazenamento.get('insightflow.push')).toBe('0');
     expect(usePush.getState()).toMatchObject({ situacao: 'desligado', token: null });
   });
-
-  it('desligar vale mesmo que o servidor não responda', async () => {
-    await usePush.getState().sincronizar();
-    jest.mocked(dispositivosApi.remover).mockRejectedValue(new ApiError(0, 'Sem conexão', { causa: 'rede' }));
-
-    await expect(usePush.getState().desligar()).resolves.toBeUndefined();
-
-    expect(usePush.getState().situacao).toBe('desligado');
-  });
 });
 
 describe('desregistrar (antes do logout)', () => {
@@ -2427,3 +2418,43 @@ Com um usuário descartável (token só em memória): `POST /dispositivos` com `
 - [ ] **Step 4: Revisão independente, correções, push e PR empilhado**
 
 `review-package` sobre a branch inteira, subagente revisor (modelo `opus`, somente leitura), uma rodada de correções com RED→GREEN, menores no "Registro da execução". Depois `git push -u origin feature/etapa-8-perfil-push` e `gh pr create --base feature/etapa-7-analise-ia-chat` (com `GH_TOKEN` na mesma chamada), sem merge.
+
+## Registro da execução (11/10/2026)
+
+Tarefas 1 a 5 executadas inline, com RED antes de cada implementação e `npm run verificar` verde em cada commit.
+
+### Desvios do plano
+- `expo-notifications` é carregado com `require` sob demanda, e não `import()`: o Jest não transforma import dinâmico (erro "dynamic import callback ... --experimental-vm-modules") e o `require` dentro da função tem o mesmo efeito no Metro (nada é carregado no Expo Go).
+- Tipos do toque: `NotificationResponse` do próprio `expo-notifications`, em vez de um tipo estrutural escrito à mão.
+- Testes de interruptor usam `fireEvent(switch, 'valueChange', valor)` (o idioma do projeto), não `user.press`; `CardPush` passou a enviar `aria-disabled` junto de `disabled`.
+- `act` assíncrono nos testes do hook (`await act(async () => ...)`) e `jest.restoreAllMocks()` no `beforeEach` (um `jest.spyOn` na store vazava entre testes).
+- A documentação citava um texto que a tela não mostra e o comando `EAS_PROJECT_ID=<uuid> npx expo start`, que não funciona no PowerShell: corrigidos para o `.env` (conferido com `npx expo config`).
+
+### Conferência com o backend local
+`POST /dispositivos` (201 novo, 200 repetido, 200 quando o token era de outra conta, 422 "Token de push invalido" para texto, vazio e 256 caracteres, 401 sem login), `DELETE` com o token codificado (204, idempotente, também para token desconhecido) e `GET /health` (200, na raiz, sem login). `npx expo config` resolve com e sem `EAS_PROJECT_ID` (variável de ambiente ou `.env`).
+
+### Revisão independente (opus, branch inteira)
+Sem Critical. Os quatro Important tinham a mesma raiz (o aparelho seguir registrado, ou o interruptor travar, sem a tela mostrar) e foram corrigidos numa rodada, cada um com teste RED→GREEN (`src/store/pushRevisao.test.ts`, `__tests__/telas/perfilRevisao.test.tsx`):
+1. **Aparelho registrado sem o app ter o token.** O token só era guardado depois do `POST` confirmado: sair ou desligar durante um registro incerto (ou depois de um `POST` que estourou o tempo mas o servidor gravou) não mandava `DELETE`, e o aparelho seguia recebendo os avisos da conta que saiu. Agora o token é guardado ao ser obtido, e `desregistrar` e `desligar` esperam o registro em curso terminar (dentro dos 4 s do Perfil) antes de remover.
+2. **Desligar sem rede dizia "desligadas" com os avisos chegando.** Agora o servidor precisa confirmar a remoção: se falhar, a escolha não muda, o interruptor continua ligado e um alerta explica. (Substitui o teste antigo "desligar vale mesmo que o servidor não responda".)
+3. **"Verificando" sem fim.** O cliente HTTP do Android não tem tempo limite e o registro podia ficar parado, travando o interruptor até fechar o app. Agora o registro tem limite de 30 s e vira erro com "Tentar novamente"; o que a execução parada produzir depois é descartado.
+4. **Falha silenciosa em "notificar por ativo".** O `onError` de `mutate` só vale para a última chamada; o Perfil passou a usar `mutateAsync` por alteração.
+
+### Rulings
+- Parte A sem `expo-dev-client`, `eas.json` e `expo-build-properties`: instalar `expo-dev-client` muda o `npx expo start` para development build e tira o Expo Go do fluxo atual. Custo se errado: instalar depois com `npx expo install` (e `npx expo start --go` volta ao Expo Go).
+- Permissão do push pedida sozinha só em `undetermined`; depois de negada, só o interruptor do Perfil pede de novo. Custo: quem negou sem querer precisa ir ao Perfil.
+- O `DELETE /dispositivos` roda no fluxo de sair do Perfil (limite de 4 s), não em `useSessao.sair`, que limpa a sessão antes de qualquer rede e também roda quando o refresh é recusado. Custo: sessão expirada deixa o token registrado até o próximo login (o backend o move para a conta seguinte).
+- Desligar o push exige a confirmação do servidor (Important 2). Custo: sem rede não dá para desligar; a tela diz isso.
+
+### Menores adiados
+1. Com o push ligado, voltar ao primeiro plano não confere a permissão: quem a revoga nos Ajustes do iOS vê "Ligadas neste aparelho" até o próximo arranque (barato: `getPermissionsAsync` em `active`).
+2. A cada volta ao primeiro plano em "negado" a tela passa por "Verificando": o interruptor acende por um instante e o botão de configurações some; no `ligar` a partir de "desligado" o interruptor volta a apagar enquanto a escolha é gravada.
+3. O toque é dado como tratado e a notificação marcada como lida antes de `router.push`: se a navegação falhar, o usuário cai no Início sem o destaque de não lida.
+4. `getLastNotificationResponseAsync` está obsoleta no SDK 57 (usar `getLastNotificationResponse()` e `clearLastNotificationResponse()`), e uma rejeição dela deixa a assinatura vazar em `observarToques`.
+5. O texto da situação "erro" ("O servidor não confirmou o registro") também aparece quando a falha é local (token do Expo, FCM ausente), o caso esperado numa build sem a chave FCM.
+6. O Perfil importa `testarConexao` de `src/api/` e orquestra o logout com limite de 4 s na rota; pelo `CLAUDE.md` isso caberia a um hook.
+7. Prévia web: `Device.isDevice` vale `true` na web, então sem `EAS_PROJECT_ID` aparece "Falta configurar o projeto" (motivo errado) e, com a variável, a web carregaria `expo-notifications`. Só em desenvolvimento.
+8. Herdado do client (fora desta branch): se a renovação antes do envio falha por rede, `request` envia com o token antigo sem rever a geração; no cenário improvável de logout e novo login nesse intervalo, o `POST /dispositivos` sairia com o token da conta anterior.
+
+### Não verificado (precisa de development build e de aparelho)
+Nenhum push real foi enviado ou recebido: o canal (o `expo-notifications` 57 cai no canal reserva "Miscellaneous" se o push vier sem `channelId`, e o backend não o manda: conferir em qual canal a notificação aparece; a saída é o backend mandar `channelId` ou `defaultChannel` no plugin), o diálogo de permissão do Android 13+, o token do Expo, a entrega com o app fechado, o toque abrindo o ativo (inclusive a partida a frio, em que o `router.push` pode lançar antes de a navegação montar, e o Android reentregando o intent ao reabrir pelos recentes) e a leitura com TalkBack e VoiceOver.
