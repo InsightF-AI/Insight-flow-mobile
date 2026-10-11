@@ -675,7 +675,7 @@ describe('configurarExibicaoEmPrimeiroPlano', () => {
   it('suprime o banner do sistema: o WebSocket já mostra o banner do aplicativo', async () => {
     await configurarExibicaoEmPrimeiroPlano();
 
-    const { handleNotification } = jest.mocked(Notificacoes.setNotificationHandler).mock.calls[0][0] as {
+    const { handleNotification } = jest.mocked(Notificacoes.setNotificationHandler).mock.calls[0][0] as unknown as {
       handleNotification: () => Promise<Record<string, boolean>>;
     };
     expect(await handleNotification()).toEqual({
@@ -774,12 +774,13 @@ Expected: FAIL (`@/notificacoes/push` não existe).
 import { isRunningInExpoGo } from 'expo';
 import Constants from 'expo-constants';
 import * as Device from 'expo-device';
+import type { NotificationResponse } from 'expo-notifications';
 import { Platform } from 'react-native';
 
 import { avaliarAmbiente, type Suporte } from '@/dominio/push';
 
-// Única fronteira com `expo-notifications`. O módulo só é carregado (import dinâmico) em ambiente que recebe push:
-// no Expo Go ele registra avisos de erro e nada funcionaria mesmo.
+// Única fronteira com `expo-notifications`. O módulo só é carregado (require sob demanda) em ambiente que recebe
+// push: no Expo Go ele registra avisos de erro e nada funcionaria mesmo.
 
 const CANAL_PADRAO = 'default';
 
@@ -793,7 +794,8 @@ export function lerSuporte(): Suporte {
 }
 
 function carregar() {
-  return import('expo-notifications');
+  // eslint-disable-next-line @typescript-eslint/no-require-imports -- carga sob demanda: nada de expo-notifications no Expo Go
+  return require('expo-notifications') as typeof import('expo-notifications');
 }
 
 export type Preparo = { estado: 'pronto'; token: string } | { estado: 'negado'; podePedirDeNovo: boolean };
@@ -848,7 +850,7 @@ export async function observarToques(aoToque: (dados: unknown) => void): Promise
   if (!lerSuporte().suportado) return SEM_ASSINATURA;
   const Notificacoes = await carregar();
 
-  function tratar(resposta: { notification: { request: { identifier: string; content: { data: unknown } } } }) {
+  function tratar(resposta: NotificationResponse) {
     const identificador = resposta.notification.request.identifier;
     if (toquesTratados.has(identificador)) return;
     toquesTratados.add(identificador);
