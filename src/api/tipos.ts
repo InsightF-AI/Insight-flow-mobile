@@ -15,6 +15,12 @@ export type TipoCondicaoAlerta = 'PRECO_MAIOR_IGUAL' | 'PRECO_MENOR_IGUAL';
 export type TipoNotificacao = 'SINAL_ATIVADO' | 'ALERTA_DISPARADO' | 'RESUMO_DIARIO';
 export type PeriodoHistorico = '1D' | '1S' | '1M' | '3M' | '1A' | '5A';
 
+/** `POST /dispositivos`. */
+export interface DispositivoResponse {
+  token: string;
+  ativo: boolean;
+}
+
 /** `GET /ativos/{id}/analise`. */
 export interface AnaliseIA {
   ativo_id: Uuid;
