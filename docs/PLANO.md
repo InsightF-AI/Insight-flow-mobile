@@ -46,8 +46,8 @@ Alternativas descartadas: Flutter ou nativo (Kotlin/Swift) perdem o reaproveitam
 | Gestos e animação | `react-native-gesture-handler`, `react-native-reanimated` 4 | instalado |
 | Ícones e fontes | `lucide-react-native`, `@expo-google-fonts/inter`, `@expo-google-fonts/space-grotesk` | instalado |
 | Datas | `@react-native-community/datetimepicker` | instalado |
-| Push | `expo-notifications`, `expo-device` | Etapa 8 |
-| Build de desenvolvimento | EAS CLI, `expo-dev-client`, `expo-build-properties` (texto claro só em dev) | Etapa 8 |
+| Push | `expo-notifications`, `expo-device` | instalado |
+| Build de desenvolvimento | EAS CLI, `expo-dev-client`, `expo-build-properties` (texto claro só em dev) | Etapa 8, depois da D8 (instalar `expo-dev-client` troca o `npx expo start` para development build e tira o Expo Go) |
 | Copiar texto (chat) | `expo-clipboard` | instalado |
 | Qualidade | Jest + `jest-expo` + React Native Testing Library, ESLint (`eslint-config-expo`), `tsc`, GitHub Actions | instalado |
 
@@ -85,7 +85,7 @@ app/                         rotas do Expo Router
   (tabs)/portfolio.tsx       Carteira (E6)
   (tabs)/chat.tsx            Chat (E7)
   (tabs)/alertas.tsx         Preço | Sinais (E5)
-  (tabs)/perfil.tsx          (E8)
+  (tabs)/perfil.tsx          Conta, push, notificar por ativo, servidor, tema (E8)
   ativo/[id].tsx             detalhe do ativo (E4, E7)
   buscar.tsx                 (E4)
   notificacoes.tsx           caixa de notificações (novo, E5)
@@ -209,7 +209,7 @@ Cada etapa termina com `npm run verificar` verde, teste no aparelho do que mudou
 | **5. Alertas e notificações** | Aba Alertas com "Preço" (CRUD, preço atual, distância ao alvo, ticker por busca) e "Sinais"; tela Notificações (não lidas, marcar todas, toque abre ativo ou resumo); WebSocket completo; banner in-app; badge | Teste com WebSocket falso cobre autenticar → notificação → 4401 → renovação → reconexão; no aparelho, alerta de BTC com alvo logo abaixo do preço chega em até 5 min como banner. **Feito em 10/10/2026** (PR da Etapa 5): protocolo conferido com o backend local e entrega ponta a ponta de uma notificação real (alerta de BTC) pelo WebSocket em 200 s; **falta conferir o banner e a reconexão no aparelho** |
 | **6. Portfólio e operações** | Aba Carteira com KPIs, CDI e Ibovespa (`null` = indisponível), distribuição, posições com variação do dia e filtro, operações com exclusão confirmada; nova operação só com ativo da watchlist, cotação sugerida, disponível na venda, data local; 422 traduzido; aviso de simulação; aviso de dados parciais | Frações ×100 e pontos percentuais com testes; COMPRA/VENDA sem verde/vermelho. **Feito em 11/10/2026** (PR da Etapa 6); erros 422 e escalas conferidos com o backend local; **falta conferir no aparelho** o filtro, o aviso de dados parciais e o registro de operações |
 | **7. Análise IA e chat** | Card de análise sob demanda (70 s; `em_cache`, `desatualizada`, modelo); Chat como aba (histórico local, últimas 20 mensagens, 2000 caracteres, sugestões, copiar, limpar, 90 s); 503 com IA desligada, cota com `Retry-After`, 502 do guardrail | Nenhum texto de IA sem o aviso legal (teste por tela); com a IA desligada nada quebra. **Feito em 11/10/2026** (PR da Etapa 7): a análise é uma consulta desligada que só o botão dispara, sem repetição automática; a conversa fica em memória (o backend não guarda histórico) e sai com a sessão; resposta da IA acima de 2000 caracteres é cortada ao reenviar o histórico (o backend valida todas as mensagens); o texto copiado leva o aviso legal. Conferidos no backend local: 503 com a IA desligada e, com um Gemini falso, 200 (`em_cache`), 503 de cota com `Retry-After`, 502 do guardrail e os limites do `/chat`; **falta conferir no aparelho** o teclado, a rolagem e a cópia |
-| **8. Configurações e push** | Perfil com tema, servidor configurado, push ligado/desligado, notificar por ativo, aviso educacional, sair; push completo; `app.config.ts` com `projectId`; `eas.json` com perfil `development` | Em development build Android, alerta disparado com o app fechado chega como push e o toque abre o ativo |
+| **8. Configurações e push** | Perfil com tema, servidor configurado, push ligado/desligado, notificar por ativo, aviso educacional, sair; push completo; `app.config.ts` com `projectId`; `eas.json` com perfil `development` | Em development build Android, alerta disparado com o app fechado chega como push e o toque abre o ativo. **Parte A feita em 11/10/2026** (PR da Etapa 8): Perfil completo, cliente de push (permissão só na primeira vez, canal `default`, `POST`/`DELETE /dispositivos`, banner do sistema suprimido, toque abre o ativo e marca como lida), `app.config.ts` com `EAS_PROJECT_ID` e plugin do `expo-notifications`; contrato de `/dispositivos` e `/health` conferido no backend local. **Parte B, depende da D8:** `eas init`, chave FCM V1, `eas.json`, `expo-dev-client`, `expo-build-properties`, build de desenvolvimento e o teste do push em aparelho |
 
 Ordem até o prazo: ciclo 1 (Etapas 1 e 2) e Etapa 3 até **19/10**, deixando 20/10 para revisar a entrega do Checkpoint 02. As Etapas 4 a 8 seguem depois, na ordem da tabela. A Etapa 8 depende da resposta ao D8.
 
@@ -265,8 +265,8 @@ O celular não enxerga o `localhost` do PC: o app precisa do **IP do PC na rede*
 
 O Expo Go não recebe push remoto no Android: é preciso uma **development build**.
 
-1. Instalar `expo-notifications`, `expo-device`, `expo-dev-client` e `expo-build-properties` com `npx expo install`.
-2. `eas init` (gera o `projectId`) e cadastrar a chave FCM V1 com `eas credentials`.
+1. `expo-notifications` e `expo-device` já estão instalados. Instalar `expo-dev-client` e `expo-build-properties` com `npx expo install` (depois disso o `npx expo start` abre em development build; para voltar ao Expo Go, `npx expo start --go`).
+2. `eas init` (gera o `projectId`) e cadastrar a chave FCM V1 com `eas credentials`. O `app.config.ts` lê o projeto de `EAS_PROJECT_ID`: `EAS_PROJECT_ID=<uuid> npx expo start --dev-client` (ou, no EAS, uma variável de ambiente do perfil de build). Sem ele o Perfil mostra "projeto Expo não configurado" e nada é registrado.
 3. `eas build --profile development --platform android` e instalar o APK.
 4. `npx expo start --dev-client`.
 5. O perfil `development` libera tráfego `http://` no Android (`usesCleartextTraffic`); produção usa HTTPS.

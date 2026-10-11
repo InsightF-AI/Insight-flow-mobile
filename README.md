@@ -14,7 +14,8 @@ Cliente mobile (Android e iOS) do Sistema de Análise de Ativos do Mercado Finan
 - Carteira simulada: KPIs (patrimônio, resultado não realizado, lucro realizado e variação do dia), comparação com CDI e Ibovespa ("indisponível" quando a fonte não cobre), distribuição por classe, setor e moeda, posições com variação do dia e filtro por classe, aviso de dados parciais quando um ativo fica sem cotação, e operações simuladas só com ativos da watchlist (com a quantidade disponível na venda e os erros do servidor em português)
 - Análise por IA no detalhe do ativo: gerada só quando o usuário pede (cada chamada gasta a cota do provedor), com modelo, procedência ("gerada em", "reaproveitada" ou "pode estar desatualizada") e aviso legal; sem repetição automática e com mensagem própria para IA desligada, limite de uso (com o tempo de espera do servidor) e bloqueio do guardrail
 - Chat com IA na quinta aba: sugestões, copiar a resposta (o aviso legal vai junto) e limpar a conversa; o histórico fica só em memória (o backend não guarda a conversa) e sai ao encerrar a sessão; envia as últimas 20 mensagens, com até 2000 caracteres cada
-- Tema escuro (padrão) e claro, alternável no Perfil, com a mesma identidade visual do cliente web
+- Perfil: conta, caixa de notificações, **push** ligado ou desligado neste aparelho (com o motivo quando não está disponível), **notificar por ativo** da watchlist, **servidor** em uso com teste de conexão, tema escuro (padrão) e claro com a mesma identidade visual do cliente web, e sair (que antes remove o aparelho do push)
+- Push no cliente: permissão (pedida sozinha só na primeira vez), canal Android, registro do token em `POST /dispositivos`, banner do sistema suprimido com o app aberto e toque que abre o ativo e marca como lida. Fica desligado no Expo Go, em simulador e sem o projeto Expo (EAS) configurado; **o push de verdade precisa de uma development build e da conta Expo/Firebase (decisão D8)**
 
 ## Stack
 
@@ -78,4 +79,4 @@ Design completo: [`docs/superpowers/specs/2026-09-25-app-mobile-mvp-design.md`](
 
 ## Próximas etapas
 
-O roteiro está em [`docs/PLANO.md`](docs/PLANO.md): falta a Etapa 8 (perfil com tema e servidor, e push); o dashboard, o gráfico de candles, a busca, os alertas com WebSocket, a carteira, a análise e o chat por IA já estão prontos. Recuperação de senha não existe no backend.
+O roteiro está em [`docs/PLANO.md`](docs/PLANO.md): da Etapa 8 só falta o que depende da decisão D8 (projeto EAS, chave FCM, development build e o teste do push em aparelho); o dashboard, o gráfico de candles, a busca, os alertas com WebSocket, a carteira, a análise e o chat por IA, o perfil e o cliente de push já estão prontos. Recuperação de senha não existe no backend.
