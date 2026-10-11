@@ -26,6 +26,9 @@ jest.mock('expo-secure-store', () => {
   };
 });
 
+// Área de transferência sem nativo: os testes inspecionam `setStringAsync`.
+jest.mock('expo-clipboard', () => ({ setStringAsync: jest.fn(async () => true) }));
+
 // O VirtualizedList agenda um setTimeout (updateCellsBatchingPeriod, 50 ms) a cada atualização de dados. Se ele dispara
 // depois do último `await` do teste e antes do cleanup, o React avisa "not wrapped in act". Este afterEach roda ANTES do
 // cleanup automático do RNTL (hooks do mesmo tipo rodam na ordem de declaração e o RNTL só registra o dele quando o teste

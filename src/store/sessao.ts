@@ -5,6 +5,7 @@ import { authApi } from '@/api/auth';
 import { ApiError } from '@/api/client';
 import type { TokenResponse } from '@/api/tipos';
 import { queryClient } from '@/hooks/queryClient';
+import { useConversa } from '@/store/conversa';
 
 const CHAVE_SESSAO = 'insightflow.sessao';
 /** Chaves do MVP antigo (token de 24 h, sem refresh): apagadas ao hidratar. */
@@ -160,6 +161,8 @@ export const useSessao = create<EstadoSessao>()((set, get) => ({
     geracao += 1;
     set(ANONIMO);
     queryClient.clear();
+    // A conversa com a IA é da conta que saiu: some junto, e a resposta que ainda vier é descartada.
+    useConversa.getState().limpar();
     if (revogarNoServidor && refreshToken) void authApi.sair(refreshToken).catch(() => {});
     await SecureStore.deleteItemAsync(CHAVE_SESSAO);
   },
