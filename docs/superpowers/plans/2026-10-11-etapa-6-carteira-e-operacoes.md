@@ -1732,3 +1732,32 @@ git commit -m "docs: carteira e operações no README, no plano e no checkpoint"
 ```
 
 Depois: pacote de revisão da branch inteira, revisor independente (opus, somente leitura), uma rodada de correções com teste RED→GREEN, "Registro da execução" no fim deste plano, `git push -u origin feature/etapa-6-carteira-operacoes` e `gh pr create --base feature/etapa-5-alertas-notificacoes` (sem merge, sem trocar bases).
+
+---
+
+## Registro da execução (11/10/2026)
+
+Executado inline, tarefa a tarefa, com revisão independente da branch inteira no fim. O código final difere do que está nas tarefas acima nos pontos abaixo.
+
+**Resultado:** 71 suítes / 787 testes; `npm run verificar` verde. Conferido com o backend local: data futura devolve 422 "data nao pode ser futura"; venda sem posição e remoção de compra com venda posterior devolvem 422 cujo `detail` é só o UUID do ativo; rentabilidade e benchmark vêm em fração; o benchmark do Ibovespa veio `null` (o "indisponível" aparece de verdade); `/portfolio/posicoes` não traz moeda nem tipo; o saldo das operações é igual à quantidade da posição.
+
+**Decisões que divergem do plano**
+
+- **Disponível na venda.** Vem do saldo das operações (`quantidadeDisponivel`), não de `/portfolio/posicoes`, que omite o ativo sem cotação e bloquearia uma venda legítima. Só limita venda feita hoje; com data passada o servidor decide.
+- **Testes.** O `NBSP` dos testes do plano saiu como espaço comum (corrigido para ` `); dois testes antigos usavam "data nao pode ser futura" como exemplo de mensagem sem tradução (agora traduzida de propósito); os seletores do teste de tela colidiam (texto repetido de propósito, botão da posição e botão de remover operação).
+- **Revisão — queda parcial da fonte de preços.** Com um ativo sem cotação o backend soma o custo dele e omite o valor de mercado. O plano tratava só o caso "nada cotado"; com queda parcial o resultado aparecia como um prejuízo vermelho que não existe, e o Comparativo mostrava "Carteira −100%" com nada cotado. Agora: resultado "indisponível" com a contagem de ativos sem cotação, patrimônio "parcial", carteira fora do comparativo, mensagens de posições e distribuição dizendo "sem cotação". O Início usa os mesmos KPIs e herdou a correção (passou a consultar as operações).
+- **Revisão — tudo vendido.** O backend divide por um custo zero e devolve 0%: o Comparativo e a dica do resultado deixaram de mostrar "0,00%".
+- **Revisão — casas decimais.** Quantidade e preço com mais de 6 casas são recusados (o backend grava `Numeric(18,6)` e arredonda em silêncio; uma quantidade que vira zero derruba o cálculo da carteira inteira).
+- **Revisão — aviso de dados parciais.** Só aparece com operações e posições assentadas (depois de remover uma venda as duas recarregam em paralelo e o aviso piscava falso). O saldo ignora resíduo de ponto flutuante.
+- **Revisão — documentação.** O checkpoint chama a aba de Carteira; o aviso de simulação deixou de dizer que as operações "ficam só aqui" (ficam no servidor, e aparecem no web e no desktop).
+
+**Menores adiados (da revisão)**
+
+- A mensagem do 422 de venda diz "na data informada" mesmo quando o problema é uma venda posterior que ficaria sem saldo.
+- Trocar de Venda para Compra deixa o erro de quantidade da venda na tela até o próximo envio.
+- Uma falha no recarregamento da watchlist troca o formulário de nova operação pela tela de erro, mesmo com dados em cache.
+- O filtro de posições com sete ou mais opções fica com alvo de toque menor que 44 pt em 360 dp (precisa rolar na horizontal).
+- Acessibilidade de `ItemPosicao`: "Hoje —" não comunica "variação indisponível" e não há dica de que o toque abre o detalhe.
+- Já existiam antes da etapa: `mutateAsync` espera o recarregamento de todas as consultas da carteira antes de voltar (o botão pode girar por vários segundos); na Carteira, uma falha de `operacoes` com dados em cache troca a tela inteira pelo erro; operações de ativos que saíram da watchlist aparecem como "Ativo".
+
+**Não verificado (depende do aparelho):** o filtro e a quebra de texto do seletor em telas estreitas, o modal de nova operação abrindo a busca por cima no iOS, a leitura real com TalkBack e VoiceOver.
