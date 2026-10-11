@@ -15,6 +15,36 @@ export type TipoCondicaoAlerta = 'PRECO_MAIOR_IGUAL' | 'PRECO_MENOR_IGUAL';
 export type TipoNotificacao = 'SINAL_ATIVADO' | 'ALERTA_DISPARADO' | 'RESUMO_DIARIO';
 export type PeriodoHistorico = '1D' | '1S' | '1M' | '3M' | '1A' | '5A';
 
+/** `GET /ativos/{id}/analise`. */
+export interface AnaliseIA {
+  ativo_id: Uuid;
+  texto: string;
+  gerado_em: DataHoraISO;
+  modelo: string;
+  /** O backend reaproveitou a última análise porque os dados do ativo não mudaram. */
+  em_cache: boolean;
+  /** O provedor falhou e o backend devolveu a última análise (sempre com `em_cache: true`). */
+  desatualizada: boolean;
+  aviso_legal: string;
+}
+
+export type PapelMensagem = 'usuario' | 'assistente';
+
+export interface MensagemChatApi {
+  papel: PapelMensagem;
+  texto: string;
+}
+
+export interface ChatRequest {
+  mensagens: MensagemChatApi[];
+}
+
+export interface ChatResponse {
+  texto: string;
+  modelo: string;
+  aviso_legal: string;
+}
+
 export interface TokenResponse {
   access_token: string;
   /** Opaco, 30 dias, rotativo: cada /auth/refresh devolve um novo e invalida o anterior. */

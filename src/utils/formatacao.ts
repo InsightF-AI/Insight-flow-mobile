@@ -68,6 +68,15 @@ export function formatarDataHora(iso: string): string {
   return `${formatarData(iso)} ${doisDigitos(data.getHours())}:${doisDigitos(data.getMinutes())}`;
 }
 
+/** Espera sugerida pelo servidor (Retry-After, em segundos) em linguagem corrente: "30 s", "cerca de 2 min". */
+export function formatarEspera(segundos: number): string {
+  if (!Number.isFinite(segundos) || segundos <= 0) return 'alguns instantes';
+  const inteiros = Math.ceil(segundos);
+  if (inteiros < 60) return `${inteiros} s`;
+  if (inteiros < 3600) return `cerca de ${Math.ceil(inteiros / 60)} min`;
+  return `cerca de ${Math.ceil(inteiros / 3600)} h`;
+}
+
 export function dataParaISOLocal(data: Date): DataISO {
   return `${data.getFullYear()}-${doisDigitos(data.getMonth() + 1)}-${doisDigitos(data.getDate())}`;
 }
