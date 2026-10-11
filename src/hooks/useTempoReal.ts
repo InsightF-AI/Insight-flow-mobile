@@ -8,7 +8,7 @@ import type { ItemWatchlist, Notificacao } from '@/api/tipos';
 import { mesclarNotificacoes } from '@/dominio/notificacoes';
 import { chaves } from '@/hooks/chaves';
 import { useBanner } from '@/store/banner';
-import { useSessao } from '@/store/sessao';
+import { geracaoDaSessao, useSessao } from '@/store/sessao';
 import { useConexaoTempoReal } from '@/store/tempoReal';
 
 function guardar(queryClient: QueryClient, novas: Notificacao[]) {
@@ -24,8 +24,12 @@ export async function sincronizarNaoLidas(queryClient: QueryClient): Promise<voi
     await queryClient.invalidateQueries({ queryKey: chaves.notificacoes });
     return;
   }
+  const geracao = geracaoDaSessao();
   try {
-    guardar(queryClient, await notificacoesApi.listar(true));
+    const naoLidas = await notificacoesApi.listar(true);
+    // Logout ou outro login durante a espera: a resposta é da conta anterior e não pode entrar no cache da atual.
+    if (geracaoDaSessao() !== geracao) return;
+    guardar(queryClient, naoLidas);
   } catch {
     // Sem rede agora: o polling de reserva e a próxima conexão cobrem.
   }

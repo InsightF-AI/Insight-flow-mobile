@@ -80,3 +80,13 @@ it('um banner novo reinicia o tempo de exibição', async () => {
   });
   expect(result.current.banner).not.toBeNull();
 });
+
+it('ao desmontar (logout) descarta o banner pendente: ele não reaparece no próximo login', async () => {
+  const { unmount } = await renderHook(() => useBannerNotificacao(), { wrapper: criarProvedor() });
+  await act(async () => {
+    useBanner.getState().mostrar(alerta, 'PETR4');
+  });
+  expect(useBanner.getState().atual).not.toBeNull();
+  await unmount();
+  expect(useBanner.getState().atual).toBeNull();
+});

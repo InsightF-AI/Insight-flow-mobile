@@ -11,6 +11,11 @@ export const ESPERA_MAXIMA_MS = 30_000;
 export const SILENCIO_MAXIMO_MS = 90_000;
 /** Renova o token (e reautentica) quando faltar menos que isto para vencer. */
 export const MARGEM_RENOVACAO_MS = 60_000;
+/**
+ * Tempo de conexão autenticada para a espera da reconexão voltar ao mínimo (um intervalo de ping). Zerar já no
+ * `autenticado` faria um servidor que autentica e cai logo depois ser martelado sem espera crescente.
+ */
+export const ESTABILIDADE_MS = 30_000;
 const ESPERA_MINIMA_DA_REAUTENTICACAO_MS = 5_000;
 const RENOVACOES_SEGUIDAS_POR_4401 = 3;
 
@@ -75,6 +80,7 @@ export function criarClienteTempoReal(opcoes: OpcoesTempoReal): ClienteTempoReal
   let temporizadorReconexao: ReturnType<typeof setTimeout> | null = null;
   let temporizadorSilencio: ReturnType<typeof setTimeout> | null = null;
   let temporizadorRenovacao: ReturnType<typeof setTimeout> | null = null;
+  let temporizadorEstavel: ReturnType<typeof setTimeout> | null = null;
 
   function mudarEstado(novo: EstadoTempoReal) {
     if (novo === estado) return;
@@ -90,8 +96,10 @@ export function criarClienteTempoReal(opcoes: OpcoesTempoReal): ClienteTempoReal
     geracao += 1;
     limpar(temporizadorSilencio);
     limpar(temporizadorRenovacao);
+    limpar(temporizadorEstavel);
     temporizadorSilencio = null;
     temporizadorRenovacao = null;
+    temporizadorEstavel = null;
     const antigo = socket;
     socket = null;
     if (antigo) {
@@ -211,8 +219,11 @@ export function criarClienteTempoReal(opcoes: OpcoesTempoReal): ClienteTempoReal
       const mensagem = lerMensagem(evento.data);
       if (!mensagem) return;
       if (mensagem.tipo === 'autenticado') {
-        tentativas = 0;
-        falhas4401 = 0;
+        limpar(temporizadorEstavel);
+        temporizadorEstavel = setTimeout(() => {
+          tentativas = 0;
+          falhas4401 = 0;
+        }, ESTABILIDADE_MS);
         mudarEstado('conectado');
         agendarReautenticacao(minha);
         if (primeiraAutenticacao) {

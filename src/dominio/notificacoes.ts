@@ -2,8 +2,9 @@ import type { Notificacao, Uuid } from '@/api/tipos';
 import { ROTULO_TIPO_NOTIFICACAO } from '@/dominio/rotulos';
 
 /**
- * Une listas de notificações por `id`, mais recentes primeiro. `lida` nunca volta a falso: uma leitura feita aqui e ainda
- * não confirmada pelo servidor vence um `GET` anterior a ela.
+ * Une listas de notificações por `id`, mais recentes primeiro. `lida` nunca volta a falso: a leitura feita aqui vence o
+ * que o servidor ainda diz (uma resposta de `GET` em voo, ou uma leitura cuja confirmação falhou). Desfazer uma leitura
+ * que não foi confirmada exige regravar a lista, não mesclar.
  */
 export function mesclarNotificacoes(
   atual: readonly Notificacao[] | undefined,

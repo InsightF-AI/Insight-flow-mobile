@@ -19,6 +19,9 @@ export function useBannerNotificacao() {
     return () => clearTimeout(temporizador);
   }, [chave, dispensar]);
 
+  // Sessão encerrada (a raiz desmonta o banner): o aviso de uma conta não pode aparecer no próximo login.
+  useEffect(() => () => useBanner.getState().dispensar(), []);
+
   return {
     banner: atual
       ? { titulo: tituloDaNotificacao(atual.notificacao, atual.ticker), mensagem: atual.notificacao.mensagem }

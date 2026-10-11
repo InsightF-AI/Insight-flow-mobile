@@ -2,6 +2,7 @@ import type { Notificacao } from '@/api/tipos';
 import {
   CODIGO_NAO_AUTENTICADO,
   criarClienteTempoReal,
+  ESTABILIDADE_MS,
   type EstadoTempoReal,
   MARGEM_RENOVACAO_MS,
   SILENCIO_MAXIMO_MS,
@@ -178,10 +179,32 @@ describe('reconexão', () => {
     await avancar(4_000);
     expect(SocketFalso.todos).toHaveLength(4);
 
+    // Só uma conexão que ficou de pé por um tempo zera a espera.
     await autenticar(SocketFalso.todos[3]);
+    await avancar(ESTABILIDADE_MS);
     SocketFalso.todos[3].cair(1006);
     await avancar(1_000);
     expect(SocketFalso.todos).toHaveLength(5);
+  });
+
+  it('servidor que autentica e cai logo depois não zera a espera: ela segue crescendo', async () => {
+    const { cliente } = montar();
+    cliente.conectar();
+    const esperas: number[] = [];
+    for (let i = 0; i < 4; i += 1) {
+      const socket = SocketFalso.todos[SocketFalso.todos.length - 1];
+      await autenticar(socket);
+      await avancar(5_000); // de pé por alguns segundos, mas menos que ESTABILIDADE_MS
+      socket.cair(1011);
+      const antes = SocketFalso.todos.length;
+      let decorrido = 0;
+      while (SocketFalso.todos.length === antes && decorrido < 40_000) {
+        await avancar(500);
+        decorrido += 500;
+      }
+      esperas.push(decorrido);
+    }
+    expect(esperas).toEqual([1_000, 2_000, 4_000, 8_000]);
   });
 
   it('a espera não passa de 30 s', async () => {
@@ -273,6 +296,23 @@ describe('fechamento 4401 (não autenticado)', () => {
     expect(SocketFalso.todos).toHaveLength(4);
     await avancar(1_000);
     expect(SocketFalso.todos).toHaveLength(5);
+  });
+
+  it('4401 logo depois de autenticar, em sequência, para de renovar na quarta vez', async () => {
+    const { cliente, renovarToken } = montar();
+    cliente.conectar();
+    for (let i = 0; i < 3; i += 1) {
+      await autenticar(SocketFalso.todos[SocketFalso.todos.length - 1]);
+      await avancar(5_000);
+      SocketFalso.todos[SocketFalso.todos.length - 1].cair(CODIGO_NAO_AUTENTICADO);
+      await avancar(0);
+    }
+    expect(renovarToken).toHaveBeenCalledTimes(3);
+    await autenticar(SocketFalso.todos[SocketFalso.todos.length - 1]);
+    await avancar(5_000);
+    SocketFalso.todos[SocketFalso.todos.length - 1].cair(CODIGO_NAO_AUTENTICADO);
+    await avancar(0);
+    expect(renovarToken).toHaveBeenCalledTimes(3);
   });
 
   it('renovação sem rede (rejeita) cai no backoff em vez de ficar parado', async () => {

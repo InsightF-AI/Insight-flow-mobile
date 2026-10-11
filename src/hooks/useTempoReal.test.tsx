@@ -8,6 +8,7 @@ import type { ItemWatchlist, Notificacao } from '@/api/tipos';
 import { chaves } from '@/hooks/chaves';
 import { receberNotificacao, sincronizarNaoLidas, useTempoReal } from '@/hooks/useTempoReal';
 import { useBanner } from '@/store/banner';
+import { useSessao } from '@/store/sessao';
 import { useConexaoTempoReal } from '@/store/tempoReal';
 import { criarProvedor, criarQueryClientDeTeste } from '@/test/renderizar';
 
@@ -174,5 +175,28 @@ describe('sincronizarNaoLidas', () => {
     await sincronizarNaoLidas(queryClient);
     expect(notificacoesApi.listar).not.toHaveBeenCalled();
     expect(invalidar).toHaveBeenCalledWith({ queryKey: chaves.notificacoes });
+  });
+});
+
+describe('sessão trocada durante a sincronização', () => {
+  it('a resposta que chega depois do logout e de outro login não repõe o cache da sessão nova', async () => {
+    queryClient.setQueryData(chaves.notificacoes, [notificacao('n-1')]);
+    let responder: (lista: Notificacao[]) => void = () => {};
+    jest.mocked(notificacoesApi.listar).mockReturnValue(
+      new Promise<Notificacao[]>((resolver) => {
+        responder = resolver;
+      }),
+    );
+    const sincronizando = sincronizarNaoLidas(queryClient);
+
+    // Outra conta entra enquanto o GET da conta anterior ainda está em voo.
+    await useSessao
+      .getState()
+      .entrar({ access_token: 'tok-b', refresh_token: 'ref-b', token_type: 'bearer', expires_in: 1800 }, 'b@exemplo.com');
+    queryClient.setQueryData(chaves.notificacoes, []);
+    responder([notificacao('n-da-conta-anterior')]);
+    await sincronizando;
+
+    expect(queryClient.getQueryData(chaves.notificacoes)).toEqual([]);
   });
 });
