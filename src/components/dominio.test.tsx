@@ -33,8 +33,7 @@ describe('aviso de IA (RN-05)', () => {
   });
 
   it('CardAnaliseIA sempre traz o aviso', async () => {
-    await render(<CardAnaliseIA />);
-    expect(screen.getByText('Análise textual por IA — disponível em breve.')).toBeOnTheScreen();
+    await render(<CardAnaliseIA gerando={false} aoGerar={jest.fn()} />);
     expect(screen.getByText(AVISO_IA)).toBeOnTheScreen();
   });
 });
