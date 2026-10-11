@@ -13,6 +13,20 @@ import { useConversa } from '@/store/conversa';
 import Chat from '../../app/(tabs)/chat';
 
 jest.mock('@/api/ia', () => ({ iaApi: { analisar: jest.fn(), conversar: jest.fn() } }));
+// A aba fica abaixo do cabeçalho: sem o deslocamento o teclado do iOS cobre o campo. O KeyboardAvoidingView falso
+// expõe o deslocamento recebido (o real calcula tudo por layout nativo).
+jest.mock('expo-router/react-navigation', () => ({ useHeaderHeight: () => 91 }));
+jest.mock('react-native/Libraries/Components/Keyboard/KeyboardAvoidingView', () => {
+  const { View } = jest.requireActual<typeof import('react-native')>('react-native');
+  return {
+    __esModule: true,
+    default: ({ children, keyboardVerticalOffset }: { children?: unknown; keyboardVerticalOffset?: number }) => (
+      <View testID="teclado" aria-label={`deslocamento ${keyboardVerticalOffset}`}>
+        {children as never}
+      </View>
+    ),
+  };
+});
 
 const resposta = (texto: string, extra: Partial<ChatResponse> = {}): ChatResponse => ({
   texto,
@@ -48,6 +62,13 @@ describe('estado inicial', () => {
   it('os textos estáticos não recomendam compra nem venda (RN-01)', async () => {
     await renderizar(<Chat />);
     expect(JSON.stringify(screen.toJSON())).not.toMatch(/\b(compre|comprar|venda|vender|invista|investir)\b/i);
+  });
+});
+
+describe('teclado', () => {
+  it('desloca o rodapé pela altura do cabeçalho para o teclado do iOS não cobrir o campo', async () => {
+    await renderizar(<Chat />);
+    expect(screen.getByTestId('teclado')).toHaveProp('aria-label', 'deslocamento 91');
   });
 });
 

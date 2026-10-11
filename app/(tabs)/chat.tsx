@@ -1,4 +1,5 @@
 import * as Clipboard from 'expo-clipboard';
+import { useHeaderHeight } from 'expo-router/react-navigation';
 import { useEffect, useRef, useState } from 'react';
 import {
   Alert,
@@ -37,6 +38,8 @@ const TEMPO_DO_COPIADO_MS = 1500;
 
 export default function Chat() {
   const { cores } = useTema();
+  // A tela começa abaixo do cabeçalho: sem este deslocamento o teclado do iOS cobre o campo e o botão Enviar.
+  const alturaDoCabecalho = useHeaderHeight();
   const mensagens = useConversa((estado) => estado.mensagens);
   const enviando = useConversa((estado) => estado.enviando);
   const erro = useConversa((estado) => estado.erro);
@@ -92,6 +95,7 @@ export default function Chat() {
     <KeyboardAvoidingView
       style={[estilos.tela, { backgroundColor: cores.fundo }]}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      keyboardVerticalOffset={alturaDoCabecalho}
     >
       <ScrollView
         ref={rolagem}

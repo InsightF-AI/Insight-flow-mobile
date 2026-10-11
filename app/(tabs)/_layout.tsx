@@ -60,6 +60,8 @@ export default function TabsLayout() {
         options={{
           title: 'Chat',
           headerTitle: 'Chat com IA',
+          // No Android o teclado empurraria a barra de abas para cima do campo de mensagem.
+          tabBarHideOnKeyboard: true,
           tabBarIcon: ({ color, size }) => <Icone nome="mensagem" corExata={color} tamanho={size} />,
         }}
       />

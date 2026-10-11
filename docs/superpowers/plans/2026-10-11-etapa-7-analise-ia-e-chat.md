@@ -2273,3 +2273,43 @@ Subir um servidor HTTP local que imita `POST /v1beta/models/{modelo}:generateCon
 - [ ] **Step 4: Revisão independente, correções, push e PR empilhado**
 
 `review-package` sobre a branch inteira, subagente revisor (modelo `opus`, somente leitura), uma rodada de correções com RED→GREEN, menores no "Registro da execução". Depois `git push -u origin feature/etapa-7-analise-ia-chat` e `gh pr create --base feature/etapa-6-carteira-operacoes` (com `GH_TOKEN` na mesma chamada), sem merge.
+
+## Registro da execução (11/10/2026)
+
+Tarefas 1 a 6 executadas inline, na ordem, com RED antes de cada implementação e `npm run verificar` verde em cada commit (81 suítes / 886 testes ao fim).
+
+### Desvios do plano
+- Teste "pergunta acima de 2000 caracteres": digitar 2001 caracteres um a um estourava o tempo do teste; passou a usar `fireEvent.changeText`.
+- Teste de "limpar conversa": o callback do alerta roda dentro de `act` (a store atualiza a tela).
+- Teste do hook `useAnaliseIA`: o cliente com repetição ligada usa `gcTime: Infinity`; o padrão de 5 min deixava um timer aberto ("worker failed to exit gracefully").
+- A tela do chat passou a usar `useHeaderHeight` (`expo-router/react-navigation`) e a aba `chat` ganhou `tabBarHideOnKeyboard` (ver "Revisão independente"). Teste novo `__tests__/telas/abas.test.tsx` fixa a ordem das cinco abas (D5) e essa opção.
+
+### Conferência com o backend local
+- IA desligada (sem `AI_HABILITADA` e sem chave): análise e chat respondem 503 "Provedor de IA indisponivel"; sem token, 401.
+- Com um Gemini falso num container descartável, apontado por um arquivo de override fora do repositório (ambiente restaurado ao fim): análise 200 (`em_cache` falso e depois verdadeiro, e a segunda não chamou o provedor), chat 200 com `aviso_legal` e modelo, chat com histórico de 3 e de 20 mensagens, 422 do `/chat` (lista vazia, 21 mensagens, última do assistente, texto em branco, 2001 caracteres, resposta da IA de 2001 caracteres no histórico; aceito com 2000), 503 de cota com `Retry-After: 37` e 502 do guardrail. O provedor tentou 2 vezes na cota e 2 vezes (original e reescrita) no guardrail.
+
+### Revisão independente (opus, branch inteira)
+Sem Critical. Pesos re-graduados pelo efeito:
+- **Important, corrigido (RED→GREEN):** no iOS o `KeyboardAvoidingView` da aba não recebia deslocamento e o teclado cobria o campo e o botão Enviar (a tela começa abaixo do cabeçalho). Corrigido com `keyboardVerticalOffset={useHeaderHeight()}`; teste: `teclado › desloca o rodapé pela altura do cabeçalho…`. Junto, `tabBarHideOnKeyboard: true` na aba Chat (a documentação do Expo indica essa opção para a barra de abas subir com o teclado no Android); teste: `abas › o teclado do chat não empurra a barra de abas…`. **Nenhum dos dois foi visto em aparelho.**
+- Documentação: o `CLAUDE.md` dizia que todo texto de IA usa `avisoLegalDe`; o rodapé do chat usa o aviso fixo (igual ao do backend hoje). Texto corrigido.
+
+### Rulings
+- Histórico do chat só em memória, limpo ao sair da conta (dados financeiros em claro no disco e uma dependência a mais não compensam; o web também não persiste). Custo se errado: a conversa some ao fechar o app.
+- Resposta da IA com mais de 2000 caracteres é cortada ao reenviar o histórico (o backend valida todas as mensagens). Custo: a IA perde o fim da própria resposta anterior.
+- "Provedor de IA indisponivel" com texto neutro ("A IA está indisponível no momento…"): vale para a análise e para o chat, e o backend usa a mesma mensagem com a IA desligada.
+- Adotado `tabBarHideOnKeyboard` só na aba Chat, em vez de `softwareKeyboardLayoutMode: pan` global (mudaria todas as telas sem aparelho para conferir).
+
+### Menores adiados
+1. Dois `gerar()` no mesmo quadro, com análise já na tela, fazem duas chamadas ao backend (`refetch` cancela e refaz; sugerido `refetch({ cancelRefetch: false })`). Improvável: o botão some assim que `gerando` fica verdadeiro.
+2. A espera da cota ("em 37 s") envelhece na tela: a consulta guarda o erro por 5 min e o chat mantém o texto até a próxima ação.
+3. Leitores de tela não anunciam "Gerando…" nem a chegada da resposta (`role="status"` e `aria-busy` não criam região viva no iOS; sugerido `aria-live` no Android e `AccessibilityInfo.announceForAccessibility`).
+4. A seleção manual do texto (e o alerta de falha ao copiar, que manda copiar manualmente) sai sem o aviso legal; só o botão Copiar o leva.
+5. Corpo do `/chat`: resposta que começa com 2000 espaços vira mensagem em branco depois do corte (422 "Mensagem vazia"); `trim()` do JS não remove ``–`` e ``, que o `strip()` do Python remove.
+6. Latente: `queryClient.refetchQueries()` sem filtro (ou `invalidateQueries({ refetchType: 'all' })`) refaria a análise em cache e gastaria cota; nenhum código faz isso hoje.
+7. Textos: `formatarEspera` devolve "cerca de 60 min" entre 3541 e 3599 s; "pode levar até 1 minuto" com limites de 70 s e 90 s; "o provedor de IA não respondeu agora" também vale quando o backend marca `desatualizada` por guardrail ou cota.
+8. A tela do chat re-renderiza todos os balões a cada tecla (sem memoização, lista sem limite em memória).
+9. Observação para o aparelho: `Tela.tsx` também não passa deslocamento ao `KeyboardAvoidingView`; formulários com cabeçalho (nova operação, alertas) podem ter o mesmo problema do teclado no iOS.
+10. Prévia web (o projeto não tem alvo web): `Alert.alert` não faz nada (limpar não funciona) e a cópia que devolve `false` mostra "Copiado".
+
+### Não verificado
+Teclado e rolagem da aba Chat em Android e iOS (inclui o deslocamento e a barra de abas), a cópia real para a área de transferência, a leitura com TalkBack e VoiceOver e o texto real do Gemini (a chave real não está no backend local; o tempo de resposta do provedor pode passar de 1 minuto).
