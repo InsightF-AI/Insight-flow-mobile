@@ -13,7 +13,7 @@ decisão da equipe.
 
 | # | Origem | Problema | Correção | Teste (vermelho antes) |
 | --- | --- | --- | --- | --- |
-| 1 | Etapa 7, item 9 | `Tela` não passava deslocamento ao `KeyboardAvoidingView`: sob um cabeçalho, o teclado do iOS cobre o fim dos formulários (nova operação, alerta) | `keyboardVerticalOffset` = `HeaderHeightContext` (0 sem cabeçalho, como em login e cadastro) | `src/components/tela.test.tsx` |
+| 1 | Etapa 7, item 9 | `Tela` não passava deslocamento ao `KeyboardAvoidingView`: sob um cabeçalho, o teclado do iOS cobre o fim do formulário de nova operação (o único com campos sob cabeçalho que usa `Tela`; o formulário de alerta fica no topo de uma lista sem `Tela`) | `keyboardVerticalOffset` = `HeaderHeightContext` (0 sem cabeçalho, como em login e cadastro) | `src/components/tela.test.tsx` |
 | 2 | Etapa 4 | Trocar o período zerava as médias e o Bollinger escolhidos | O estado sobe para a tela do ativo (`sobreposicoesIniciais` e `aoMudarSobreposicoes` do painel; padrão em `SOBREPOSICOES_PADRAO`, em `src/dominio/candles.ts`) | `graficoTecnico.test.tsx` e `__tests__/telas/ativo.test.tsx` |
 | 3 | Etapa 4 | Volume de cripto arredondado para inteiro: 0,42 BTC aparecia como "Volume 0" | `formatarVolume`: até 4 casas abaixo de mil, inteiro de mil em diante | `formatacao.test.ts` e `graficoTecnico.test.tsx` |
 | 4 | Etapa 5 | "Marcar todas como lidas" sem rede deixava o selo em zero com não lidas no servidor | A marcação otimista é desfeita para os ids que o servidor não confirmou | `__tests__/telas/notificacoes.test.tsx` |
@@ -23,6 +23,11 @@ decisão da equipe.
 | 8 | Etapa 7, item 7 | `formatarEspera` devolvia "cerca de 60 min" entre 3541 e 3599 s | Fecha em "cerca de 1 h" | `errosIA.test.ts` |
 
 ## Continua adiado
+
+- **Da revisão desta rodada (modelo Opus, sem Crítico nem Importante):**
+  - O modal de nova operação no iPhone ainda pode ficar uns 60 pt abaixo do ideal: o cabeçalho do modal é menor que o topo da folha, e o `KeyboardAvoidingView` compara coordenadas diferentes. Melhor que antes, não é regressão. Se o aparelho mostrar o botão coberto, a saída é `automaticallyAdjustKeyboardInsets` no `ScrollView` (iOS). Está no roteiro de teste.
+  - Volume abaixo de 0,00005 ainda aparece como "0" (irreal para candle diário).
+  - Teórico: se um `GET` entra no meio da marcação, o `PATCH` de um item falha e a releitura final também, o item aparece como não lido com o servidor já tendo lido; precisa de rede instável e some na próxima leitura.
 
 - **Depende de aparelho ou de decisão:** push real (Etapa 8, parte B), teclado/rolagem/leitor de tela em Android, canal
   do push, `ws://` em build de produção.
@@ -41,5 +46,5 @@ decisão da equipe.
 
 ## Verificação
 
-`npm run verificar` verde: 97 suítes e 1.026 testes (antes: 96 e 1.008). Não testado em aparelho: o deslocamento do
+`npm run verificar` verde: 97 suítes e 1.026 testes (antes: 96 e 1.008). Revisão independente (modelo Opus, somente leitura) da branch inteira: nada Crítico nem Importante; os quatro menores estão acima. A primeira tentativa da revisão caiu por limite de uso da conta e foi refeita. Não testado em aparelho: o deslocamento do
 teclado em cada tela com cabeçalho (iPhone e Android) e a leitura da dica da busca com VoiceOver e TalkBack.
