@@ -48,7 +48,7 @@ Alternativas descartadas: Flutter ou nativo (Kotlin/Swift) perdem o reaproveitam
 | Datas | `@react-native-community/datetimepicker` | instalado |
 | Push | `expo-notifications`, `expo-device` | Etapa 8 |
 | Build de desenvolvimento | EAS CLI, `expo-dev-client`, `expo-build-properties` (texto claro só em dev) | Etapa 8 |
-| Copiar texto (chat) | `expo-clipboard` | Etapa 7 |
+| Copiar texto (chat) | `expo-clipboard` | instalado |
 | Qualidade | Jest + `jest-expo` + React Native Testing Library, ESLint (`eslint-config-expo`), `tsc`, GitHub Actions | instalado |
 
 Toda dependência nova entra com `npx expo install <pacote>`, para casar com o SDK 57. Antes de usar uma API do Expo, consultar `https://docs.expo.dev/versions/v57.0.0/`.
@@ -83,7 +83,7 @@ app/                         rotas do Expo Router
   (tabs)/_layout.tsx         Início · Carteira · Chat · Alertas · Perfil
   (tabs)/index.tsx           Início (E3)
   (tabs)/portfolio.tsx       Carteira (E6)
-  (tabs)/chat.tsx            Chat (E7; hoje em app/chat.tsx)
+  (tabs)/chat.tsx            Chat (E7)
   (tabs)/alertas.tsx         Preço | Sinais (E5)
   (tabs)/perfil.tsx          (E8)
   ativo/[id].tsx             detalhe do ativo (E4, E7)
@@ -208,7 +208,7 @@ Cada etapa termina com `npm run verificar` verde, teste no aparelho do que mudou
 | **4. Busca e detalhe do ativo** | Busca com adição explícita à watchlist; detalhe com cotação, seis períodos, candles + volume com SMA e Bollinger alternáveis e mira por toque, RSI (30/70) e MACD; indicadores oficiais; sinais com valor no disparo e backtest 5/20/60 (`null` = "sem dados") | Último valor de SMA 20/50/200, RSI 14, Bollinger e MACD calculados no app bate com `/indicadores` em fixtures (tolerância 0,01); gráfico responde ao dedo no aparelho. **Feito em 10/10/2026** (PR da Etapa 4): o cálculo bate nos 4 ativos da captura (B3 e cripto, `src/dominio/contratoIndicadores.test.ts`); **falta conferir o toque e o desempenho no aparelho** |
 | **5. Alertas e notificações** | Aba Alertas com "Preço" (CRUD, preço atual, distância ao alvo, ticker por busca) e "Sinais"; tela Notificações (não lidas, marcar todas, toque abre ativo ou resumo); WebSocket completo; banner in-app; badge | Teste com WebSocket falso cobre autenticar → notificação → 4401 → renovação → reconexão; no aparelho, alerta de BTC com alvo logo abaixo do preço chega em até 5 min como banner. **Feito em 10/10/2026** (PR da Etapa 5): protocolo conferido com o backend local e entrega ponta a ponta de uma notificação real (alerta de BTC) pelo WebSocket em 200 s; **falta conferir o banner e a reconexão no aparelho** |
 | **6. Portfólio e operações** | Aba Carteira com KPIs, CDI e Ibovespa (`null` = indisponível), distribuição, posições com variação do dia e filtro, operações com exclusão confirmada; nova operação só com ativo da watchlist, cotação sugerida, disponível na venda, data local; 422 traduzido; aviso de simulação; aviso de dados parciais | Frações ×100 e pontos percentuais com testes; COMPRA/VENDA sem verde/vermelho. **Feito em 11/10/2026** (PR da Etapa 6); erros 422 e escalas conferidos com o backend local; **falta conferir no aparelho** o filtro, o aviso de dados parciais e o registro de operações |
-| **7. Análise IA e chat** | Card de análise sob demanda (70 s; `em_cache`, `desatualizada`, modelo); Chat como aba (histórico local, últimas 20 mensagens, 2000 caracteres, sugestões, copiar, limpar, 90 s); 503 com IA desligada, cota com `Retry-After`, 502 do guardrail | Nenhum texto de IA sem o aviso legal (teste por tela); com a IA desligada nada quebra |
+| **7. Análise IA e chat** | Card de análise sob demanda (70 s; `em_cache`, `desatualizada`, modelo); Chat como aba (histórico local, últimas 20 mensagens, 2000 caracteres, sugestões, copiar, limpar, 90 s); 503 com IA desligada, cota com `Retry-After`, 502 do guardrail | Nenhum texto de IA sem o aviso legal (teste por tela); com a IA desligada nada quebra. **Feito em 11/10/2026** (PR da Etapa 7): a análise é uma consulta desligada que só o botão dispara, sem repetição automática; a conversa fica em memória (o backend não guarda histórico) e sai com a sessão; resposta da IA acima de 2000 caracteres é cortada ao reenviar o histórico (o backend valida todas as mensagens); o texto copiado leva o aviso legal. Conferidos no backend local: 503 com a IA desligada e, com um Gemini falso, 200 (`em_cache`), 503 de cota com `Retry-After`, 502 do guardrail e os limites do `/chat`; **falta conferir no aparelho** o teclado, a rolagem e a cópia |
 | **8. Configurações e push** | Perfil com tema, servidor configurado, push ligado/desligado, notificar por ativo, aviso educacional, sair; push completo; `app.config.ts` com `projectId`; `eas.json` com perfil `development` | Em development build Android, alerta disparado com o app fechado chega como push e o toque abre o ativo |
 
 Ordem até o prazo: ciclo 1 (Etapas 1 e 2) e Etapa 3 até **19/10**, deixando 20/10 para revisar a entrega do Checkpoint 02. As Etapas 4 a 8 seguem depois, na ordem da tabela. A Etapa 8 depende da resposta ao D8.
@@ -222,7 +222,7 @@ O celular não enxerga o `localhost` do PC: o app precisa do **IP do PC na rede*
 1. Ligar o Docker Desktop.
 2. No `Insight-flow-backend`: `docker compose up -d`, depois `curl http://localhost:8000/health` (esperado: `{"status":"ok"}`).
 3. Opcional, para testar a renovação de sessão: no `.env` local do backend (não versionado), `JWT_EXPIRATION_MINUTES=2`, depois `docker compose up -d` de novo.
-4. Para IA: `AI_HABILITADA=true` e `GEMINI_API_KEY` no mesmo `.env`. Sem isso, análise e chat respondem 503 e o app deve mostrar "IA indisponível".
+4. Para IA: `AI_HABILITADA=true` e `GEMINI_API_KEY` no mesmo `.env`. Sem isso, análise e chat respondem 503 ("Provedor de IA indisponivel") e o app mostra "A IA está indisponível no momento".
 
 ### 9.2 Rede do PC (Windows)
 

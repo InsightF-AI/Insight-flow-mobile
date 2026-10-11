@@ -12,12 +12,13 @@ Cliente mobile (Android e iOS) do Sistema de Análise de Ativos do Mercado Finan
 - Alertas: aba com **Preço** (criar, ativar/desativar e remover alertas de preço, com o preço atual, a distância ao alvo e sugestões de ticker pela busca) e **Sinais** (sinais técnicos ativos da watchlist com o histórico da condição)
 - Notificações em tempo real por WebSocket (autenticação, reautenticação antes de o token vencer e reconexão com espera crescente), banner in-app, selo de não lidas, tela de notificações com "marcar todas como lidas" e detalhe do resumo diário; o polling de 60 s só roda enquanto o WebSocket está caído
 - Carteira simulada: KPIs (patrimônio, resultado não realizado, lucro realizado e variação do dia), comparação com CDI e Ibovespa ("indisponível" quando a fonte não cobre), distribuição por classe, setor e moeda, posições com variação do dia e filtro por classe, aviso de dados parciais quando um ativo fica sem cotação, e operações simuladas só com ativos da watchlist (com a quantidade disponível na venda e os erros do servidor em português)
-- Telas de IA (análise do ativo e chat) prontas com o aviso legal; a integração com os endpoints do backend é a etapa 7 do [plano](docs/PLANO.md)
+- Análise por IA no detalhe do ativo: gerada só quando o usuário pede (cada chamada gasta a cota do provedor), com modelo, procedência ("gerada em", "reaproveitada" ou "pode estar desatualizada") e aviso legal; sem repetição automática e com mensagem própria para IA desligada, limite de uso (com o tempo de espera do servidor) e bloqueio do guardrail
+- Chat com IA na quinta aba: sugestões, copiar a resposta (o aviso legal vai junto) e limpar a conversa; o histórico fica só em memória (o backend não guarda a conversa) e sai ao encerrar a sessão; envia as últimas 20 mensagens, com até 2000 caracteres cada
 - Tema escuro (padrão) e claro, alternável no Perfil, com a mesma identidade visual do cliente web
 
 ## Stack
 
-Expo SDK 57 (React Native 0.86, TypeScript), Expo Router, TanStack Query, Zustand, expo-secure-store, Victory Native (Skia), Jest + React Native Testing Library.
+Expo SDK 57 (React Native 0.86, TypeScript), Expo Router, TanStack Query, Zustand, expo-secure-store, expo-clipboard, Victory Native (Skia), Jest + React Native Testing Library.
 
 ## Como rodar
 
@@ -77,4 +78,4 @@ Design completo: [`docs/superpowers/specs/2026-09-25-app-mobile-mvp-design.md`](
 
 ## Próximas etapas
 
-O roteiro está em [`docs/PLANO.md`](docs/PLANO.md): alertas com WebSocket, portfólio, IA e push (o dashboard, o gráfico de candles e a busca já estão prontos). Recuperação de senha não existe no backend.
+O roteiro está em [`docs/PLANO.md`](docs/PLANO.md): falta a Etapa 8 (perfil com tema e servidor, e push); o dashboard, o gráfico de candles, a busca, os alertas com WebSocket, a carteira, a análise e o chat por IA já estão prontos. Recuperação de senha não existe no backend.
