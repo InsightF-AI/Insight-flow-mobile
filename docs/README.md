@@ -24,7 +24,7 @@
 
 ## Mapa dos pull requests
 
-Todos abertos, empilhados e **sem merge**. Cada um aponta para o anterior (o #1 aponta para `develop`).
+Foram publicados empilhados (cada um apontando para o anterior; o #1 apontava para `develop`) e **entraram na `develop` de uma só vez, pelo #11, com merge commit, em 11/10/2026**. A `main` recebeu a release `v0.1.0` (tag). Os PRs #1 a #10 foram fechados com a indicação do #11; as branches `feature/*` continuam no repositório como histórico.
 
 | PR | Branch | Conteúdo |
 | --- | --- | --- |
@@ -46,6 +46,7 @@ Ordem e forma de mesclar: [`CONTRIBUTING.md`](../CONTRIBUTING.md#pull-requests-e
 
 | Item | Situação |
 | --- | --- |
+| Código no repositório | Em `develop` e em `main` (tag `v0.1.0`), desde 11/10/2026 |
 | Etapas 1 a 8 (parte A) | Prontas e testadas por automação (97 suítes, 1.026 testes) e conferidas contra o backend local |
 | Teste em aparelho | Aberto no iPhone com Expo Go; o [roteiro](roteiro-de-teste-no-aparelho.md) completo ainda não foi concluído |
 | Push com o app fechado (Etapa 8, parte B) | Depende da decisão D8: conta Expo/EAS, projeto Firebase (Android) e conta Apple Developer (iOS) |

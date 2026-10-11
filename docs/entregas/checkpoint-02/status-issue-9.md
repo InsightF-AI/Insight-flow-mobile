@@ -1,5 +1,6 @@
 > **Publicado em 11/10/2026** na issue #9 do backend, por @brunoosouza09: https://github.com/InsightF-AI/Insight-flow-backend/issues/9#issuecomment-6113166864
 > Este arquivo guarda o texto como registro. Para atualizar o status, comente de novo na issue com o que mudou.
+> Depois da publicação, o código foi mesclado em `develop` e em `main` (tag `v0.1.0`), então o item de merge abaixo, que dizia "nenhum mergeado ainda", já foi cumprido.
 
 ---
 

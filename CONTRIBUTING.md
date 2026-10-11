@@ -63,7 +63,8 @@ chore(deps): atualiza expo e expo-router para os patches do SDK 57
 ## Pull Requests empilhados (como o histórico atual foi publicado)
 
 O trabalho do app saiu em PRs pequenos, cada um sobre o anterior (#1 a #11; o mapa está em
-[`docs/README.md`](docs/README.md#mapa-dos-pull-requests)). Para mesclar:
+[`docs/README.md`](docs/README.md#mapa-dos-pull-requests)). Esses entraram na `develop` de uma vez, pelo PR do topo da
+pilha (#11). Para uma pilha nova, o caminho de baixo para cima é:
 
 1. Mesclar o PR da base da pilha (o #1, que aponta para `develop`) com **merge commit** (não use squash: os PRs de cima
    dependem dos commits de baixo).

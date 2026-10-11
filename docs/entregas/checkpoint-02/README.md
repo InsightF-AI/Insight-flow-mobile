@@ -9,7 +9,7 @@ Esta pasta reúne o que o enunciado pede, com o mapa de onde está cada item. O 
 
 | # | Pede o enunciado | Onde está |
 | --- | --- | --- |
-| 1 | Código-fonte completo e atualizado do projeto React Native | Este repositório. Estado atual: branch `feature/documentacao-entrega-cp2` (empilhada sobre os PRs #1 a #10). Depois do merge, `develop` |
+| 1 | Código-fonte completo e atualizado do projeto React Native | Este repositório: branch `main` (tag `v0.1.0`); a mesma versão está em `develop`. O histórico por etapa está nos PRs #1 a #11 e nas branches `feature/*` |
 | 2 | Código ou indicação da WebAPI utilizada | `Insight-flow-backend` (FastAPI): <https://github.com/InsightF-AI/Insight-flow-backend>. Sobe com `docker compose up` em `http://localhost:8000`; Swagger em `/docs`. Endpoints usados: [`docs/checkpoint-02.md` §3](../../checkpoint-02.md#3-integração-com-a-webapi) |
 | 3 | Documentação do Checkpoint 2 | [`docs/checkpoint-02.md`](../../checkpoint-02.md): evolução do projeto, navegação, integração com a WebAPI e tratamento de estado |
 | 4 | Termo de Uso de Inteligência Artificial Generativa | [`Termo_Uso_IA_Checkpoint02.docx`](Termo_Uso_IA_Checkpoint02.docx) (rascunho para o estudante revisar, assinar e entregar) |
