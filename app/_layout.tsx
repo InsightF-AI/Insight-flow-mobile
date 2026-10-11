@@ -13,8 +13,7 @@ import { BannerNotificacao } from '@/components/BannerNotificacao';
 import { ConfiguracaoInvalida } from '@/components/ConfiguracaoInvalida';
 import { lerUrlDaApi, urlDoWebSocket } from '@/config/ambiente';
 import { queryClient } from '@/hooks/queryClient';
-import { useBannerNotificacao } from '@/hooks/useBannerNotificacao';
-import { useTempoReal } from '@/hooks/useTempoReal';
+import { useSessaoAtiva } from '@/hooks/useSessaoAtiva';
 import { usePreferencias } from '@/store/preferencias';
 import { geracaoDaSessao, pertoDeVencer, useSessao } from '@/store/sessao';
 import { FONTES } from '@/theme/carregarFontes';
@@ -41,10 +40,9 @@ configurarApi({
   geracaoDaSessao,
 });
 
-// Com a sessão ativa: mantém o WebSocket de notificações aberto e mostra o banner de cada notificação recebida.
+// Com a sessão ativa: mantém o WebSocket aberto, registra o push e mostra o banner de cada notificação recebida.
 function SessaoAtiva() {
-  useTempoReal(erroDeConfiguracao ? null : urlDoWebSocket(baseUrl));
-  const { banner, aoPressionar, aoDispensar } = useBannerNotificacao();
+  const { banner, aoPressionar, aoDispensar } = useSessaoAtiva(erroDeConfiguracao ? null : urlDoWebSocket(baseUrl));
   if (!banner) return null;
   return (
     <BannerNotificacao titulo={banner.titulo} mensagem={banner.mensagem} aoPressionar={aoPressionar} aoDispensar={aoDispensar} />

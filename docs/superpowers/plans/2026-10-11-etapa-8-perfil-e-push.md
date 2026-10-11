@@ -1187,6 +1187,7 @@ jest.mock('@/notificacoes/push', () => ({
 
 beforeEach(() => {
   jest.clearAllMocks();
+  jest.restoreAllMocks();
   usePush.getState().reiniciar();
   jest.mocked(observarToques).mockResolvedValue(() => {});
   jest.mocked(observarMudancaDeToken).mockResolvedValue(() => {});
@@ -1234,7 +1235,9 @@ describe('useSincronizarPush', () => {
     await renderHook(() => useSincronizarPush());
     await waitFor(() => expect(observarMudancaDeToken).toHaveBeenCalled());
     sincronizar.mockClear();
-    act(() => aoMudarEstado('active'));
+    await act(async () => {
+      aoMudarEstado('active');
+    });
 
     expect(sincronizar).toHaveBeenCalledTimes(1);
   });
@@ -1251,7 +1254,9 @@ describe('useSincronizarPush', () => {
     await renderHook(() => useSincronizarPush());
     await waitFor(() => expect(observarMudancaDeToken).toHaveBeenCalled());
     sincronizar.mockClear();
-    act(() => aoMudarEstado('active'));
+    await act(async () => {
+      aoMudarEstado('active');
+    });
 
     expect(sincronizar).not.toHaveBeenCalled();
   });
@@ -1266,7 +1271,10 @@ describe('useToquesDoPush', () => {
     });
     await renderHook(() => useToquesDoPush(), { wrapper: criarProvedor() });
     await waitFor(() => expect(observarToques).toHaveBeenCalled());
-    return (dados: unknown) => act(() => aoToque(dados));
+    return (dados: unknown) =>
+      act(async () => {
+        aoToque(dados);
+      });
   }
 
   it('toque de sinal ou alerta abre o ativo e marca a notificação como lida', async () => {
