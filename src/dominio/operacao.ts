@@ -23,6 +23,15 @@ export interface OperacaoValidada {
 
 export type ResultadoValidacaoOperacao = { ok: true; dados: OperacaoValidada } | { ok: false; erros: ErrosOperacao };
 
+/** O backend grava quantidade e preço em Numeric(18, 6): mais casas seriam arredondadas em silêncio (e 0,0000001 vira 0). */
+const MAXIMO_DE_CASAS_DECIMAIS = 6;
+const MENSAGEM_CASAS_DECIMAIS = 'Use no máximo 6 casas decimais';
+
+function casasDecimais(decimal: Decimal): number {
+  const fracao = decimal.split('.')[1];
+  return fracao ? fracao.replace(/0+$/, '').length : 0;
+}
+
 function decimalPositivo(entrada: string): Decimal | null {
   const decimal = normalizarDecimal(entrada);
   return decimal !== null && Number(decimal) > 0 ? decimal : null;
@@ -54,7 +63,9 @@ export function validarOperacao(
     erros.ticker = 'Escolha um ativo da sua watchlist';
   }
   if (quantidade === null) erros.quantidade = 'Informe uma quantidade maior que zero';
+  else if (casasDecimais(quantidade) > MAXIMO_DE_CASAS_DECIMAIS) erros.quantidade = MENSAGEM_CASAS_DECIMAIS;
   if (precoUnitario === null) erros.precoUnitario = 'Informe um preço maior que zero';
+  else if (casasDecimais(precoUnitario) > MAXIMO_DE_CASAS_DECIMAIS) erros.precoUnitario = MENSAGEM_CASAS_DECIMAIS;
   // Strings AAAA-MM-DD comparam na mesma ordem que as datas.
   if (data > dataDeHoje) erros.data = 'A data não pode ser futura';
 
@@ -63,6 +74,7 @@ export function validarOperacao(
   if (
     form.tipo === 'VENDA' &&
     quantidade !== null &&
+    !erros.quantidade &&
     data === dataDeHoje &&
     disponivel !== undefined &&
     disponivel !== null

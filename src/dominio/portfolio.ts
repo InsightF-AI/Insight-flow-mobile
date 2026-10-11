@@ -1,4 +1,4 @@
-import type { Decimal, Distribuicao, ItemWatchlist, Operacao, Posicao, TipoAtivo, Uuid } from '@/api/tipos';
+import type { Decimal, Distribuicao, ItemWatchlist, Operacao, Posicao, Rentabilidade, TipoAtivo, Uuid } from '@/api/tipos';
 import { ROTULO_CLASSE_CURTO, ROTULO_CLASSE_PLURAL } from '@/dominio/rotulos';
 import { paraNumero } from '@/utils/formatacao';
 
@@ -128,5 +128,15 @@ export function descreverDadosParciais(ids: readonly Uuid[], ativos: ReadonlyMap
  * cotação, e a venda dele não pode ser bloqueada por falha da fonte de preços.
  */
 export function quantidadeDisponivel(operacoes: readonly Operacao[], ativoId: Uuid): number {
-  return Math.max(saldoPorAtivo(operacoes).get(ativoId) ?? 0, 0);
+  const saldo = saldoPorAtivo(operacoes).get(ativoId) ?? 0;
+  // 0,1 + 0,2 − 0,3 dá 5,55e-17 em ponto flutuante: abaixo da tolerância é zero.
+  return saldo > TOLERANCIA_DO_SALDO ? saldo : 0;
+}
+
+/**
+ * O percentual da carteira (lucro não realizado ÷ custo) só diz algo com posições abertas e todas cotadas: sem custo em
+ * aberto o backend divide por zero e devolve 0%, e com ativo sem cotação ele soma o custo e omite o valor (−100%).
+ */
+export function percentualDaCarteiraConfiavel(r: Rentabilidade, semCotacao: number): boolean {
+  return semCotacao === 0 && paraNumero(r.custo_base_brl) > 0 && paraNumero(r.valor_mercado_brl) > 0;
 }

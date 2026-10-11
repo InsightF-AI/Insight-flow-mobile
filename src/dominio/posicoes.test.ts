@@ -147,3 +147,14 @@ describe('quantidadeDisponivel', () => {
     expect(quantidadeDisponivel([operacao('o-1', 'a-1', 'VENDA', '4')], 'a-1')).toBe(0);
   });
 });
+
+describe('quantidadeDisponivel: ponto flutuante', () => {
+  it('0,1 + 0,2 − 0,3 é zero, não 5,55e-17', () => {
+    const operacoes = [
+      operacao('o-1', 'a-1', 'COMPRA', '0.1'),
+      operacao('o-2', 'a-1', 'COMPRA', '0.2'),
+      operacao('o-3', 'a-1', 'VENDA', '0.3'),
+    ];
+    expect(quantidadeDisponivel(operacoes, 'a-1')).toBe(0);
+  });
+});

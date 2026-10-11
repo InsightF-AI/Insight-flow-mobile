@@ -172,12 +172,16 @@ describe('venda', () => {
 describe('erros 422 do backend em português', () => {
   it('venda sem saldo mostra frase legível em vez do UUID', async () => {
     const user = userEvent.setup();
+    // Hoje há 10 em carteira (o app deixa passar 5); o servidor recusa por outra venda posterior ficar sem saldo.
+    jest.mocked(portfolioApi.listarOperacoes).mockResolvedValue([compra('o-1', 'a-1', '10')]);
     jest
       .mocked(portfolioApi.registrarOperacao)
       .mockRejectedValue(new ApiError(422, '3fa85f64-5717-4562-b3fc-2c963f66afa6'));
     await abrir();
+    await user.press(screen.getByRole('radio', { name: 'Venda' }));
     await user.type(screen.getByLabelText('Ativo (ticker)'), 'PETR4');
-    await user.type(screen.getByLabelText('Quantidade'), '100');
+    await screen.findByText('Disponível para venda: 10');
+    await user.type(screen.getByLabelText('Quantidade'), '5');
     await user.type(screen.getByLabelText('Preço unitário'), '38');
     await user.press(screen.getByRole('button', { name: 'Registrar operação' }));
     const alerta = await screen.findByRole('alert');
@@ -213,4 +217,29 @@ it('submit inválido depois de um erro geral da API remove a mensagem geral e mo
 
   expect(await screen.findByText('Informe o ticker do ativo')).toBeOnTheScreen();
   expect(screen.queryByText('Erro no servidor. Tente novamente em instantes.')).not.toBeOnTheScreen();
+});
+
+it('saldo de 0,1 + 0,2 − 0,3 é "sem posição", não "Disponível para venda: 0"', async () => {
+  const user = userEvent.setup();
+  jest.mocked(portfolioApi.listarOperacoes).mockResolvedValue([
+    compra('o-1', 'a-1', '0.1'),
+    compra('o-2', 'a-1', '0.2'),
+    { ...compra('o-3', 'a-1', '0.3'), tipo: 'VENDA' },
+  ]);
+  await abrir();
+  await user.press(screen.getByRole('radio', { name: 'Venda' }));
+  await user.press(await screen.findByRole('button', { name: 'Usar PETR4' }));
+  expect(await screen.findByText('Sem posição em carteira neste ativo.')).toBeOnTheScreen();
+  expect(screen.queryByText(/Disponível para venda/)).not.toBeOnTheScreen();
+});
+
+it('quantidade com mais de 6 casas decimais é recusada: o servidor arredondaria em silêncio', async () => {
+  const user = userEvent.setup();
+  await abrir();
+  await user.type(screen.getByLabelText('Ativo (ticker)'), 'PETR4');
+  await user.type(screen.getByLabelText('Quantidade'), '0,0000001');
+  await user.type(screen.getByLabelText('Preço unitário'), '38');
+  await user.press(screen.getByRole('button', { name: 'Registrar operação' }));
+  expect(await screen.findByText('Use no máximo 6 casas decimais')).toBeOnTheScreen();
+  expect(portfolioApi.registrarOperacao).not.toHaveBeenCalled();
 });

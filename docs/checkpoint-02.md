@@ -33,13 +33,13 @@ Biblioteca: **Expo Router** (rotas por arquivo, pilhas e abas).
 | Login | `/login` | Abertura sem sessão; "Entrar" no cadastro |
 | Cadastro | `/cadastro` | "Criar conta" no login |
 | Início | `/` (aba) | Abertura com sessão |
-| Portfólio | `/portfolio` (aba) | Aba inferior |
+| Carteira | `/portfolio` (aba) | Aba inferior |
 | Alertas | `/alertas` (aba) | Aba inferior |
 | Perfil | `/perfil` (aba) | Aba inferior |
 | Detalhe do ativo | `/ativo/[id]` | Toque num ativo da watchlist, num sinal ou numa notificação |
 | Buscar ativo | `/buscar` | Botão "+" do cabeçalho do Início |
-| Nova operação | `/operacao/nova` (modal) | Botão "Nova operação" do Portfólio |
-| Chat com IA | `/chat` | Botão do cabeçalho do Portfólio (em construção) |
+| Nova operação | `/operacao/nova` (modal) | Botão "Nova operação" da Carteira |
+| Chat com IA | `/chat` | Botão do cabeçalho da Carteira (em construção) |
 
 **Proteção de rotas.** O layout raiz mostra só `(auth)` sem sessão e só `(tabs)` e as pilhas com sessão (`Stack.Protected`); ao sair ou ao perder a sessão, o aplicativo volta ao login sozinho.
 
@@ -65,7 +65,7 @@ Biblioteca: **Expo Router** (rotas por arquivo, pilhas e abas).
 | Backtest | `GET /ativos/{id}/sinais/{regra}/backtest` | Histórico da condição (24 meses) |
 | Watchlist | `GET`, `POST /watchlist`; `DELETE /watchlist/{id}`; `PATCH /watchlist/{id}/notificacao` | Lista, adicionar, remover, notificar |
 | Alertas | `GET`, `POST /alertas`; `PATCH`, `DELETE /alertas/{id}` | Alertas de preço |
-| Operações | `GET`, `POST /operacoes`; `DELETE /operacoes/{id}` | Portfólio simulado |
+| Operações | `GET`, `POST /operacoes`; `DELETE /operacoes/{id}` | Carteira simulada |
 | Carteira | `GET /portfolio/posicoes`, `/rentabilidade`, `/benchmark`, `/distribuicao` | Posições, resultado, CDI/Ibovespa, distribuição |
 | Notificações | `GET /notificacoes`; `PATCH /notificacoes/{id}/lida` | Caixa de notificações e resumo diário |
 | Tempo real | `WS /notificacoes/ws` | Notificações em primeiro plano (o servidor não reenvia o que chegou com a conexão caída: o app sincroniza pelo `GET`) |
@@ -101,7 +101,7 @@ Biblioteca: **Expo Router** (rotas por arquivo, pilhas e abas).
 
 - Todo texto gerado por IA aparece com o aviso **"Análise gerada por IA. Não constitui recomendação de investimento."**
 - Linguagem informativa (RN-01): nenhum texto de análise sugere comprar, vender ou investir; "Compra" e "Venda" aparecem só como o tipo da operação simulada que o próprio usuário registra. Verde e vermelho indicam só valor positivo ou negativo.
-- Portfólio **simulado**: nenhuma operação é executada em corretora.
+- Carteira **simulada**: nenhuma operação é executada em corretora.
 
 ## 6. Requisitos do Checkpoint e onde estão no código
 

@@ -37,6 +37,7 @@ import {
   filtrarPosicoes,
   filtrosDasPosicoes,
   mapaAtivos,
+  percentualDaCarteiraConfiavel,
   prepararDistribuicao,
   rotuloDoFiltro,
 } from '@/dominio/portfolio';
@@ -69,7 +70,16 @@ function textoDoBenchmark(consulta: ConsultaComparativo): string {
   return formatarPercentual(valor, 'fracao');
 }
 
-function ComparativoBenchmarks({ cdi, ibovespa }: { cdi: ConsultaComparativo; ibovespa: ConsultaComparativo }) {
+function ComparativoBenchmarks({
+  cdi,
+  ibovespa,
+  carteiraConfiavel,
+}: {
+  cdi: ConsultaComparativo;
+  ibovespa: ConsultaComparativo;
+  /** Falso com ativo sem cotação ou sem posição aberta: o percentual do backend não representa a carteira. */
+  carteiraConfiavel: boolean;
+}) {
   if (cdi.isPending || ibovespa.isPending) return <Carregando />;
   if (ehStatus(cdi.error, 404) || ehStatus(ibovespa.error, 404)) {
     return <EstadoVazio mensagem="Registre uma operação para comparar com CDI e Ibovespa." />;
@@ -77,7 +87,9 @@ function ComparativoBenchmarks({ cdi, ibovespa }: { cdi: ConsultaComparativo; ib
   const carteira = cdi.data?.rentabilidade_carteira_percentual ?? ibovespa.data?.rentabilidade_carteira_percentual;
   return (
     <>
-      {carteira !== undefined ? <Linha rotulo="Carteira" valor={formatarPercentual(carteira, 'fracao')} /> : null}
+      {carteira !== undefined ? (
+        <Linha rotulo="Carteira" valor={carteiraConfiavel ? formatarPercentual(carteira, 'fracao') : 'indisponível'} />
+      ) : null}
       <Linha rotulo="CDI" valor={textoDoBenchmark(cdi)} />
       <Linha rotulo="Ibovespa" valor={textoDoBenchmark(ibovespa)} />
     </>
@@ -142,19 +154,26 @@ export default function Portfolio() {
     );
   }
 
-  const semCotacaoNoServidor = posicoesSemCotacao(rentabilidade.data, posicoes.data);
+  // Ativos com saldo nas operações que o backend não conseguiu cotar (ele omite a posição e soma o custo).
+  const semCotacao = posicoes.data ? ativosSemCotacao(operacoes.data, posicoes.data) : [];
+  const todasSemCotacao = posicoes.data?.length === 0 && semCotacao.length > 0;
+  const semCotacaoNoServidor = posicoesSemCotacao(rentabilidade.data, posicoes.data) || todasSemCotacao;
   const rentabilidadeIndisponivel = rentabilidade.isError && rentabilidade.data === undefined;
-  const patrimonio = rentabilidade.data ? kpiPatrimonio(rentabilidade.data) : null;
-  const resultado = rentabilidade.data ? kpiResultado(rentabilidade.data) : null;
+  const patrimonio = rentabilidade.data ? kpiPatrimonio(rentabilidade.data, semCotacao.length) : null;
+  const resultado = rentabilidade.data ? kpiResultado(rentabilidade.data, semCotacao.length) : null;
   const realizado = rentabilidade.data ? kpiLucroRealizado(rentabilidade.data) : null;
   const variacao = posicoes.data
-    ? kpiVariacaoDoDia(variacaoDoDia(posicoes.data, cotacoesPorId), semCotacaoNoServidor)
+    ? kpiVariacaoDoDia(variacaoDoDia(posicoes.data, cotacoesPorId), semCotacaoNoServidor, semCotacao.length)
     : null;
   const carregandoVariacao = posicoes.isPending || consultasCotacao.some((consulta) => consulta.isPending);
+  const carteiraConfiavel = rentabilidade.data
+    ? percentualDaCarteiraConfiavel(rentabilidade.data, semCotacao.length)
+    : false;
 
-  const avisoDeDadosParciais = posicoes.data
-    ? descreverDadosParciais(ativosSemCotacao(operacoes.data, posicoes.data), ativos)
-    : null;
+  // Operações e posições recarregam em paralelo depois de uma remoção: com uma delas ainda a caminho o saldo e a lista
+  // não são do mesmo instante e o aviso apareceria falso. Só avisa com os dois dados assentados.
+  const dadosAssentados = !posicoes.isFetching && !operacoes.isFetching;
+  const avisoDeDadosParciais = dadosAssentados ? descreverDadosParciais(semCotacao, ativos) : null;
 
   const filtros = filtrosDasPosicoes(posicoes.data ?? [], ativos);
   const filtroAtivo = filtros.includes(filtro) ? filtro : 'TODAS';
@@ -163,8 +182,8 @@ export default function Portfolio() {
     <View style={estilos.tela}>
       <Tela aoAtualizar={atualizar} atualizando={operacoes.isRefetching}>
         <Texto variante="legenda" cor="secundario">
-          Carteira simulada: as operações ficam só aqui e nenhuma ordem é enviada a corretoras. Ferramenta educacional
-          de análise, não constitui recomendação de investimento.
+          Carteira simulada: as operações são registradas só neste sistema e nenhuma ordem é enviada a corretoras.
+          Ferramenta educacional de análise, não constitui recomendação de investimento.
         </Texto>
 
         {avisoDeDadosParciais ? (
@@ -211,7 +230,7 @@ export default function Portfolio() {
         </View>
 
         <Card titulo="Comparativo desde a 1ª operação" icone="tendencia">
-          <ComparativoBenchmarks cdi={cdi} ibovespa={ibovespa} />
+          <ComparativoBenchmarks cdi={cdi} ibovespa={ibovespa} carteiraConfiavel={carteiraConfiavel} />
         </Card>
 
         <Card titulo="Distribuição" icone="grafico-pizza">
@@ -224,10 +243,15 @@ export default function Portfolio() {
           <EstadoConsulta consulta={distribuicao}>
             {(dados) => {
               const fatias = prepararDistribuicao(dados, dimensao, tema.serie);
-              return fatias.length > 0 ? (
-                <GraficoDistribuicao fatias={fatias} />
-              ) : (
-                <EstadoVazio mensagem="Sem posições em carteira." />
+              if (fatias.length > 0) return <GraficoDistribuicao fatias={fatias} />;
+              return (
+                <EstadoVazio
+                  mensagem={
+                    semCotacao.length > 0
+                      ? 'Sem cotação das posições para montar a distribuição.'
+                      : 'Sem posições em carteira.'
+                  }
+                />
               );
             }}
           </EstadoConsulta>
@@ -236,7 +260,17 @@ export default function Portfolio() {
         <Card titulo="Posições" icone="lista">
           <EstadoConsulta consulta={posicoes}>
             {(lista) => {
-              if (lista.length === 0) return <EstadoVazio mensagem="Nenhuma posição em aberto." />;
+              if (lista.length === 0) {
+                return (
+                  <EstadoVazio
+                    mensagem={
+                      semCotacao.length > 0
+                        ? 'As posições abertas estão sem cotação no momento.'
+                        : 'Nenhuma posição em aberto.'
+                    }
+                  />
+                );
+              }
               return (
                 <>
                   {filtros.length > 1 ? (

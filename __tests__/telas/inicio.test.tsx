@@ -10,6 +10,7 @@ import type {
   CotacaoAtual,
   ItemWatchlist,
   Notificacao,
+  Operacao,
   Posicao,
   Rentabilidade,
   ResultadoBacktest,
@@ -25,7 +26,9 @@ import Inicio from '../../app/(tabs)/index';
 jest.mock('expo-router', () => ({ router: { push: jest.fn() } }));
 jest.mock('@/api/watchlist', () => ({ watchlistApi: { listar: jest.fn(), definirNotificacao: jest.fn() } }));
 jest.mock('@/api/ativos', () => ({ ativosApi: { cotacao: jest.fn(), sinais: jest.fn(), backtest: jest.fn() } }));
-jest.mock('@/api/portfolio', () => ({ portfolioApi: { rentabilidade: jest.fn(), posicoes: jest.fn() } }));
+jest.mock('@/api/portfolio', () => ({
+  portfolioApi: { rentabilidade: jest.fn(), posicoes: jest.fn(), listarOperacoes: jest.fn() },
+}));
 jest.mock('@/api/notificacoes', () => ({ notificacoesApi: { listar: jest.fn(), marcarComoLida: jest.fn() } }));
 
 const NBSP = ' ';
@@ -47,6 +50,18 @@ function cotacao(ticker: string, preco: string, variacaoPercentual: string): Cot
     maxima_dia: preco,
     minima_dia: preco,
     volume: '1',
+  };
+}
+
+function compra(id: string, ativoId: string): Operacao {
+  return {
+    id,
+    ativo_id: ativoId,
+    tipo: 'COMPRA',
+    quantidade: '100',
+    preco_unitario: '30',
+    data: '2026-09-01',
+    criado_em: '2026-09-01T12:00:00Z',
   };
 }
 
@@ -123,6 +138,7 @@ function prepararComDados() {
   jest.mocked(ativosApi.sinais).mockImplementation(async (ativoId: string) => (ativoId === 'a-1' ? [SINAL] : []));
   jest.mocked(ativosApi.backtest).mockResolvedValue(BACKTEST);
   jest.mocked(portfolioApi.rentabilidade).mockResolvedValue(RENTABILIDADE);
+  jest.mocked(portfolioApi.listarOperacoes).mockResolvedValue([compra('o-1', 'a-1'), compra('o-2', 'a-2')]);
   jest
     .mocked(portfolioApi.posicoes)
     .mockResolvedValue([posicao('a-1', 'PETR4', '3000.00'), posicao('a-2', 'VALE3', '1000.00')]);
@@ -138,6 +154,7 @@ beforeEach(() => {
   jest.mocked(ativosApi.backtest).mockResolvedValue(BACKTEST);
   jest.mocked(portfolioApi.rentabilidade).mockResolvedValue(RENTABILIDADE_ZERADA);
   jest.mocked(portfolioApi.posicoes).mockResolvedValue([]);
+  jest.mocked(portfolioApi.listarOperacoes).mockResolvedValue([]);
   jest.mocked(notificacoesApi.listar).mockResolvedValue([]);
 });
 
@@ -420,5 +437,26 @@ describe('falha em segundo plano não apaga o que já está na tela', () => {
     expect(screen.getByRole('button', { name: 'PETR4, Petrobras PN' })).toBeOnTheScreen();
     expect(screen.queryByText('Resumo diário indisponível no momento.')).not.toBeOnTheScreen();
     expect(screen.queryByRole('button', { name: 'Tentar novamente' })).not.toBeOnTheScreen();
+  });
+});
+
+describe('queda parcial da fonte de preços', () => {
+  it('um ativo sem cotação: o resultado é "indisponível", nunca um prejuízo que não existe', async () => {
+    prepararComDados();
+    // a-3 tem operação e saldo, mas o backend omitiu a posição (sem cotação) e somou o custo dele.
+    jest
+      .mocked(portfolioApi.listarOperacoes)
+      .mockResolvedValue([compra('o-1', 'a-1'), compra('o-2', 'a-2'), compra('o-3', 'a-3')]);
+    jest.mocked(portfolioApi.rentabilidade).mockResolvedValue({
+      custo_base_brl: '8000.00',
+      valor_mercado_brl: '4000.00',
+      lucro_nao_realizado_brl: '-4000.00',
+      lucro_realizado_brl: '0',
+      percentual: '-0.5',
+    });
+    await renderizar(<Inicio />);
+    expect(await screen.findByText('Sem cotação de 1 ativo')).toBeOnTheScreen();
+    expect(screen.getByText('Parcial: 1 ativo sem cotação')).toBeOnTheScreen();
+    expect(screen.queryByText('-50,00%')).not.toBeOnTheScreen();
   });
 });
