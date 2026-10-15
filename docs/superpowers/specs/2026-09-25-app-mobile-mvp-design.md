@@ -193,7 +193,7 @@ Algoritmo `resolverAtivoId(ticker, deps)` em `src/dominio/`, puro e testado, com
 3. 409 no passo 2 (corrida) → repete o passo 1; se ainda não achar, lança `ApiError`.
 4. Outros erros propagam (404 → "Ativo não encontrado", 503 → fonte indisponível).
 
-Depois: `POST /operacoes`. 422 → mensagem abaixo do formulário. Atenção: quando falta quantidade, o backend responde `detail` com **apenas o UUID do ativo** (`QuantidadeInsuficienteError(ativo_id)` convertido em string); nesse caso o app mostra "Quantidade insuficiente em carteira para esta venda na data informada." Os demais 422 (`OperacaoInvalidaError`) já trazem texto legível e são exibidos como vieram. Sucesso → invalida caches e volta ao Portfólio.
+Depois: `POST /operacoes`. 422 → mensagem abaixo do formulário. Atenção: quando falta quantidade, o backend responde `detail` com **apenas o UUID do ativo** (`QuantidadeInsuficienteError(ativo_id)` convertido em string); nesse caso o app mostra "Quantidade insuficiente em carteira: a venda deixaria o saldo negativo na data informada ou em uma venda posterior." Os demais 422 (`OperacaoInvalidaError`) já trazem texto legível e são exibidos como vieram. Sucesso → invalida caches e volta ao Portfólio.
 
 **Alertas (aba)** — lista de `Alerta`: ticker, condição ("Preço ≥ R$ 40,00" / "Preço ≤ …", com a `moeda_alvo`), switch de habilitado (`PATCH { ativo }`) e "Disparado em …" quando `disparado_em` existir. Formulário de criação (ticker, condição, valor > 0) → `POST /alertas`. Remoção com confirmação → `DELETE`.
 

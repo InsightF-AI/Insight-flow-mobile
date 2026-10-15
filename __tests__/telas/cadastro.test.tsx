@@ -1,0 +1,74 @@
+import * as SecureStore from 'expo-secure-store';
+import { screen, userEvent, waitFor } from '@testing-library/react-native';
+import type { ReactNode } from 'react';
+
+import { authApi } from '@/api/auth';
+import { ApiError } from '@/api/client';
+import { useSessao } from '@/store/sessao';
+import { renderizar } from '@/test/renderizar';
+
+import Cadastro from '../../app/(auth)/cadastro';
+
+jest.mock('expo-router', () => ({ Link: ({ children }: { children: ReactNode }) => children }));
+jest.mock('@/api/auth', () => ({ authApi: { login: jest.fn(), cadastrar: jest.fn() } }));
+
+const armazenamento = (SecureStore as unknown as { __armazenamento: Map<string, string> }).__armazenamento;
+
+async function preencher() {
+  const user = userEvent.setup();
+  await user.type(screen.getByLabelText('Nome'), 'Ana');
+  await user.type(screen.getByLabelText('E-mail'), 'ana@exemplo.com');
+  await user.type(screen.getByLabelText('Senha'), 'segredo123');
+  await user.press(screen.getByRole('button', { name: 'Criar conta' }));
+  return user;
+}
+
+beforeEach(() => {
+  jest.clearAllMocks();
+  armazenamento.clear();
+  useSessao.setState({ status: 'anonimo', token: null, refreshToken: null, expiraEm: null, email: null });
+});
+
+it('mostra o card do web com título, alternância de senha e link para entrar', async () => {
+  await renderizar(<Cadastro />);
+  expect(screen.getByRole('heading', { name: 'Criar conta' })).toBeOnTheScreen();
+  expect(screen.getByLabelText('Mostrar senha')).toBeOnTheScreen();
+  // WCAG 2.5.3: o nome acessível do link contém o texto visível.
+  const link = screen.getByRole('link', { name: 'Já tem conta? Entrar' });
+  expect(link).toBeOnTheScreen();
+  expect(link).toHaveTextContent('Já tem conta? Entrar');
+});
+
+it('cadastro com sucesso já entra no app', async () => {
+  jest.mocked(authApi.cadastrar).mockResolvedValue({ access_token: 'novo', refresh_token: 'ref', token_type: 'bearer', expires_in: 1800 });
+  await renderizar(<Cadastro />);
+  await preencher();
+  await waitFor(() => expect(useSessao.getState().status).toBe('autenticado'));
+  expect(authApi.cadastrar).toHaveBeenCalledWith({ nome: 'Ana', email: 'ana@exemplo.com', senha: 'segredo123' });
+});
+
+it('409 marca o e-mail como já cadastrado', async () => {
+  jest.mocked(authApi.cadastrar).mockRejectedValue(new ApiError(409, 'E-mail já cadastrado'));
+  await renderizar(<Cadastro />);
+  await preencher();
+  expect(await screen.findByText('E-mail já cadastrado')).toBeOnTheScreen();
+  expect(useSessao.getState().status).toBe('anonimo');
+});
+
+it('segundo toque enquanto a sessão é gravada não dispara outro cadastro', async () => {
+  let liberarArmazenamento: () => void = () => {};
+  jest.mocked(SecureStore.setItemAsync).mockImplementationOnce(
+    () => new Promise<void>((resolver) => (liberarArmazenamento = resolver)),
+  );
+  jest.mocked(authApi.cadastrar).mockResolvedValue({ access_token: 'novo', refresh_token: 'ref', token_type: 'bearer', expires_in: 1800 });
+  await renderizar(<Cadastro />);
+  const user = await preencher();
+  // A mutation já resolveu (isPending voltou a false), mas `entrar` segue esperando o armazenamento seguro.
+  await waitFor(() => expect(SecureStore.setItemAsync).toHaveBeenCalledTimes(1));
+  await user.press(screen.getByRole('button', { name: 'Criar conta' }));
+  expect(authApi.cadastrar).toHaveBeenCalledTimes(1);
+  expect(screen.getByRole('button', { name: 'Criar conta' })).toBeDisabled();
+  liberarArmazenamento();
+  await waitFor(() => expect(useSessao.getState().status).toBe('autenticado'));
+  expect(authApi.cadastrar).toHaveBeenCalledTimes(1);
+});
