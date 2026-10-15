@@ -1,6 +1,6 @@
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { FlatList, StyleSheet, View } from 'react-native';
+import { Alert, FlatList, StyleSheet, View } from 'react-native';
 
 import type { AtivoEncontrado } from '@/api/tipos';
 import { Campo } from '@/components/Campo';
@@ -11,6 +11,7 @@ import { LinhaResultadoBusca } from '@/components/LinhaResultadoBusca';
 import { Texto } from '@/components/Texto';
 import { TAMANHO_MINIMO_BUSCA, useBuscaAtivos, useDebounce } from '@/hooks/useBusca';
 import { useResolverAtivo } from '@/hooks/useResolverAtivo';
+import { useWatchlist } from '@/hooks/useWatchlist';
 import { espaco } from '@/theme/escala';
 import { useTema } from '@/theme/useTema';
 import { mensagemDeErro } from '@/utils/erros';
@@ -24,10 +25,10 @@ export default function Buscar() {
   const termoAtrasado = useDebounce(termo.trim(), ATRASO_BUSCA_MS);
   const busca = useBuscaAtivos(termoAtrasado);
   const resolver = useResolverAtivo();
+  const watchlist = useWatchlist();
+  const idPorTicker = new Map((watchlist.data ?? []).map((item) => [item.ativo.ticker.toUpperCase(), item.ativo.id]));
 
-  async function aoEscolher(ativo: AtivoEncontrado) {
-    // A lista segue tocável durante a adição: ignora toques até a resolução terminar (evita duas adições e duas navegações).
-    if (resolver.isPending) return;
+  async function adicionarEAbrir(ativo: AtivoEncontrado) {
     setErro(null);
     try {
       const { ativoId } = await resolver.mutateAsync(ativo.ticker);
@@ -35,6 +36,21 @@ export default function Buscar() {
     } catch (falha) {
       setErro(mensagemDeErro(falha));
     }
+  }
+
+  function aoEscolher(ativo: AtivoEncontrado) {
+    // A lista segue tocável durante a adição: ignora toques até a resolução terminar (evita duas adições e duas navegações).
+    if (resolver.isPending) return;
+    const idNaWatchlist = idPorTicker.get(ativo.ticker.toUpperCase());
+    if (idNaWatchlist) {
+      router.replace({ pathname: '/ativo/[id]', params: { id: idNaWatchlist, ticker: ativo.ticker } });
+      return;
+    }
+    // Adição explícita: o ativo só entra na watchlist (e passa a ter análise) com a confirmação do usuário.
+    Alert.alert('Adicionar à watchlist', `Adicionar ${ativo.ticker} à sua watchlist para ver o gráfico e a análise?`, [
+      { text: 'Cancelar', style: 'cancel' },
+      { text: 'Adicionar', onPress: () => void adicionarEAbrir(ativo) },
+    ]);
   }
 
   function resultados() {
@@ -51,7 +67,13 @@ export default function Buscar() {
         data={busca.data}
         keyExtractor={(ativo) => ativo.ticker}
         keyboardShouldPersistTaps="handled"
-        renderItem={({ item }) => <LinhaResultadoBusca ativo={item} aoPressionar={() => void aoEscolher(item)} />}
+        renderItem={({ item }) => (
+          <LinhaResultadoBusca
+            ativo={item}
+            naWatchlist={idPorTicker.has(item.ticker.toUpperCase())}
+            aoPressionar={() => aoEscolher(item)}
+          />
+        )}
       />
     );
   }

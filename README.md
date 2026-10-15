@@ -7,8 +7,8 @@ Cliente mobile (Android e iOS) do Sistema de Análise de Ativos do Mercado Finan
 ## Funcionalidades
 
 - Cadastro e login com sessão renovada automaticamente (access token de 30 min e refresh token de 30 dias no SecureStore); sair revoga a sessão no servidor
-- Início: indicadores da carteira (patrimônio, resultado, variação do dia, sinais ativos), resumo diário por IA com aviso legal, watchlist com preço, variação, sinais e notificação por ativo, e sinais técnicos ativos com o histórico da condição. Busca de ativos
-- Detalhe do ativo: gráfico de fechamento (1D a 5A), indicadores técnicos (SMA 20/50/200, RSI 14, MACD 12/26/9, Bollinger 20/2, volume relativo) e sinais ativos com o histórico da condição nos últimos 24 meses
+- Início: indicadores da carteira (patrimônio, resultado, variação do dia, sinais ativos), resumo diário por IA com aviso legal, watchlist com preço, variação, sinais e notificação por ativo, e sinais técnicos ativos com o histórico da condição. Busca de ativos com adição explícita à watchlist (o ativo só entra depois da confirmação)
+- Detalhe do ativo: gráfico de candles com volume (1D a 5A), médias móveis (SMA 20/50/200) e Bollinger alternáveis, leitura de abertura, máxima, mínima, fechamento e volume por toque, painéis de RSI (14, com 30 e 70) e MACD (12/26/9), que só aparecem com o histórico anterior ao período (o 5A) para não mostrar valores diferentes dos oficiais; indicadores técnicos oficiais da API; e sinais ativos com o valor do indicador no disparo e o histórico da condição (5, 20 e 60 pregões, "sem dados" quando não há)
 - Alertas de preço (criar, ativar/desativar, remover)
 - Notificações in-app, atualizadas a cada 60 s com o app aberto
 - Portfólio simulado: rentabilidade, comparação com CDI e Ibovespa, distribuição por classe, setor e moeda, posições e histórico de operações
@@ -77,4 +77,4 @@ Design completo: [`docs/superpowers/specs/2026-09-25-app-mobile-mvp-design.md`](
 
 ## Próximas etapas
 
-O roteiro está em [`docs/PLANO.md`](docs/PLANO.md): dashboard e watchlist, gráfico de candles, alertas com WebSocket, portfólio, IA e push. Recuperação de senha não existe no backend.
+O roteiro está em [`docs/PLANO.md`](docs/PLANO.md): alertas com WebSocket, portfólio, IA e push (o dashboard, o gráfico de candles e a busca já estão prontos). Recuperação de senha não existe no backend.

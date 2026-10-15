@@ -1,5 +1,5 @@
 import { router, Stack, useLocalSearchParams } from 'expo-router';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Alert, StyleSheet, View } from 'react-native';
 
 import type { PeriodoHistorico } from '@/api/tipos';
@@ -7,20 +7,21 @@ import { Botao } from '@/components/Botao';
 import { BotaoCabecalho } from '@/components/BotaoCabecalho';
 import { Card } from '@/components/Card';
 import { CardAnaliseIA } from '@/components/CardAnaliseIA';
+import { Carregando } from '@/components/Carregando';
 import { EstadoConsulta } from '@/components/EstadoConsulta';
 import { EstadoVazio } from '@/components/EstadoVazio';
-import { GraficoPreco } from '@/components/GraficoPreco';
 import { IndicadorItem } from '@/components/IndicadorItem';
 import { Linha } from '@/components/Linha';
+import { PainelTecnico } from '@/components/PainelTecnico';
 import { Pill } from '@/components/Pill';
 import { SeletorSegmentado } from '@/components/SeletorSegmentado';
 import { SinalCard } from '@/components/SinalCard';
 import { Tela } from '@/components/Tela';
 import { Texto } from '@/components/Texto';
 import { VariacaoBadge } from '@/components/VariacaoBadge';
-import { ROTULO_TIPO_ATIVO } from '@/dominio/rotulos';
-import { prepararSeriePreco } from '@/dominio/graficos';
+import { prepararAnaliseTecnica } from '@/dominio/candles';
 import { descreverIndicadores } from '@/dominio/indicadores';
+import { ROTULO_TIPO_ATIVO } from '@/dominio/rotulos';
 import { useBacktests, useCotacao, useHistorico, useIndicadores, useSinais } from '@/hooks/useAtivo';
 import { useDefinirNotificacao, useItemWatchlist, useRemoverWatchlist } from '@/hooks/useWatchlist';
 import { espaco } from '@/theme/escala';
@@ -45,6 +46,18 @@ export default function DetalheAtivo() {
   const [periodo, setPeriodo] = useState<PeriodoHistorico>('1M');
   const cotacao = useCotacao(id);
   const historico = useHistorico(id, periodo);
+  // Médias e RSI precisam de registros anteriores ao período: o histórico 5A (o máximo do backend) aquece o cálculo.
+  // Corre em paralelo e não bloqueia o gráfico; sem ele as séries só começam mais tarde. 1D e 5A não precisam dele.
+  const precisaAquecimento = periodo !== '1D' && periodo !== '5A';
+  const aquecimento = useHistorico(id, '5A', { habilitado: precisaAquecimento });
+  // Trocar de período mantém o gráfico anterior até a resposta chegar: não o apresenta como se fosse o novo período.
+  const trocandoPeriodo = historico.isPlaceholderData;
+  // No período 5A o próprio histórico é o completo. RSI e MACD só aparecem com o histórico anterior ao período.
+  const historicoCompleto = precisaAquecimento ? aquecimento.data : historico.data;
+  const analise = useMemo(
+    () => (historico.data && !trocandoPeriodo ? prepararAnaliseTecnica(historico.data, historicoCompleto) : null),
+    [historico.data, trocandoPeriodo, historicoCompleto],
+  );
   const indicadores = useIndicadores(id);
   const sinais = useSinais(id);
   const backtests = useBacktests(id, sinais.data?.map((sinal) => sinal.regra_id) ?? []);
@@ -56,6 +69,7 @@ export default function DetalheAtivo() {
   function atualizar() {
     void cotacao.refetch();
     void historico.refetch();
+    if (precisaAquecimento) void aquecimento.refetch();
     void indicadores.refetch();
     void sinais.refetch();
   }
@@ -125,21 +139,30 @@ export default function DetalheAtivo() {
           </EstadoConsulta>
         </Card>
 
-        <Card titulo="Histórico de fechamento" icone="tendencia">
+        <Card titulo="Gráfico técnico" icone="tendencia">
           <SeletorSegmentado rotulo="Período do gráfico" opcoes={PERIODOS} selecionado={periodo} aoSelecionar={setPeriodo} />
-          <EstadoConsulta
-            consulta={historico}
-            mensagemErro={(erro) => (ehStatus(erro, 404) ? 'Histórico indisponível para este ativo.' : undefined)}
-          >
-            {(pontos) => {
-              const serie = prepararSeriePreco(pontos);
-              return serie ? (
-                <GraficoPreco serie={serie} moeda={ativo?.moeda} />
-              ) : (
-                <EstadoVazio mensagem="Dados insuficientes para o gráfico neste período." />
-              );
-            }}
-          </EstadoConsulta>
+          {trocandoPeriodo ? (
+            <Carregando />
+          ) : (
+            <EstadoConsulta
+              consulta={historico}
+              mensagemErro={(erro) => (ehStatus(erro, 404) ? 'Histórico indisponível para este ativo.' : undefined)}
+            >
+              {() =>
+                analise ? (
+                  <PainelTecnico key={periodo} analise={analise} moeda={ativo?.moeda} />
+                ) : (
+                  <EstadoVazio
+                    mensagem={
+                      periodo === '1D'
+                        ? '1D mostra só a cotação atual (um ponto). Escolha 1S ou mais para ver os candles.'
+                        : 'Dados insuficientes para o gráfico neste período.'
+                    }
+                  />
+                )
+              }
+            </EstadoConsulta>
+          )}
         </Card>
 
         <Card titulo="Indicadores técnicos" icone="atividade">

@@ -15,6 +15,8 @@ WebAPI utilizada: `Insight-flow-backend` (FastAPI), repositório <https://github
 - Consumo de dados reais por `GET` nas telas de dados: watchlist, cotação, histórico de preços, indicadores técnicos, sinais e seu histórico (backtest), alertas, notificações, posições, rentabilidade, comparação com CDI e Ibovespa, e distribuição da carteira.
 - Operações com `POST`, `PATCH` e `DELETE`: adicionar e remover ativos da watchlist, ligar e desligar notificações, criar, ativar, desativar e remover alertas de preço, registrar e remover operações simuladas.
 - Tela **Início** (dashboard): indicadores da carteira, resumo diário gerado por IA (com o aviso legal obrigatório), watchlist com preço, variação e sinais, e sinais técnicos ativos com o histórico da mesma condição.
+- Tela de **detalhe do ativo** com gráfico de candles e volume, médias móveis e bandas de Bollinger que o usuário liga e desliga, leitura dos valores de cada dia ao tocar no gráfico, painéis de RSI e MACD (calculados no aplicativo com o mesmo histórico e as mesmas fórmulas do servidor, e conferidos com os valores oficiais da API), indicadores oficiais e sinais com o valor no disparo.
+- **Busca** de ativos com adição explícita à watchlist: o aplicativo pede confirmação antes de adicionar e mostra "Na watchlist" para os que já estão.
 - Tratamento explícito de carregamento, lista vazia, falha de comunicação e erro do servidor nas telas.
 - Identidade visual do cliente web (tema escuro e claro, fontes Inter e Space Grotesk).
 
@@ -55,7 +57,7 @@ Biblioteca: **Expo Router** (rotas por arquivo, pilhas e abas).
 | Sessão | `POST /auth/login`, `POST /auth/refresh`, `POST /auth/logout` | Entrar, renovar e sair |
 | Busca | `GET /ativos/buscar?termo=` | Buscar ativo por ticker ou nome |
 | Cotação | `GET /ativos/{id}/cotacao` | Preço e variação do dia |
-| Histórico | `GET /ativos/{id}/historico?periodo=` | Gráfico de fechamento (1D a 5A) |
+| Histórico | `GET /ativos/{id}/historico?periodo=` | Candles e séries dos indicadores (1D a 5A; o 5A também aquece as médias móveis) |
 | Indicadores | `GET /ativos/{id}/indicadores` | SMA, RSI, MACD, Bollinger, volume relativo |
 | Sinais | `GET /ativos/{id}/sinais` | Sinais técnicos vigentes |
 | Backtest | `GET /ativos/{id}/sinais/{regra}/backtest` | Histórico da condição (24 meses) |
@@ -103,7 +105,7 @@ Biblioteca: **Expo Router** (rotas por arquivo, pilhas e abas).
 | Requisito | Onde |
 | --- | --- |
 | Navegação funcional entre as telas | `app/_layout.tsx` e `app/(tabs)/_layout.tsx` (Expo Router) |
-| Interface com Flexbox | `flexDirection`, `flexWrap`, `flex` e `flexBasis` em `app/(tabs)/index.tsx`, `src/components/Kpi.tsx` e `src/components/LinhaAtivo.tsx` |
+| Interface com Flexbox | `flexDirection`, `flexWrap`, `flex` e `flexBasis` em `app/(tabs)/index.tsx`, `src/components/Kpi.tsx`, `src/components/LinhaAtivo.tsx` e `src/components/PainelTecnico.tsx` |
 | Integração com Web API e requisições HTTP (GET) | `src/api/client.ts` (`fetch`) e uma função por rota em `src/api/*.ts` |
 | Conversão e uso do JSON recebido | `resposta.json()` em `src/api/client.ts`; `paraNumero` e os formatadores de `src/utils/formatacao.ts` |
 | Renderização dos dados recebidos | `app/(tabs)/index.tsx` e os componentes de `src/components/` |

@@ -10,9 +10,11 @@ import { useTema } from '@/theme/useTema';
 interface Props {
   ativo: AtivoEncontrado;
   aoPressionar: () => void;
+  /** Já está na watchlist: tocar abre o ativo. Fora dela, tocar pede para adicionar. */
+  naWatchlist?: boolean;
 }
 
-export function LinhaResultadoBusca({ ativo, aoPressionar }: Props) {
+export function LinhaResultadoBusca({ ativo, aoPressionar, naWatchlist = false }: Props) {
   const { cores } = useTema();
   return (
     <Pressable
@@ -26,7 +28,12 @@ export function LinhaResultadoBusca({ ativo, aoPressionar }: Props) {
         <Texto numberOfLines={1}>{ativo.nome}</Texto>
         <Texto variante="legenda" cor="secundario">{`${ROTULO_TIPO_ATIVO[ativo.tipo]} · ${ativo.moeda}`}</Texto>
       </View>
-      <Icone nome="mais-circulo" tamanho={24} cor="primaria" />
+      <View style={estilos.acao}>
+        <Icone nome={naWatchlist ? 'confirmado' : 'mais-circulo'} tamanho={22} cor={naWatchlist ? 'textoSecundario' : 'primaria'} />
+        <Texto variante="legenda" cor={naWatchlist ? 'secundario' : 'primaria'}>
+          {naWatchlist ? 'Na watchlist' : 'Adicionar à watchlist'}
+        </Texto>
+      </View>
     </Pressable>
   );
 }
@@ -40,4 +47,5 @@ const estilos = StyleSheet.create({
     borderBottomWidth: StyleSheet.hairlineWidth,
   },
   textos: { flex: 1, gap: 2 },
+  acao: { alignItems: 'center', gap: 2, maxWidth: 96 },
 });

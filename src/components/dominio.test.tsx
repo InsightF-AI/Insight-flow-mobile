@@ -74,8 +74,24 @@ describe('SinalCard (RN-03: sinal sempre com histórico)', () => {
     expect(screen.getByText('Ativo desde 25/09/2026 12:30')).toBeOnTheScreen();
     expect(screen.getByText('3')).toBeOnTheScreen();
     expect(screen.getByText('+1,50%')).toBeOnTheScreen();
-    expect(screen.getByText('—')).toBeOnTheScreen();
+    expect(screen.getByText('sem dados')).toBeOnTheScreen();
     expect(screen.getByText('-2,00%')).toBeOnTheScreen();
+  });
+
+  it('mostra o valor do indicador no momento do disparo', async () => {
+    await render(
+      <SinalCard
+        sinal={{ ...sinal, regra_id: 'a1a1a1a1-0000-0000-0000-000000000001', contexto: { valor: '28.4' } }}
+        carregandoBacktest={false}
+      />,
+    );
+    expect(screen.getByText('RSI (14) no disparo')).toBeOnTheScreen();
+    expect(screen.getByText('28,4')).toBeOnTheScreen();
+  });
+
+  it('sem valor no contexto não mostra a linha do disparo', async () => {
+    await render(<SinalCard sinal={sinal} backtest={backtest} carregandoBacktest={false} />);
+    expect(screen.queryByText(/no disparo/)).not.toBeOnTheScreen();
   });
 
   it('zero ocorrências tem mensagem própria', async () => {

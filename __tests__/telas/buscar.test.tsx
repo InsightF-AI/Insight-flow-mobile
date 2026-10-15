@@ -1,5 +1,6 @@
 import { screen, userEvent, waitFor } from '@testing-library/react-native';
 import { router } from 'expo-router';
+import { Alert } from 'react-native';
 
 import { ativosApi } from '@/api/ativos';
 import { ApiError } from '@/api/client';
@@ -18,7 +19,16 @@ const TEMPO_DA_BUSCA_MS = 5000;
 
 beforeEach(() => {
   jest.clearAllMocks();
+  jest.restoreAllMocks();
+  jest.mocked(watchlistApi.listar).mockResolvedValue([]);
 });
+
+/** Confirma o diálogo "Adicionar à watchlist" tocando no botão de ação. */
+function confirmarAdicao() {
+  jest.spyOn(Alert, 'alert').mockImplementation((_titulo, _mensagem, botoes) => {
+    botoes?.find((botao) => botao.text === 'Adicionar')?.onPress?.();
+  });
+}
 
 it('pede ao menos 2 caracteres antes de buscar', async () => {
   await renderizar(<Buscar />);
@@ -26,8 +36,9 @@ it('pede ao menos 2 caracteres antes de buscar', async () => {
   expect(ativosApi.buscar).not.toHaveBeenCalled();
 });
 
-it('escolher um resultado adiciona à watchlist e abre o ativo', async () => {
+it('confirmar a adição inclui o ativo na watchlist e abre o detalhe', async () => {
   const user = userEvent.setup();
+  confirmarAdicao();
   jest.mocked(ativosApi.buscar).mockResolvedValue([petr]);
   jest.mocked(watchlistApi.listar).mockResolvedValue([]);
   jest.mocked(watchlistApi.adicionar).mockResolvedValue({
@@ -63,6 +74,7 @@ const itemDaWatchlist = {
 
 it('toque duplo no mesmo resultado adiciona e navega uma única vez', async () => {
   const user = userEvent.setup();
+  confirmarAdicao();
   let concluirAdicao: (item: typeof itemDaWatchlist) => void = () => {};
   jest.mocked(ativosApi.buscar).mockResolvedValue([petr]);
   jest.mocked(watchlistApi.listar).mockResolvedValue([]);
@@ -84,6 +96,7 @@ it('toque duplo no mesmo resultado adiciona e navega uma única vez', async () =
 
 it('o erro da tentativa anterior some ao digitar um novo termo', async () => {
   const user = userEvent.setup();
+  confirmarAdicao();
   jest.mocked(ativosApi.buscar).mockResolvedValue([petr]);
   jest.mocked(watchlistApi.listar).mockResolvedValue([]);
   jest.mocked(watchlistApi.adicionar).mockRejectedValue(new ApiError(503, 'Fonte de dados de mercado indisponivel'));
@@ -93,4 +106,34 @@ it('o erro da tentativa anterior some ao digitar um novo termo', async () => {
   expect(await screen.findByRole('alert')).toBeOnTheScreen();
   await user.type(screen.getByLabelText('Ticker ou nome'), '4');
   expect(screen.queryByRole('alert')).not.toBeOnTheScreen();
+});
+
+it('pede confirmação antes de adicionar e não adiciona se o usuário cancelar', async () => {
+  const user = userEvent.setup();
+  const alerta = jest.spyOn(Alert, 'alert').mockImplementation(() => {});
+  jest.mocked(ativosApi.buscar).mockResolvedValue([petr]);
+  await renderizar(<Buscar />);
+  await user.type(screen.getByLabelText('Ticker ou nome'), 'PETR');
+  await user.press(await screen.findByRole('button', { name: 'PETR4, Petrobras PN' }, { timeout: TEMPO_DA_BUSCA_MS }));
+  expect(alerta).toHaveBeenCalledWith(
+    'Adicionar à watchlist',
+    expect.stringContaining('PETR4'),
+    expect.arrayContaining([expect.objectContaining({ text: 'Adicionar' })]),
+  );
+  expect(watchlistApi.adicionar).not.toHaveBeenCalled();
+  expect(router.replace).not.toHaveBeenCalled();
+});
+
+it('ativo que já está na watchlist abre direto, sem diálogo nem nova adição', async () => {
+  const user = userEvent.setup();
+  const alerta = jest.spyOn(Alert, 'alert').mockImplementation(() => {});
+  jest.mocked(ativosApi.buscar).mockResolvedValue([petr]);
+  jest.mocked(watchlistApi.listar).mockResolvedValue([itemDaWatchlist]);
+  await renderizar(<Buscar />);
+  await user.type(screen.getByLabelText('Ticker ou nome'), 'PETR');
+  expect(await screen.findByText('Na watchlist', undefined, { timeout: TEMPO_DA_BUSCA_MS })).toBeOnTheScreen();
+  await user.press(screen.getByRole('button', { name: 'PETR4, Petrobras PN' }));
+  expect(alerta).not.toHaveBeenCalled();
+  expect(watchlistApi.adicionar).not.toHaveBeenCalled();
+  expect(router.replace).toHaveBeenCalledWith({ pathname: '/ativo/[id]', params: { id: 'a-1', ticker: 'PETR4' } });
 });
