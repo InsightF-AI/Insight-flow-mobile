@@ -73,6 +73,8 @@ src/dominio/      regras puras (validações, indicadores, portfólio)
 src/components/   componentes de apresentação
 src/theme/        tokens de cor, espaçamento e tipografia
 __tests__/telas/  testes de tela
+docs/             documentação (índice em docs/README.md)
+tools/            IA falsa, conferência do backend e prévia web (fora do app)
 ```
 
 Design completo: [`docs/superpowers/specs/2026-09-25-app-mobile-mvp-design.md`](docs/superpowers/specs/2026-09-25-app-mobile-mvp-design.md).
@@ -80,6 +82,13 @@ Design completo: [`docs/superpowers/specs/2026-09-25-app-mobile-mvp-design.md`](
 ## Teste no aparelho
 
 O que só o celular confere (toque, rolagem, teclado, rede real, leitores de tela e push) está em [`docs/roteiro-de-teste-no-aparelho.md`](docs/roteiro-de-teste-no-aparelho.md), com o resultado esperado de cada passo.
+
+## Documentação e contribuição
+
+- Índice, mapa dos pull requests e pendências: [`docs/README.md`](docs/README.md)
+- Entrega do Checkpoint 02 (Programação Mobile): [`docs/checkpoint-02.md`](docs/checkpoint-02.md) e [`docs/entregas/checkpoint-02/`](docs/entregas/checkpoint-02/README.md)
+- Git Flow, commits e regras de PR: [`CONTRIBUTING.md`](CONTRIBUTING.md)
+- Ferramentas de apoio (IA falsa, conferência do backend, prévia web): [`tools/`](tools/README.md)
 
 ## Próximas etapas
 

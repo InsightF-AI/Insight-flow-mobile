@@ -41,3 +41,9 @@ yarn-error.*
 .env
 coverage/
 .superpowers/
+
+# saídas das ferramentas de tools/
+tools/ia-falsa/stub.log
+/capturas/
+/capturas-ia/
+/capturas-alerta/

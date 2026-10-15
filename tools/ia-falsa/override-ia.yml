@@ -1,0 +1,9 @@
+# Sobrepõe o serviço `app` do docker-compose do BACKEND para apontar a IA ao Gemini falso (nada disto vai para o repositório do backend).
+# Uso: docker compose -f docker-compose.yml -f <caminho-deste-arquivo> up -d app
+services:
+  app:
+    environment:
+      AI_HABILITADA: "true"
+      GEMINI_API_KEY: "chave-falsa-so-para-teste-local"
+      GEMINI_BASE_URL: "http://gemini-stub:8099"
+      GEMINI_BACKOFF_SEGUNDOS: "0"
