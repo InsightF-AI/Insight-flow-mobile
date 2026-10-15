@@ -53,9 +53,16 @@ export default function TabsLayout() {
         options={{
           title: 'Carteira',
           tabBarIcon: ({ color, size }) => <Icone nome="grafico-pizza" corExata={color} tamanho={size} />,
-          headerRight: () => (
-            <BotaoCabecalho icone="mensagem" rotulo="Perguntar à IA" onPress={() => router.push('/chat')} />
-          ),
+        }}
+      />
+      <Tabs.Screen
+        name="chat"
+        options={{
+          title: 'Chat',
+          headerTitle: 'Chat com IA',
+          // No Android o teclado empurraria a barra de abas para cima do campo de mensagem.
+          tabBarHideOnKeyboard: true,
+          tabBarIcon: ({ color, size }) => <Icone nome="mensagem" corExata={color} tamanho={size} />,
         }}
       />
       <Tabs.Screen

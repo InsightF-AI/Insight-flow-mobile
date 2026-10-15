@@ -123,7 +123,6 @@ export default function RootLayout() {
                 <Stack.Screen name="buscar" options={{ title: 'Buscar ativo' }} />
                 <Stack.Screen name="ativo/[id]" options={{ title: 'Ativo' }} />
                 <Stack.Screen name="operacao/nova" options={{ title: 'Nova operação', presentation: 'modal' }} />
-                <Stack.Screen name="chat" options={{ title: 'Perguntar à IA' }} />
                 <Stack.Screen name="notificacoes" options={{ title: 'Notificações' }} />
                 <Stack.Screen name="notificacao/[id]" options={{ title: 'Notificação' }} />
               </Stack.Protected>

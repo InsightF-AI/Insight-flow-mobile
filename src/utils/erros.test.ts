@@ -20,7 +20,7 @@ describe('mensagemDeErro', () => {
     ['Ativo ja esta na watchlist', 'Este ativo já está na sua watchlist'],
     ['Item nao encontrado na watchlist', 'Este ativo não está mais na sua watchlist'],
     ['Cotacao nao encontrada para o ativo', 'Cotação indisponível para este ativo'],
-    ['Provedor de IA indisponivel', 'A análise por IA está indisponível no momento'],
+    ['Provedor de IA indisponivel', 'A IA está indisponível no momento. Tente novamente em instantes.'],
     [
       'Resposta da IA bloqueada pelo guardrail',
       'A IA não conseguiu gerar um texto dentro das regras de linguagem. Tente novamente.',

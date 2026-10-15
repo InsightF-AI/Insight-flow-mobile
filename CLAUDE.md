@@ -15,6 +15,7 @@ App Expo SDK 57 (React Native 0.86, TypeScript). Spec: `docs/superpowers/specs/2
 - Sessão só via `useSessao` (`src/store/sessao.ts`): uma chave `insightflow.sessao` no SecureStore com access, refresh, vencimento e e-mail. O client renova sozinho (antes de vencer e no 401); telas nunca chamam `/auth/refresh`.
 - Rotas `/auth/*` não levam `Authorization`. Chamadas lentas passam `timeoutMs` ao `request` (padrão 20 s).
 - Mensagem de erro para o usuário só via `mensagemDeErro`; o `requestId` aparece como "Código do erro" no `ErroComRetry`.
+- IA: chamadas de IA nunca repetem sozinhas (cada uma gasta cota). A análise é a consulta desligada de `useAnaliseIA` (só o botão dispara); a conversa do chat vive em memória em `src/store/conversa.ts` (limpa ao sair da conta; resposta tardia é descartada) e o corpo do `/chat` sai de `montarMensagensDaApi` (`src/dominio/ia.ts`), que respeita os limites do backend. O card da análise usa `avisoLegalDe` (o aviso da API, ou o fixo se vier vazio); o rodapé do chat mostra sempre o aviso fixo e o botão Copiar leva o `avisoLegal` guardado da resposta.
 
 ## Regras visuais (identidade do web)
 - Cores, sombras e séries só via `useTema()` (`cores`, `tons`, `grafico`, `sombras`, `serie`); hex/`rgba` literais só em `src/theme/`. O tema padrão é o escuro; a preferência fica em `src/store/preferencias.ts`.

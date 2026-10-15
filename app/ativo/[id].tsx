@@ -22,6 +22,7 @@ import { VariacaoBadge } from '@/components/VariacaoBadge';
 import { prepararAnaliseTecnica } from '@/dominio/candles';
 import { descreverIndicadores } from '@/dominio/indicadores';
 import { ROTULO_TIPO_ATIVO } from '@/dominio/rotulos';
+import { useAnaliseIA } from '@/hooks/useAnaliseIA';
 import { useBacktests, useCotacao, useHistorico, useIndicadores, useSinais } from '@/hooks/useAtivo';
 import { useDefinirNotificacao, useItemWatchlist, useRemoverWatchlist } from '@/hooks/useWatchlist';
 import { espaco } from '@/theme/escala';
@@ -40,6 +41,7 @@ const PERIODOS: readonly { valor: PeriodoHistorico; rotulo: string }[] = [
 export default function DetalheAtivo() {
   const { id, ticker: tickerParam } = useLocalSearchParams<{ id: string; ticker?: string }>();
   const item = useItemWatchlist(id);
+  const analiseIA = useAnaliseIA(id);
   const ativo = item?.ativo;
   const titulo = ativo?.ticker ?? tickerParam ?? 'Ativo';
 
@@ -199,7 +201,12 @@ export default function DetalheAtivo() {
           }
         </EstadoConsulta>
 
-        <CardAnaliseIA />
+        <CardAnaliseIA
+          analise={analiseIA.analise}
+          gerando={analiseIA.gerando}
+          erro={analiseIA.erro}
+          aoGerar={analiseIA.gerar}
+        />
 
         {item ? (
           <Botao titulo="Remover da watchlist" variante="perigo" onPress={confirmarRemocao} carregando={remover.isPending} />
