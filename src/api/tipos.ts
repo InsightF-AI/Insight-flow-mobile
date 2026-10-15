@@ -6,17 +6,26 @@ export type Uuid = string;
 export type DataHoraISO = string;
 export type DataISO = string;
 
-export type TipoAtivo = 'ACAO' | 'FII' | 'ETF' | 'BDR' | 'CRIPTO';
+/** INDICE é interno do backend (Ibovespa, usado no benchmark): não aparece na busca nem na watchlist. */
+export type TipoAtivo = 'ACAO' | 'FII' | 'ETF' | 'BDR' | 'CRIPTO' | 'INDICE';
 export type TipoIndicador = 'SMA' | 'RSI' | 'MACD' | 'BOLLINGER' | 'VOLUME_RELATIVO';
 export type TipoOperacao = 'COMPRA' | 'VENDA';
 export type TipoBenchmark = 'CDI' | 'IBOVESPA';
 export type TipoCondicaoAlerta = 'PRECO_MAIOR_IGUAL' | 'PRECO_MENOR_IGUAL';
-export type TipoNotificacao = 'SINAL_ATIVADO' | 'ALERTA_DISPARADO';
+export type TipoNotificacao = 'SINAL_ATIVADO' | 'ALERTA_DISPARADO' | 'RESUMO_DIARIO';
 export type PeriodoHistorico = '1D' | '1S' | '1M' | '3M' | '1A' | '5A';
 
 export interface TokenResponse {
   access_token: string;
+  /** Opaco, 30 dias, rotativo: cada /auth/refresh devolve um novo e invalida o anterior. */
+  refresh_token: string;
   token_type: string;
+  /** Validade do access token em segundos (1800 por padrão). */
+  expires_in: number;
+}
+
+export interface RefreshRequest {
+  refresh_token: string;
 }
 
 export interface LoginRequest {
@@ -130,9 +139,13 @@ export interface AtualizarAlertaRequest {
 
 export interface Notificacao {
   id: Uuid;
-  ativo_id: Uuid;
+  /** null no RESUMO_DIARIO. */
+  ativo_id: Uuid | null;
   tipo: TipoNotificacao;
+  /** No RESUMO_DIARIO é só o título; o texto completo vem em contexto.texto. */
   mensagem: string;
+  /** SINAL_ATIVADO: {sinal_id, regra_id}; ALERTA_DISPARADO: {alerta_id, preco}; RESUMO_DIARIO: {texto, aviso_legal, ...}. */
+  contexto: Record<string, unknown>;
   lida: boolean;
   criado_em: DataHoraISO;
 }

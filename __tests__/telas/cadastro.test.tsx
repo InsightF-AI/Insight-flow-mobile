@@ -26,7 +26,7 @@ async function preencher() {
 beforeEach(() => {
   jest.clearAllMocks();
   armazenamento.clear();
-  useSessao.setState({ status: 'anonimo', token: null, email: null });
+  useSessao.setState({ status: 'anonimo', token: null, refreshToken: null, expiraEm: null, email: null });
 });
 
 it('mostra o card do web com título, alternância de senha e link para entrar', async () => {
@@ -40,7 +40,7 @@ it('mostra o card do web com título, alternância de senha e link para entrar',
 });
 
 it('cadastro com sucesso já entra no app', async () => {
-  jest.mocked(authApi.cadastrar).mockResolvedValue({ access_token: 'novo', token_type: 'bearer' });
+  jest.mocked(authApi.cadastrar).mockResolvedValue({ access_token: 'novo', refresh_token: 'ref', token_type: 'bearer', expires_in: 1800 });
   await renderizar(<Cadastro />);
   await preencher();
   await waitFor(() => expect(useSessao.getState().status).toBe('autenticado'));
@@ -60,7 +60,7 @@ it('segundo toque enquanto a sessão é gravada não dispara outro cadastro', as
   jest.mocked(SecureStore.setItemAsync).mockImplementationOnce(
     () => new Promise<void>((resolver) => (liberarArmazenamento = resolver)),
   );
-  jest.mocked(authApi.cadastrar).mockResolvedValue({ access_token: 'novo', token_type: 'bearer' });
+  jest.mocked(authApi.cadastrar).mockResolvedValue({ access_token: 'novo', refresh_token: 'ref', token_type: 'bearer', expires_in: 1800 });
   await renderizar(<Cadastro />);
   const user = await preencher();
   // A mutation já resolveu (isPending voltou a false), mas `entrar` segue esperando o armazenamento seguro.

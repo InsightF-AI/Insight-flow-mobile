@@ -53,6 +53,16 @@ describe('ErroComRetry', () => {
     expect(tentar).toHaveBeenCalledTimes(1);
   });
 
+  it('mostra o código do erro quando há requestId', async () => {
+    await render(<ErroComRetry erro={new ApiError(500, 'x', { requestId: 'srv-42' })} aoTentarNovamente={jest.fn()} />);
+    expect(screen.getByText('Código do erro: srv-42')).toBeOnTheScreen();
+  });
+
+  it('não mostra código quando não há requestId', async () => {
+    await render(<ErroComRetry erro={new ApiError(0, 'Sem conexão com o servidor')} aoTentarNovamente={jest.fn()} />);
+    expect(screen.queryByText(/Código do erro/)).not.toBeOnTheScreen();
+  });
+
   it('mensagem explícita tem prioridade', async () => {
     await render(<ErroComRetry erro={new ApiError(404, 'x')} mensagem="Sem cotação" aoTentarNovamente={jest.fn()} />);
     expect(screen.getByRole('alert')).toHaveTextContent('Sem cotação');

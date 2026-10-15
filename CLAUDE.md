@@ -12,6 +12,9 @@ App Expo SDK 57 (React Native 0.86, TypeScript). Spec: `docs/superpowers/specs/2
 - Decimais da API chegam como string; converta com `paraNumero`.
 - `formatarPercentual` exige escala: `'pontos'` (cotação, backtest) ou `'fracao'` (rentabilidade, benchmark, distribuição).
 - RN-01: sem "compre", "venda", "invista" em textos de análise. RN-05: `AvisoIA` em toda tela com conteúdo de IA.
+- Sessão só via `useSessao` (`src/store/sessao.ts`): uma chave `insightflow.sessao` no SecureStore com access, refresh, vencimento e e-mail. O client renova sozinho (antes de vencer e no 401); telas nunca chamam `/auth/refresh`.
+- Rotas `/auth/*` não levam `Authorization`. Chamadas lentas passam `timeoutMs` ao `request` (padrão 20 s).
+- Mensagem de erro para o usuário só via `mensagemDeErro`; o `requestId` aparece como "Código do erro" no `ErroComRetry`.
 
 ## Regras visuais (identidade do web)
 - Cores, sombras e séries só via `useTema()` (`cores`, `tons`, `grafico`, `sombras`, `serie`); hex/`rgba` literais só em `src/theme/`. O tema padrão é o escuro; a preferência fica em `src/store/preferencias.ts`.
@@ -32,3 +35,6 @@ Before writing or changing RNTL tests, read the relevant guide in
 Prefer those package docs over stale assumptions, and follow deprecation notices.
 
 Listas (FlatList) não exigem nada especial nos testes: o `afterEach` de `jest.setup.ts` aguarda o timer de lote do VirtualizedList antes do cleanup do RNTL. Por isso `jest.setup.ts` não pode importar `@testing-library/react-native` no topo (só `pure`, via require preguiçoso).
+
+## Expo muda a cada SDK
+Antes de usar uma API do Expo, EAS ou React Native, consulte a documentação da versão em uso (`https://docs.expo.dev/versions/v57.0.0/`; índice em `https://docs.expo.dev/llms.txt`) em vez de confiar na memória. Dependências novas entram com `npx expo install <pacote>`.

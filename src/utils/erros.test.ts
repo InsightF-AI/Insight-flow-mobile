@@ -1,5 +1,5 @@
 import { ApiError } from '@/api/client';
-import { ehStatus, mensagemDeErro } from '@/utils/erros';
+import { codigoDoErro, ehStatus, mensagemDeErro } from '@/utils/erros';
 
 describe('mensagemDeErro', () => {
   it('usa a mensagem do ApiError', () => {
@@ -15,6 +15,33 @@ describe('mensagemDeErro', () => {
   it('erro desconhecido vira mensagem genérica', () => {
     expect(mensagemDeErro(new Error('boom'))).toBe('Algo deu errado. Tente novamente.');
   });
+
+  it.each([
+    ['Ativo ja esta na watchlist', 'Este ativo já está na sua watchlist'],
+    ['Item nao encontrado na watchlist', 'Este ativo não está mais na sua watchlist'],
+    ['Cotacao nao encontrada para o ativo', 'Cotação indisponível para este ativo'],
+    ['Provedor de IA indisponivel', 'A análise por IA está indisponível no momento'],
+    [
+      'Resposta da IA bloqueada pelo guardrail',
+      'A IA não conseguiu gerar um texto dentro das regras de linguagem. Tente novamente.',
+    ],
+  ])('traduz "%s"', (doBackend, esperado) => {
+    expect(mensagemDeErro(new ApiError(404, doBackend))).toBe(esperado);
+  });
+
+  it('503 sem mensagem conhecida vira serviço indisponível', () => {
+    expect(mensagemDeErro(new ApiError(503, 'Erro 503'))).toBe(
+      'Serviço indisponível no momento. Tente novamente em instantes.',
+    );
+  });
+
+  it('500 genérico vira erro no servidor', () => {
+    expect(mensagemDeErro(new ApiError(500, 'Erro 500'))).toBe('Erro no servidor. Tente novamente em instantes.');
+  });
+
+  it('mensagem que não está no dicionário passa como veio', () => {
+    expect(mensagemDeErro(new ApiError(422, 'data nao pode ser futura'))).toBe('data nao pode ser futura');
+  });
 });
 
 describe('ehStatus', () => {
@@ -26,5 +53,16 @@ describe('ehStatus', () => {
   it('é falso para outros erros e para null', () => {
     expect(ehStatus(new Error('x'), 404)).toBe(false);
     expect(ehStatus(null, 404)).toBe(false);
+  });
+});
+
+describe('codigoDoErro', () => {
+  it('devolve o requestId do ApiError', () => {
+    expect(codigoDoErro(new ApiError(500, 'x', { requestId: 'srv-42' }))).toBe('srv-42');
+  });
+
+  it('é null sem requestId ou para outros erros', () => {
+    expect(codigoDoErro(new ApiError(500, 'x'))).toBeNull();
+    expect(codigoDoErro(new Error('x'))).toBeNull();
   });
 });

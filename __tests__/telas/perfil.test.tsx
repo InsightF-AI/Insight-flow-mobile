@@ -3,6 +3,7 @@ import { router } from 'expo-router';
 import * as SecureStore from 'expo-secure-store';
 import { Alert } from 'react-native';
 
+import { authApi } from '@/api/auth';
 import { notificacoesApi } from '@/api/notificacoes';
 import type { Notificacao } from '@/api/tipos';
 import { watchlistApi } from '@/api/watchlist';
@@ -14,6 +15,7 @@ import { coresClaro, coresEscuro } from '@/theme/cores';
 import Perfil from '../../app/(tabs)/perfil';
 
 jest.mock('expo-router', () => ({ router: { push: jest.fn() } }));
+jest.mock('@/api/auth', () => ({ authApi: { sair: jest.fn(), renovar: jest.fn() } }));
 jest.mock('@/api/notificacoes', () => ({ notificacoesApi: { listar: jest.fn(), marcarComoLida: jest.fn() } }));
 jest.mock('@/api/watchlist', () => ({ watchlistApi: { listar: jest.fn() } }));
 
@@ -24,6 +26,7 @@ const naoLida: Notificacao = {
   ativo_id: 'a-1',
   tipo: 'SINAL_ATIVADO',
   mensagem: 'Sobrevenda RSI ativado em PETR4',
+  contexto: {},
   lida: false,
   criado_em: '2026-09-25T15:30:00Z',
 };
@@ -32,6 +35,7 @@ const lidaDeAtivoRemovido: Notificacao = {
   ativo_id: 'a-9',
   tipo: 'ALERTA_DISPARADO',
   mensagem: 'Preço atingiu o alvo',
+  contexto: {},
   lida: true,
   criado_em: '2026-09-24T15:30:00Z',
 };
@@ -41,7 +45,8 @@ beforeEach(() => {
   jest.restoreAllMocks();
   armazenamento.clear();
   usePreferencias.setState({ tema: 'escuro' });
-  useSessao.setState({ status: 'autenticado', token: 'tok', email: 'ana@exemplo.com' });
+  useSessao.setState({ status: 'autenticado', token: 'tok', refreshToken: 'ref', expiraEm: null, email: 'ana@exemplo.com' });
+  jest.mocked(authApi.sair).mockResolvedValue(undefined);
   jest.mocked(watchlistApi.listar).mockResolvedValue([
     {
       ativo: { id: 'a-1', ticker: 'PETR4', nome: 'Petrobras PN', tipo: 'ACAO', setor: null, moeda: 'BRL' },
@@ -58,6 +63,25 @@ it('mostra o e-mail e as notificações, com ticker quando conhecido', async () 
   expect(await screen.findByText('ana@exemplo.com')).toBeOnTheScreen();
   expect(await screen.findByText('Sinal técnico · PETR4')).toBeOnTheScreen();
   expect(screen.getByText('Alerta de preço')).toBeOnTheScreen();
+});
+
+it('resumo diário aparece com o título do tipo e o toque só marca como lida', async () => {
+  const user = userEvent.setup();
+  const resumo: Notificacao = {
+    id: 'n-3',
+    ativo_id: null,
+    tipo: 'RESUMO_DIARIO',
+    mensagem: 'Resumo diario da carteira',
+    contexto: { texto: 'A carteira fechou o dia estável.', aviso_legal: 'Análise gerada por IA.' },
+    lida: false,
+    criado_em: '2026-10-09T21:30:00Z',
+  };
+  jest.mocked(notificacoesApi.listar).mockResolvedValue([resumo]);
+  jest.mocked(notificacoesApi.marcarComoLida).mockResolvedValue({ ...resumo, lida: true });
+  await renderizar(<Perfil />);
+  await user.press(await screen.findByRole('button', { name: /Resumo diário/ }));
+  await waitFor(() => expect(notificacoesApi.marcarComoLida).toHaveBeenCalledWith('n-3'));
+  expect(router.push).not.toHaveBeenCalled();
 });
 
 it('tocar numa não lida marca como lida e abre o ativo', async () => {
@@ -78,6 +102,7 @@ it('sair pede confirmação e encerra a sessão', async () => {
   await renderizar(<Perfil />);
   await user.press(await screen.findByRole('button', { name: 'Sair' }));
   await waitFor(() => expect(useSessao.getState().status).toBe('anonimo'));
+  expect(authApi.sair).toHaveBeenCalledWith('ref');
 });
 
 it('sair encerra a sessão mesmo se o armazenamento seguro falhar, sem rejeição não tratada', async () => {

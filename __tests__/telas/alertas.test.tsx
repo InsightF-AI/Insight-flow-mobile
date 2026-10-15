@@ -76,11 +76,11 @@ it('submit inválido depois de um erro geral da API remove a mensagem geral e mo
   await user.type(screen.getByLabelText('Ticker'), 'PETR4');
   await user.type(screen.getByLabelText('Valor alvo'), '10');
   await user.press(screen.getByRole('button', { name: 'Criar alerta' }));
-  expect(await screen.findByText('Falha no servidor')).toBeOnTheScreen();
+  expect(await screen.findByText('Erro no servidor. Tente novamente em instantes.')).toBeOnTheScreen();
 
   await user.clear(screen.getByLabelText('Ticker'));
   await user.press(screen.getByRole('button', { name: 'Criar alerta' }));
 
   expect(await screen.findByText('Informe o ticker do ativo')).toBeOnTheScreen();
-  expect(screen.queryByText('Falha no servidor')).not.toBeOnTheScreen();
+  expect(screen.queryByText('Erro no servidor. Tente novamente em instantes.')).not.toBeOnTheScreen();
 });

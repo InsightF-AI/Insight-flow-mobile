@@ -8,6 +8,7 @@ const notificacao: Notificacao = {
   ativo_id: 'a-1',
   tipo: 'SINAL_ATIVADO',
   mensagem: 'Sobrevenda RSI ativado em PETR4',
+  contexto: {},
   lida: false,
   criado_em: '2026-09-25T15:30:00Z',
 };

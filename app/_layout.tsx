@@ -9,26 +9,33 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { configurarApi } from '@/api/client';
+import { ConfiguracaoInvalida } from '@/components/ConfiguracaoInvalida';
+import { lerUrlDaApi } from '@/config/ambiente';
 import { queryClient } from '@/hooks/queryClient';
 import { usePreferencias } from '@/store/preferencias';
-import { useSessao } from '@/store/sessao';
+import { geracaoDaSessao, pertoDeVencer, useSessao } from '@/store/sessao';
 import { FONTES } from '@/theme/carregarFontes';
 import { familia, fontesProntas } from '@/theme/familias';
 import { type Tema, useTema } from '@/theme/useTema';
 
 void SplashScreen.preventAutoHideAsync();
 
+// A URL é embutida no bundle pelo Metro. Inválida, o app mostra como corrigir em vez de "sem conexão" em toda tela.
+let erroDeConfiguracao: string | null = null;
+let baseUrl = '';
+try {
+  baseUrl = lerUrlDaApi(process.env.EXPO_PUBLIC_API_URL);
+} catch (erro) {
+  erroDeConfiguracao = erro instanceof Error ? erro.message : String(erro);
+}
+
 configurarApi({
-  baseUrl: process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:8000',
+  baseUrl,
   obterToken: () => useSessao.getState().token,
-  // Token vencido ou inválido: volta ao login (não há refresh token no backend).
-  // `sair` propaga falhas do SecureStore e vários 401 podem disparar em paralelo: sem o `.catch` haveria rejeição não tratada.
-  aoNaoAutorizado: () => {
-    void useSessao
-      .getState()
-      .sair()
-      .catch(() => {});
-  },
+  tokenPertoDeVencer: () => pertoDeVencer(useSessao.getState().expiraEm),
+  // A store serializa as renovações e, se o refresh for recusado, encerra a sessão (o app volta ao login).
+  renovarToken: () => useSessao.getState().renovar(),
+  geracaoDaSessao,
 });
 
 function temaDeNavegacao(tema: Tema): Theme {
@@ -73,6 +80,13 @@ export default function RootLayout() {
   }, []);
 
   if (!pronto) return null;
+  if (erroDeConfiguracao) {
+    return (
+      <SafeAreaProvider>
+        <ConfiguracaoInvalida mensagem={erroDeConfiguracao} />
+      </SafeAreaProvider>
+    );
+  }
   const autenticado = status === 'autenticado';
 
   return (
