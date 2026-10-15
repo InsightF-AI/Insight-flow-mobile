@@ -1,6 +1,7 @@
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import type { Notificacao } from '@/api/tipos';
+import { Pill } from '@/components/Pill';
 import { Texto } from '@/components/Texto';
 import { ROTULO_TIPO_NOTIFICACAO } from '@/dominio/rotulos';
 import { espaco, raio } from '@/theme/escala';
@@ -14,7 +15,7 @@ interface Props {
 }
 
 export function ItemNotificacao({ notificacao, ticker, aoPressionar }: Props) {
-  const { cores } = useTema();
+  const { cores, sombras } = useTema();
   const tipo = ROTULO_TIPO_NOTIFICACAO[notificacao.tipo];
   const titulo = ticker ? `${tipo} · ${ticker}` : tipo;
   const naoLida = !notificacao.lida;
@@ -29,12 +30,13 @@ export function ItemNotificacao({ notificacao, ticker, aoPressionar }: Props) {
         {
           backgroundColor: cores.superficie,
           borderColor: naoLida ? cores.primaria : cores.borda,
+          boxShadow: sombras.sm,
           opacity: pressed ? 0.85 : 1,
         },
       ]}
     >
       <View style={estilos.cabecalho}>
-        {naoLida ? <View style={[estilos.ponto, { backgroundColor: cores.primaria }]} /> : null}
+        {naoLida ? <Pill tom="azul">Nova</Pill> : null}
         <Texto variante="legenda" cor="secundario" negrito={naoLida}>
           {titulo}
         </Texto>
@@ -50,5 +52,4 @@ export function ItemNotificacao({ notificacao, ticker, aoPressionar }: Props) {
 const estilos = StyleSheet.create({
   item: { padding: espaco.lg, gap: espaco.xs, borderWidth: 1, borderRadius: raio.lg },
   cabecalho: { flexDirection: 'row', alignItems: 'center', gap: espaco.sm },
-  ponto: { width: 8, height: 8, borderRadius: 4 },
 });

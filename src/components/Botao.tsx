@@ -16,15 +16,16 @@ interface Props {
 
 const COR_DO_TEXTO: Record<VarianteBotao, CorTexto> = {
   primario: 'sobrePrimaria',
-  secundario: 'primaria',
+  secundario: 'secundario',
   perigo: 'negativo',
 };
 
 export function Botao({ titulo, onPress, variante = 'primario', carregando = false, desabilitado = false }: Props) {
-  const { cores } = useTema();
+  const { cores, sombras } = useTema();
   const inativo = desabilitado || carregando;
-  const fundo = variante === 'primario' ? cores.primaria : 'transparent';
-  const borda = variante === 'perigo' ? cores.negativo : cores.primaria;
+  const primario = variante === 'primario';
+  const borda = variante === 'perigo' ? cores.negativo : primario ? cores.primaria : cores.bordaForte;
+  const sombra = primario ? `${sombras.primaria}, ${sombras.brilho}` : sombras.sm;
 
   return (
     <Pressable
@@ -36,11 +37,17 @@ export function Botao({ titulo, onPress, variante = 'primario', carregando = fal
       onPress={onPress}
       style={({ pressed }) => [
         estilos.base,
-        { backgroundColor: fundo, borderColor: borda, opacity: inativo ? 0.6 : pressed ? 0.85 : 1 },
+        {
+          backgroundColor: primario ? (pressed ? cores.primariaHover : cores.primaria) : 'transparent',
+          borderColor: borda,
+          boxShadow: sombra,
+          opacity: inativo ? 0.5 : 1,
+          transform: [{ scale: pressed && !inativo ? 0.98 : 1 }],
+        },
       ]}
     >
       {carregando ? (
-        <ActivityIndicator color={variante === 'primario' ? cores.textoSobrePrimaria : cores.primaria} />
+        <ActivityIndicator color={primario ? cores.textoSobrePrimaria : cores.primaria} />
       ) : (
         <Texto negrito cor={COR_DO_TEXTO[variante]}>
           {titulo}
@@ -53,7 +60,7 @@ export function Botao({ titulo, onPress, variante = 'primario', carregando = fal
 const estilos = StyleSheet.create({
   base: {
     minHeight: 48,
-    borderRadius: raio.md,
+    borderRadius: raio.sm,
     borderWidth: 1,
     paddingHorizontal: espaco.lg,
     alignItems: 'center',

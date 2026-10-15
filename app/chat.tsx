@@ -5,16 +5,20 @@ import { AvisoIA } from '@/components/AvisoIA';
 import { Botao } from '@/components/Botao';
 import { Texto } from '@/components/Texto';
 import { espaco, fonte, raio } from '@/theme/escala';
+import { familia } from '@/theme/familias';
 import { useTema } from '@/theme/useTema';
 
 // O backend ainda não expõe o chat (RF-15); a tela já nasce com o aviso legal fixo (RN-05).
 export default function Chat() {
-  const { cores } = useTema();
+  const { cores, sombras } = useTema();
   const insets = useSafeAreaInsets();
   return (
     <View style={[estilos.tela, { backgroundColor: cores.fundo }]}>
       <ScrollView contentContainerStyle={estilos.conversa}>
-        <View style={[estilos.balao, { backgroundColor: cores.superficie, borderColor: cores.borda }]}>
+        <View style={[
+            estilos.balao,
+            { backgroundColor: cores.superficie, borderColor: cores.borda, boxShadow: sombras.sm },
+          ]}>
           <Texto negrito>Assistente InsightFlow</Texto>
           <Texto>O chat com IA estará disponível em breve.</Texto>
           <Texto cor="secundario">
@@ -35,8 +39,11 @@ export default function Chat() {
             aria-label="Mensagem para a IA"
             editable={false}
             placeholder="Disponível em breve"
-            placeholderTextColor={cores.textoSecundario}
-            style={[estilos.campo, { color: cores.texto, borderColor: cores.borda, backgroundColor: cores.fundo }]}
+            placeholderTextColor={cores.textoTerciario}
+            style={[
+              estilos.campo,
+              { color: cores.texto, borderColor: cores.bordaForte, backgroundColor: cores.superficieElevada },
+            ]}
           />
           <Botao titulo="Enviar" onPress={() => undefined} desabilitado />
         </View>
@@ -55,8 +62,9 @@ const estilos = StyleSheet.create({
     flex: 1,
     minHeight: 48,
     borderWidth: 1,
-    borderRadius: raio.md,
+    borderRadius: raio.sm,
     paddingHorizontal: espaco.md,
     fontSize: fonte.corpo,
+    fontFamily: familia.corpo,
   },
 });

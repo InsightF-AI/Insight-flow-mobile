@@ -18,7 +18,7 @@ interface Props {
 }
 
 export function LinhaAtivo({ ativo, cotacao, estadoCotacao, aoPressionar }: Props) {
-  const { cores } = useTema();
+  const { cores, sombras } = useTema();
   return (
     <Pressable
       role="button"
@@ -26,7 +26,7 @@ export function LinhaAtivo({ ativo, cotacao, estadoCotacao, aoPressionar }: Prop
       onPress={aoPressionar}
       style={({ pressed }) => [
         estilos.linha,
-        { backgroundColor: cores.superficie, borderColor: cores.borda, opacity: pressed ? 0.85 : 1 },
+        { backgroundColor: cores.superficie, borderColor: cores.borda, boxShadow: sombras.sm, opacity: pressed ? 0.85 : 1 },
       ]}
     >
       <View style={estilos.esquerda}>
@@ -47,7 +47,7 @@ export function LinhaAtivo({ ativo, cotacao, estadoCotacao, aoPressionar }: Prop
         ) : null}
         {estadoCotacao === 'ok' && cotacao ? (
           <>
-            <Texto negrito>{formatarMoeda(cotacao.preco, ativo.moeda)}</Texto>
+            <Texto negrito numerico>{formatarMoeda(cotacao.preco, ativo.moeda)}</Texto>
             <VariacaoBadge valor={cotacao.variacao_percentual} escala="pontos" />
           </>
         ) : null}
@@ -62,7 +62,7 @@ const estilos = StyleSheet.create({
     alignItems: 'center',
     gap: espaco.md,
     padding: espaco.lg,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderWidth: 1,
     borderRadius: raio.lg,
   },
   esquerda: { flex: 1, gap: 2 },

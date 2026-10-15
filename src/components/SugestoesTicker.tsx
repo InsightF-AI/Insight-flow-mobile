@@ -10,7 +10,7 @@ interface Props {
 }
 
 export function SugestoesTicker({ tickers, aoEscolher }: Props) {
-  const { cores } = useTema();
+  const { cores, tons } = useTema();
   if (tickers.length === 0) return null;
   return (
     <ScrollView
@@ -25,7 +25,7 @@ export function SugestoesTicker({ tickers, aoEscolher }: Props) {
           role="button"
           aria-label={`Usar ${ticker}`}
           onPress={() => aoEscolher(ticker)}
-          style={[estilos.chip, { borderColor: cores.primaria }]}
+          style={[estilos.chip, { borderColor: cores.primaria, backgroundColor: tons.azulFundo }]}
         >
           <Texto variante="legenda" negrito cor="primaria">
             {ticker}
@@ -38,5 +38,12 @@ export function SugestoesTicker({ tickers, aoEscolher }: Props) {
 
 const estilos = StyleSheet.create({
   lista: { gap: espaco.sm },
-  chip: { borderWidth: 1, borderRadius: raio.pilula, paddingHorizontal: espaco.md, paddingVertical: espaco.xs },
+  chip: {
+    minHeight: 44,
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderRadius: raio.pilula,
+    paddingHorizontal: espaco.md,
+    paddingVertical: espaco.xs,
+  },
 });

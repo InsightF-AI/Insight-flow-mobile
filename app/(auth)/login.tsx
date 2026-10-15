@@ -1,8 +1,9 @@
 import { Link } from 'expo-router';
 import { useState } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet } from 'react-native';
 
 import { Botao } from '@/components/Botao';
+import { CartaoAuth } from '@/components/CartaoAuth';
 import { Campo } from '@/components/Campo';
 import { Tela } from '@/components/Tela';
 import { Texto } from '@/components/Texto';
@@ -39,35 +40,51 @@ export default function Login() {
   }
 
   return (
-    <Tela areaSegura>
-      <View style={estilos.cabecalho}>
-        <Texto variante="destaque">InsightFlow</Texto>
-        <Texto cor="secundario">Análise técnica de ativos com dados e contexto histórico.</Texto>
-      </View>
-      <Campo
-        rotulo="E-mail"
-        valor={email}
-        aoMudar={setEmail}
-        erro={erros.email}
-        keyboardType="email-address"
-        autoCapitalize="none"
-        autoComplete="email"
-      />
-      <Campo rotulo="Senha" valor={senha} aoMudar={setSenha} erro={erros.senha} secureTextEntry autoComplete="password" />
-      {erroGeral ? (
-        <Texto role="alert" cor="negativo">
-          {erroGeral}
-        </Texto>
-      ) : null}
-      <Botao titulo="Entrar" onPress={aoEnviar} carregando={enviando} />
-      <Link href="/cadastro" replace asChild>
-        <Pressable role="link" style={estilos.link}>
-          <Texto cor="primaria" negrito>
-            Criar conta
+    <Tela areaSegura centralizar>
+      <CartaoAuth
+        titulo="Entrar"
+        subtitulo="Acesse sua conta para ver sua watchlist e sua carteira simulada."
+        rodape={
+          <Link href="/cadastro" replace asChild>
+            <Pressable role="link" aria-label="Criar conta" style={estilos.link}>
+              <Texto cor="secundario">
+                Não tem conta?{' '}
+                <Texto cor="primaria" negrito>
+                  Criar conta
+                </Texto>
+              </Texto>
+            </Pressable>
+          </Link>
+        }
+      >
+        <Campo
+          rotulo="E-mail"
+          valor={email}
+          aoMudar={setEmail}
+          erro={erros.email}
+          keyboardType="email-address"
+          autoCapitalize="none"
+          autoComplete="email"
+          icone="email"
+        />
+        <Campo
+          rotulo="Senha"
+          valor={senha}
+          aoMudar={setSenha}
+          erro={erros.senha}
+          secureTextEntry
+          alternarSenha
+          autoComplete="password"
+          icone="cadeado"
+        />
+        {erroGeral ? (
+          <Texto role="alert" cor="negativo">
+            {erroGeral}
           </Texto>
-        </Pressable>
-      </Link>
-      <Texto variante="legenda" cor="secundario" style={estilos.rodape}>
+        ) : null}
+        <Botao titulo="Entrar" onPress={aoEnviar} carregando={enviando} />
+      </CartaoAuth>
+      <Texto variante="legenda" cor="terciario" style={estilos.rodape}>
         Ferramenta educacional de análise. Não constitui recomendação de investimento.
       </Texto>
     </Tela>
@@ -75,7 +92,6 @@ export default function Login() {
 }
 
 const estilos = StyleSheet.create({
-  cabecalho: { gap: espaco.sm, marginTop: espaco.xl, marginBottom: espaco.md },
-  link: { alignSelf: 'center', padding: espaco.sm },
-  rodape: { textAlign: 'center', marginTop: 'auto' },
+  link: { padding: espaco.sm },
+  rodape: { textAlign: 'center' },
 });

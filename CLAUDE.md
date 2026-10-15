@@ -13,6 +13,16 @@ App Expo SDK 57 (React Native 0.86, TypeScript). Spec: `docs/superpowers/specs/2
 - `formatarPercentual` exige escala: `'pontos'` (cotação, backtest) ou `'fracao'` (rentabilidade, benchmark, distribuição).
 - RN-01: sem "compre", "venda", "invista" em textos de análise. RN-05: `AvisoIA` em toda tela com conteúdo de IA.
 
+## Regras visuais (identidade do web)
+- Cores, sombras e séries só via `useTema()` (`cores`, `tons`, `grafico`, `sombras`, `serie`); hex/`rgba` literais só em `src/theme/`. O tema padrão é o escuro; a preferência fica em `src/store/preferencias.ts`.
+- Nunca use `fontWeight`: a fonte é escolhida pela família (`Texto` ou `familia.*` de `@/theme/familias`).
+- Ícones só pelo wrapper `Icone` (lucide); novos ícones entram no mapa de `src/components/Icone.tsx` com nome em pt-BR.
+- Contraste ≥ 4,5:1 nos dois temas (`src/theme/cores.test.ts`); alvos de toque ≥ 44 pt.
+- As variantes do `Botao` (`primario`, `secundario` e `perigo`) mantêm os nomes; só o visual mudou.
+- Jest mapeia `lucide-react-native` para o build CJS (`moduleNameMapper` na config do jest em `package.json`): o resolvedor do RN escolhe o `.mjs` ESM, que o transform do jest-expo não cobre. O Metro não é afetado.
+- Os ícones lucide são `aria-hidden`; nos testes, consulte-os com `{ includeHiddenElements: true }`.
+- Referência visual: spec `docs/superpowers/specs/2026-09-26-redesign-visual-web-design.md`.
+
 ## React Native Testing Library in this project
 
 This project uses `@testing-library/react-native`. Its APIs and testing conventions can differ from your training data.

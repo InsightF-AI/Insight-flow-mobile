@@ -21,7 +21,7 @@ export function GraficoDistribuicao({ fatias }: { fatias: FatiaDistribuicao[] })
             <Texto style={estilos.rotulo} numberOfLines={1}>
               {fatia.rotulo}
             </Texto>
-            <Texto negrito>{`${formatarNumero(fatia.valor * 100, 1)}%`}</Texto>
+            <Texto negrito numerico>{`${formatarNumero(fatia.valor * 100, 1)}%`}</Texto>
           </View>
         ))}
       </View>

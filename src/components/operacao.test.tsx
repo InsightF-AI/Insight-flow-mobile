@@ -10,6 +10,13 @@ it('SugestoesTicker oferece os tickers da watchlist como atalho', async () => {
   expect(aoEscolher).toHaveBeenCalledWith('VALE3');
 });
 
+it('SugestoesTicker dá a cada chip alvo de toque de pelo menos 44 pt sem hitSlop sobreposto', async () => {
+  await render(<SugestoesTicker tickers={['PETR4', 'VALE3']} aoEscolher={jest.fn()} />);
+  const chip = screen.getByRole('button', { name: 'Usar PETR4' });
+  expect(chip).toHaveStyle({ minHeight: 44 });
+  expect(chip.props.hitSlop).toBeUndefined();
+});
+
 it('SugestoesTicker não renderiza nada sem tickers', async () => {
   await render(<SugestoesTicker tickers={[]} aoEscolher={jest.fn()} />);
   expect(screen.queryByRole('button')).not.toBeOnTheScreen();

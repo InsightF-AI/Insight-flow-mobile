@@ -1,10 +1,9 @@
-import { Ionicons } from '@expo/vector-icons';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import type { Operacao } from '@/api/tipos';
+import { Icone } from '@/components/Icone';
 import { Texto } from '@/components/Texto';
 import { espaco } from '@/theme/escala';
-import { useTema } from '@/theme/useTema';
 import { formatarData, formatarMoeda, formatarQuantidade, paraNumero } from '@/utils/formatacao';
 
 interface Props {
@@ -19,7 +18,6 @@ interface Props {
 const ROTULO_TIPO = { COMPRA: 'Compra', VENDA: 'Venda' } as const;
 
 export function ItemOperacao({ operacao, ticker, moeda, aoRemover, removendo }: Props) {
-  const { cores } = useTema();
   const rotuloTipo = ROTULO_TIPO[operacao.tipo];
   const nomeAtivo = ticker ?? 'Ativo';
   const data = formatarData(operacao.data);
@@ -33,16 +31,16 @@ export function ItemOperacao({ operacao, ticker, moeda, aoRemover, removendo }: 
           {`${data} · ${formatarQuantidade(operacao.quantidade)} × ${formatarMoeda(operacao.preco_unitario, moeda)}`}
         </Texto>
       </View>
-      <Texto negrito>{formatarMoeda(total, moeda)}</Texto>
+      <Texto negrito numerico>{formatarMoeda(total, moeda)}</Texto>
       <Pressable
         role="button"
         aria-label={`Remover operação de ${rotuloTipo.toLowerCase()} de ${nomeAtivo} em ${data}`}
         aria-disabled={removendo}
         disabled={removendo}
         onPress={aoRemover}
-        hitSlop={8}
+        hitSlop={12}
       >
-        <Ionicons name="trash-outline" size={20} color={cores.negativo} />
+        <Icone nome="lixeira" tamanho={20} cor="negativo" />
       </Pressable>
     </View>
   );

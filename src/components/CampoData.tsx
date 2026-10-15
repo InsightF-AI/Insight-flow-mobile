@@ -29,7 +29,7 @@ export function CampoData({ rotulo, valor, aoMudar, maximo, erro }: Props) {
 
   return (
     <View style={estilos.container}>
-      <Texto variante="legenda" cor="secundario" negrito>
+      <Texto variante="rotulo" cor="secundario">
         {rotulo}
       </Texto>
       {Platform.OS === 'ios' ? (
@@ -47,7 +47,7 @@ export function CampoData({ rotulo, valor, aoMudar, maximo, erro }: Props) {
           role="button"
           aria-label={`${rotulo}: ${texto}`}
           onPress={abrirNoAndroid}
-          style={[estilos.campo, { backgroundColor: cores.superficie, borderColor: erro ? cores.negativo : cores.borda }]}
+          style={[estilos.campo, { backgroundColor: cores.superficieElevada, borderColor: erro ? cores.negativo : cores.bordaForte }]}
         >
           <Texto>{texto}</Texto>
         </Pressable>
@@ -64,5 +64,5 @@ export function CampoData({ rotulo, valor, aoMudar, maximo, erro }: Props) {
 const estilos = StyleSheet.create({
   container: { gap: espaco.xs },
   seletorIos: { alignSelf: 'flex-start' },
-  campo: { minHeight: 48, borderWidth: 1, borderRadius: raio.md, paddingHorizontal: espaco.md, justifyContent: 'center' },
+  campo: { minHeight: 48, borderWidth: 1, borderRadius: raio.sm, paddingHorizontal: espaco.md, justifyContent: 'center' },
 });

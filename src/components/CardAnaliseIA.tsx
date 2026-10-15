@@ -4,7 +4,7 @@ import { Texto } from '@/components/Texto';
 
 export function CardAnaliseIA() {
   return (
-    <Card titulo="Análise por IA">
+    <Card titulo="Análise por IA" icone="brilho" tomIcone="ia">
       <Texto cor="secundario">Análise textual por IA — disponível em breve.</Texto>
       <AvisoIA />
     </Card>

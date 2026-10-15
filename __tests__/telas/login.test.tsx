@@ -20,6 +20,14 @@ beforeEach(() => {
   useSessao.setState({ status: 'anonimo', token: null, email: null });
 });
 
+it('mostra o card do web com título, alternância de senha e aviso educacional', async () => {
+  await renderizar(<Login />);
+  expect(screen.getByRole('heading', { name: 'Entrar' })).toBeOnTheScreen();
+  expect(screen.getByLabelText('Mostrar senha')).toBeOnTheScreen();
+  expect(screen.getByRole('link', { name: 'Criar conta' })).toBeOnTheScreen();
+  expect(screen.getByText('Ferramenta educacional de análise. Não constitui recomendação de investimento.')).toBeOnTheScreen();
+});
+
 it('valida os campos antes de chamar a API', async () => {
   const user = userEvent.setup();
   await renderizar(<Login />);

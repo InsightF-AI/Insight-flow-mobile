@@ -1,8 +1,9 @@
 import { Link } from 'expo-router';
 import { useState } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet } from 'react-native';
 
 import { Botao } from '@/components/Botao';
+import { CartaoAuth } from '@/components/CartaoAuth';
 import { Campo } from '@/components/Campo';
 import { Tela } from '@/components/Tela';
 import { Texto } from '@/components/Texto';
@@ -41,48 +42,56 @@ export default function Cadastro() {
   }
 
   return (
-    <Tela areaSegura>
-      <View style={estilos.cabecalho}>
-        <Texto variante="titulo">Criar conta</Texto>
-        <Texto cor="secundario">Monte sua watchlist e registre operações simuladas, sem dinheiro real.</Texto>
-      </View>
-      <Campo rotulo="Nome" valor={nome} aoMudar={setNome} erro={erros.nome} autoComplete="name" />
-      <Campo
-        rotulo="E-mail"
-        valor={email}
-        aoMudar={setEmail}
-        erro={erros.email}
-        keyboardType="email-address"
-        autoCapitalize="none"
-        autoComplete="email"
-      />
-      <Campo
-        rotulo="Senha"
-        valor={senha}
-        aoMudar={setSenha}
-        erro={erros.senha}
-        secureTextEntry
-        autoComplete="new-password"
-        placeholder="Mínimo de 8 caracteres"
-      />
-      {erroGeral ? (
-        <Texto role="alert" cor="negativo">
-          {erroGeral}
-        </Texto>
-      ) : null}
-      <Botao titulo="Criar conta" onPress={aoEnviar} carregando={enviando} />
-      <Link href="/login" replace asChild>
-        <Pressable role="link" style={estilos.link}>
-          <Texto cor="primaria" negrito>
-            Já tenho conta
+    <Tela areaSegura centralizar>
+      <CartaoAuth
+        titulo="Criar conta"
+        subtitulo="Monte sua watchlist e registre operações simuladas, sem dinheiro real."
+        rodape={
+          <Link href="/login" replace asChild>
+            <Pressable role="link" aria-label="Já tem conta? Entrar" style={estilos.link}>
+              <Texto cor="secundario">
+                Já tem conta?{' '}
+                <Texto cor="primaria" negrito>
+                  Entrar
+                </Texto>
+              </Texto>
+            </Pressable>
+          </Link>
+        }
+      >
+        <Campo rotulo="Nome" valor={nome} aoMudar={setNome} erro={erros.nome} autoComplete="name" icone="usuario" />
+        <Campo
+          rotulo="E-mail"
+          valor={email}
+          aoMudar={setEmail}
+          erro={erros.email}
+          keyboardType="email-address"
+          autoCapitalize="none"
+          autoComplete="email"
+          icone="email"
+        />
+        <Campo
+          rotulo="Senha"
+          valor={senha}
+          aoMudar={setSenha}
+          erro={erros.senha}
+          secureTextEntry
+          alternarSenha
+          autoComplete="new-password"
+          icone="cadeado"
+          placeholder="Mínimo de 8 caracteres"
+        />
+        {erroGeral ? (
+          <Texto role="alert" cor="negativo">
+            {erroGeral}
           </Texto>
-        </Pressable>
-      </Link>
+        ) : null}
+        <Botao titulo="Criar conta" onPress={aoEnviar} carregando={enviando} />
+      </CartaoAuth>
     </Tela>
   );
 }
 
 const estilos = StyleSheet.create({
-  cabecalho: { gap: espaco.sm, marginTop: espaco.xl, marginBottom: espaco.md },
-  link: { alignSelf: 'center', padding: espaco.sm },
+  link: { padding: espaco.sm },
 });

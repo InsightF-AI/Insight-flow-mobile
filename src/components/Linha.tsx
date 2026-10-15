@@ -17,7 +17,7 @@ export function Linha({ rotulo, valor, cor = 'padrao' }: Props) {
         {rotulo}
       </Texto>
       {typeof valor === 'string' ? (
-        <Texto negrito cor={cor}>
+        <Texto negrito numerico cor={cor}>
           {valor}
         </Texto>
       ) : (

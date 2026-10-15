@@ -46,7 +46,7 @@ function HistoricoDaCondicao({ backtest, carregando }: { backtest?: ResultadoBac
 
 export function SinalCard({ sinal, backtest, carregandoBacktest }: Props) {
   return (
-    <Card titulo={sinal.regra_nome}>
+    <Card titulo={sinal.regra_nome} icone="atividade" tomIcone="positivo">
       <Texto cor="secundario">{sinal.regra_descricao}</Texto>
       <Texto variante="legenda" cor="secundario">
         {`Ativo desde ${formatarDataHora(sinal.data_ativacao)}`}

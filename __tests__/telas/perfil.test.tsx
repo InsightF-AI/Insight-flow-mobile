@@ -6,8 +6,10 @@ import { Alert } from 'react-native';
 import { notificacoesApi } from '@/api/notificacoes';
 import type { Notificacao } from '@/api/tipos';
 import { watchlistApi } from '@/api/watchlist';
+import { usePreferencias } from '@/store/preferencias';
 import { useSessao } from '@/store/sessao';
 import { renderizar } from '@/test/renderizar';
+import { coresClaro, coresEscuro } from '@/theme/cores';
 
 import Perfil from '../../app/(tabs)/perfil';
 
@@ -38,6 +40,7 @@ beforeEach(() => {
   jest.clearAllMocks();
   jest.restoreAllMocks();
   armazenamento.clear();
+  usePreferencias.setState({ tema: 'escuro' });
   useSessao.setState({ status: 'autenticado', token: 'tok', email: 'ana@exemplo.com' });
   jest.mocked(watchlistApi.listar).mockResolvedValue([
     {
@@ -98,4 +101,34 @@ it('sair encerra a sessão mesmo se o armazenamento seguro falhar, sem rejeiçã
   // para que a detecção aconteça aqui dentro e não escape para depois do fim do teste.
   await new Promise<void>((resolver) => setImmediate(resolver));
   await new Promise<void>((resolver) => setImmediate(resolver));
+});
+
+describe('Aparência (tema)', () => {
+  it('abre no escuro por padrão', async () => {
+    await renderizar(<Perfil />);
+    expect(await screen.findByRole('radio', { name: 'Escuro' })).toBeChecked();
+    expect(screen.getByRole('radio', { name: 'Claro' })).not.toBeChecked();
+  });
+
+  it('alternar para claro reestiliza a tela na hora e persiste a escolha', async () => {
+    const user = userEvent.setup();
+    await renderizar(<Perfil />);
+    const titulo = await screen.findByRole('heading', { name: 'Aparência' });
+    expect(titulo).toHaveStyle({ color: coresEscuro.texto });
+
+    await user.press(screen.getByRole('radio', { name: 'Claro' }));
+
+    expect(screen.getByRole('radio', { name: 'Claro' })).toBeChecked();
+    expect(screen.getByRole('heading', { name: 'Aparência' })).toHaveStyle({ color: coresClaro.texto });
+    expect(usePreferencias.getState().tema).toBe('claro');
+    expect(armazenamento.get('insightflow.tema')).toBe('claro');
+  });
+
+  it('voltar para escuro também persiste', async () => {
+    const user = userEvent.setup();
+    usePreferencias.setState({ tema: 'claro' });
+    await renderizar(<Perfil />);
+    await user.press(await screen.findByRole('radio', { name: 'Escuro' }));
+    expect(armazenamento.get('insightflow.tema')).toBe('escuro');
+  });
 });

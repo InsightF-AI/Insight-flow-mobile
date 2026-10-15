@@ -13,7 +13,7 @@ Cliente mobile (Android e iOS) do Sistema de Análise de Ativos do Mercado Finan
 - Notificações in-app, atualizadas a cada 60 s com o app aberto
 - Portfólio simulado: rentabilidade, comparação com CDI e Ibovespa, distribuição por classe, setor e moeda, posições e histórico de operações
 - Telas de IA (análise do ativo e chat) prontas com o aviso legal, aguardando os endpoints de IA do backend
-- Tema claro e escuro, seguindo o sistema
+- Tema escuro (padrão) e claro, alternável no Perfil, com a mesma identidade visual do cliente web
 
 ## Stack
 

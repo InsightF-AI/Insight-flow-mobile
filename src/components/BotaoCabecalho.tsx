@@ -1,11 +1,6 @@
-import { Ionicons } from '@expo/vector-icons';
-import type { ComponentProps } from 'react';
 import { Pressable, StyleSheet } from 'react-native';
 
-import { espaco } from '@/theme/escala';
-import { useTema } from '@/theme/useTema';
-
-export type NomeIcone = ComponentProps<typeof Ionicons>['name'];
+import { Icone, type NomeIcone } from '@/components/Icone';
 
 interface Props {
   icone: NomeIcone;
@@ -14,14 +9,13 @@ interface Props {
 }
 
 export function BotaoCabecalho({ icone, rotulo, onPress }: Props) {
-  const { cores } = useTema();
   return (
-    <Pressable role="button" aria-label={rotulo} hitSlop={8} onPress={onPress} style={estilos.botao}>
-      <Ionicons name={icone} size={24} color={cores.primaria} />
+    <Pressable role="button" aria-label={rotulo} onPress={onPress} style={estilos.botao}>
+      <Icone nome={icone} tamanho={22} cor="primaria" />
     </Pressable>
   );
 }
 
 const estilos = StyleSheet.create({
-  botao: { paddingHorizontal: espaco.md },
+  botao: { minWidth: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center' },
 });
