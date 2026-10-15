@@ -31,8 +31,8 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Watchlist',
-          tabBarIcon: ({ color, size }) => <Icone nome="estrela" corExata={color} tamanho={size} />,
+          title: 'Início',
+          tabBarIcon: ({ color, size }) => <Icone nome="casa" corExata={color} tamanho={size} />,
           headerRight: () => <BotaoCabecalho icone="mais" rotulo="Buscar ativo" onPress={() => router.push('/buscar')} />,
         }}
       />
