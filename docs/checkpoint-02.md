@@ -17,6 +17,7 @@ WebAPI utilizada: `Insight-flow-backend` (FastAPI), repositório <https://github
 - Tela **Início** (dashboard): indicadores da carteira, resumo diário gerado por IA (com o aviso legal obrigatório), watchlist com preço, variação e sinais, e sinais técnicos ativos com o histórico da mesma condição.
 - Tela de **detalhe do ativo** com gráfico de candles e volume, médias móveis e bandas de Bollinger que o usuário liga e desliga, leitura dos valores de cada dia ao tocar no gráfico, painéis de RSI e MACD (calculados no aplicativo com o mesmo histórico e as mesmas fórmulas do servidor, e conferidos com os valores oficiais da API), indicadores oficiais e sinais com o valor no disparo.
 - **Busca** de ativos com adição explícita à watchlist: o aplicativo pede confirmação antes de adicionar e mostra "Na watchlist" para os que já estão.
+- **Notificações em tempo real** por WebSocket, com banner in-app, selo de não lidas e tela de notificações; alertas de preço com o preço atual e a distância ao alvo, e a aba de sinais técnicos ativos.
 - Tratamento explícito de carregamento, lista vazia, falha de comunicação e erro do servidor nas telas.
 - Identidade visual do cliente web (tema escuro e claro, fontes Inter e Space Grotesk).
 
@@ -66,6 +67,7 @@ Biblioteca: **Expo Router** (rotas por arquivo, pilhas e abas).
 | Operações | `GET`, `POST /operacoes`; `DELETE /operacoes/{id}` | Portfólio simulado |
 | Carteira | `GET /portfolio/posicoes`, `/rentabilidade`, `/benchmark`, `/distribuicao` | Posições, resultado, CDI/Ibovespa, distribuição |
 | Notificações | `GET /notificacoes`; `PATCH /notificacoes/{id}/lida` | Caixa de notificações e resumo diário |
+| Tempo real | `WS /notificacoes/ws` | Notificações em primeiro plano (o servidor não reenvia o que chegou com a conexão caída: o app sincroniza pelo `GET`) |
 
 **Entidades principais.** `Ativo` (id, ticker, nome, tipo, setor, moeda), `ItemWatchlist`, `CotacaoAtual`, `PontoHistorico`, `IndicadorTecnico`, `Sinal`, `ResultadoBacktest`, `Alerta`, `Operacao`, `Posicao`, `Rentabilidade`, `Notificacao`. Os tipos estão em `src/api/tipos.ts`, espelhando os esquemas do backend.
 

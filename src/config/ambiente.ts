@@ -22,3 +22,8 @@ export function lerUrlDaApi(valor: string | undefined): string {
   }
   return `${partes[1].toLowerCase()}://${partes[2]}`;
 }
+
+/** Endereço do WebSocket de notificações a partir da raiz do servidor: `http` vira `ws` e `https` vira `wss`. */
+export function urlDoWebSocket(raiz: string): string {
+  return `${raiz.replace(/\/+$/, '').replace(/^http/i, 'ws')}/api/v1/notificacoes/ws`;
+}

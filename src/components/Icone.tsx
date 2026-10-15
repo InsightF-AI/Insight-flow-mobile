@@ -26,6 +26,7 @@ import {
   TrendingUp,
   User,
   Wallet,
+  X,
 } from 'lucide-react-native';
 
 import type { ColorValue } from 'react-native';
@@ -57,6 +58,7 @@ const ICONES = {
   busca: Search,
   brilho: Sparkles,
   estrela: Star,
+  fechar: X,
   lixeira: Trash,
   tendencia: TrendingUp,
   usuario: User,

@@ -18,3 +18,17 @@ describe('BotaoCabecalho', () => {
     expect(botao.props.hitSlop).toBeUndefined();
   });
 });
+
+it('mostra o selo de não lidas e o inclui no nome acessível', async () => {
+  await render(<BotaoCabecalho icone="sino" rotulo="Notificações" selo={3} onPress={jest.fn()} />);
+  expect(screen.getByRole('button', { name: 'Notificações, 3 não lidas' })).toBeOnTheScreen();
+  expect(screen.getByText('3')).toBeOnTheScreen();
+});
+
+it('selo zero ou ausente não aparece e muitos viram 99+', async () => {
+  const { rerender } = await render(<BotaoCabecalho icone="sino" rotulo="Notificações" selo={0} onPress={jest.fn()} />);
+  expect(screen.queryByText('0')).not.toBeOnTheScreen();
+  expect(screen.getByRole('button', { name: 'Notificações' })).toBeOnTheScreen();
+  await rerender(<BotaoCabecalho icone="sino" rotulo="Notificações" selo={150} onPress={jest.fn()} />);
+  expect(screen.getByText('99+')).toBeOnTheScreen();
+});
