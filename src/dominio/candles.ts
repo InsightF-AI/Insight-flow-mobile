@@ -109,3 +109,8 @@ export function prepararAnaliseTecnica(exibido: PontoHistorico[], completo?: Pon
     rsiMacdCalculados,
   };
 }
+
+/** Médias móveis e Bollinger que a pessoa liga no gráfico de candles. */
+export type Sobreposicoes = { sma20: boolean; sma50: boolean; sma200: boolean; bollinger: boolean };
+
+export const SOBREPOSICOES_PADRAO: Sobreposicoes = { sma20: true, sma50: true, sma200: false, bollinger: false };

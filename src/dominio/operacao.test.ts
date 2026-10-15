@@ -49,7 +49,7 @@ describe('mensagemErroOperacao', () => {
 
   it('422 com só o UUID ao registrar vira quantidade insuficiente', () => {
     expect(mensagemErroOperacao(new ApiError(422, uuid), 'registrar')).toBe(
-      'Quantidade insuficiente em carteira para esta venda na data informada.',
+      'Quantidade insuficiente em carteira: a venda deixaria o saldo negativo na data informada ou em uma venda posterior.',
     );
   });
 

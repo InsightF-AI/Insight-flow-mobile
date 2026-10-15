@@ -27,6 +27,15 @@ const formatadorQuantidade = new Intl.NumberFormat('pt-BR', {
   maximumFractionDigits: 8,
 });
 
+// Volume de cripto vem em unidades fracionadas (0,42 BTC): abaixo de mil mantém até 4 casas; de mil em diante, inteiro.
+const formatadorVolumePequeno = new Intl.NumberFormat('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 4 });
+const formatadorVolumeGrande = new Intl.NumberFormat('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+
+export function formatarVolume(valor: Numerico): string {
+  const numero = paraNumero(valor);
+  return (Math.abs(numero) >= 1000 ? formatadorVolumeGrande : formatadorVolumePequeno).format(numero);
+}
+
 export function formatarNumero(valor: Numerico, casas = 2): string {
   return formatadorDecimal(casas).format(paraNumero(valor));
 }
@@ -73,7 +82,8 @@ export function formatarEspera(segundos: number): string {
   if (!Number.isFinite(segundos) || segundos <= 0) return 'alguns instantes';
   const inteiros = Math.ceil(segundos);
   if (inteiros < 60) return `${inteiros} s`;
-  if (inteiros < 3600) return `cerca de ${Math.ceil(inteiros / 60)} min`;
+  const minutos = Math.ceil(inteiros / 60);
+  if (minutos < 60) return `cerca de ${minutos} min`;
   return `cerca de ${Math.ceil(inteiros / 3600)} h`;
 }
 

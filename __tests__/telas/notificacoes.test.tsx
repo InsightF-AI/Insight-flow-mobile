@@ -106,6 +106,23 @@ it('falha parcial ao marcar todas é dita ao usuário', async () => {
   );
 });
 
+it('sem rede, marcar todas não esconde as notificações que o servidor ainda tem como não lidas', async () => {
+  const user = userEvent.setup();
+  jest.spyOn(Alert, 'alert').mockImplementation(() => {});
+  jest
+    .mocked(notificacoesApi.listar)
+    .mockResolvedValueOnce([notificacao('n-1'), notificacao('n-2')])
+    .mockRejectedValue(new ApiError(0, 'Sem conexão'));
+  jest.mocked(notificacoesApi.marcarComoLida).mockRejectedValue(new ApiError(0, 'Sem conexão'));
+  await renderizar(<Notificacoes />);
+  await user.press(await screen.findByRole('button', { name: 'Marcar todas como lidas' }));
+  await waitFor(() => expect(notificacoesApi.marcarComoLida).toHaveBeenCalledTimes(2));
+  await waitFor(() => expect(notificacoesApi.listar).toHaveBeenCalledTimes(2));
+
+  expect(screen.getByRole('button', { name: 'Marcar todas como lidas' })).toBeOnTheScreen();
+  expect(screen.getByText('Sobrevenda RSI ativado em PETR4 (n-1)')).toBeOnTheScreen();
+});
+
 it('lista vazia, carregando e erro têm estado próprio', async () => {
   jest.mocked(notificacoesApi.listar).mockResolvedValue([]);
   await renderizar(<Notificacoes />);

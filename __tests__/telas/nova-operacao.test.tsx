@@ -95,6 +95,21 @@ it('ticker fora da watchlist é recusado e nada é adicionado em silêncio', asy
   expect(portfolioApi.registrarOperacao).not.toHaveBeenCalled();
 });
 
+it('trocar de Venda para Compra apaga o erro de quantidade da venda', async () => {
+  const user = userEvent.setup();
+  await abrir();
+  await user.press(screen.getByRole('radio', { name: 'Venda' }));
+  await user.type(screen.getByLabelText('Ativo (ticker)'), 'PETR4');
+  await user.type(screen.getByLabelText('Quantidade'), '5');
+  await user.type(screen.getByLabelText('Preço unitário'), '38');
+  await user.press(screen.getByRole('button', { name: 'Registrar operação' }));
+  expect(await screen.findByText('Sem posição em carteira neste ativo')).toBeOnTheScreen();
+
+  await user.press(screen.getByRole('radio', { name: 'Compra' }));
+
+  expect(screen.queryByText('Sem posição em carteira neste ativo')).not.toBeOnTheScreen();
+});
+
 it('registra com o ativo da watchlist, ticker normalizado e decimais convertidos', async () => {
   const user = userEvent.setup();
   jest.mocked(portfolioApi.registrarOperacao).mockResolvedValue({ id: 'o-2' } as Operacao);
@@ -185,7 +200,9 @@ describe('erros 422 do backend em português', () => {
     await user.type(screen.getByLabelText('Preço unitário'), '38');
     await user.press(screen.getByRole('button', { name: 'Registrar operação' }));
     const alerta = await screen.findByRole('alert');
-    expect(alerta).toHaveTextContent('Quantidade insuficiente em carteira para esta venda na data informada.');
+    expect(alerta).toHaveTextContent(
+      'Quantidade insuficiente em carteira: a venda deixaria o saldo negativo na data informada ou em uma venda posterior.',
+    );
     expect(alerta).not.toHaveTextContent('3fa85f64');
     expect(router.back).not.toHaveBeenCalled();
   });

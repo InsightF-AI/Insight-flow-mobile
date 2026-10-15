@@ -36,6 +36,25 @@ it('pede ao menos 2 caracteres antes de buscar', async () => {
   expect(ativosApi.buscar).not.toHaveBeenCalled();
 });
 
+it('a linha diz ao leitor de tela se o ativo já está na watchlist ou o que o toque faz', async () => {
+  jest.mocked(ativosApi.buscar).mockResolvedValue([petr, { ...petr, ticker: 'VALE3', nome: 'Vale ON' }]);
+  jest.mocked(watchlistApi.listar).mockResolvedValue([
+    {
+      ativo: { id: 'a-2', ticker: 'VALE3', nome: 'Vale ON', tipo: 'ACAO', setor: null, moeda: 'BRL' },
+      notificar: true,
+      adicionado_em: '2026-09-25T12:00:00Z',
+    },
+  ]);
+  const user = userEvent.setup();
+  await renderizar(<Buscar />);
+  await user.type(screen.getByLabelText('Ticker ou nome'), 'a3');
+  const fora = await screen.findByRole('button', { name: 'PETR4, Petrobras PN' }, { timeout: TEMPO_DA_BUSCA_MS });
+  const dentro = await screen.findByRole('button', { name: 'VALE3, Vale ON' }, { timeout: TEMPO_DA_BUSCA_MS });
+
+  await waitFor(() => expect(dentro.props.accessibilityHint).toBe('Já está na sua watchlist. Toque para abrir o ativo.'));
+  expect(fora.props.accessibilityHint).toBe('Toque para adicionar à watchlist.');
+});
+
 it('confirmar a adição inclui o ativo na watchlist e abre o detalhe', async () => {
   const user = userEvent.setup();
   confirmarAdicao();

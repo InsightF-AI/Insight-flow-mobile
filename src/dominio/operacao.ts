@@ -95,7 +95,7 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 export function mensagemErroOperacao(erro: unknown, contexto: 'registrar' | 'remover'): string {
   if (erro instanceof ApiError && erro.status === 422 && UUID.test(erro.message.trim())) {
     return contexto === 'registrar'
-      ? 'Quantidade insuficiente em carteira para esta venda na data informada.'
+      ? 'Quantidade insuficiente em carteira: a venda deixaria o saldo negativo na data informada ou em uma venda posterior.'
       : 'Esta operação não pode ser removida: uma venda posterior ficaria sem saldo em carteira.';
   }
   return mensagemDeErro(erro);

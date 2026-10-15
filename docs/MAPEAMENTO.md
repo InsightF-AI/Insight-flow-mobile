@@ -701,8 +701,9 @@ Requisitos de ambiente (não há como contornar no código):
 | Média | Rentabilidade não somar o custo de ativo sem cotação, ou informar `dados_parciais: true` | Hoje a queda da brapi aparece como prejuízo |
 | Média | Paginação ou limite em `GET /notificacoes` e "marcar todas como lidas" (`PATCH /notificacoes/lidas`) | A lista cresce sem limite e marcar todas exige N requisições |
 | Média | `ORDER BY` em watchlist, alertas e operações | Ordem não garantida |
-| Média | `channelId` no push Expo e acentuação nas mensagens ("preço maior ou igual") | Canal Android explícito e texto em pt-BR correto |
+| Média | `channelId` no push Expo e texto do alerta em pt-BR correto: com acento e sem casas decimais sobrando | Canal Android explícito; hoje o alerta chega como "BTC atingiu o alvo de 999999.000000 BRL (preco menor ou igual)" e o app mostra o texto como veio |
 | Média | Validar `PATCH /alertas` vazio (422), como diz a referência | Contrato coerente |
+| Baixa | `GET /portfolio/benchmark` responder 200 com valores nulos (ou lista vazia) quando não há operações, em vez de 404 "Nenhuma operacao registrada" | Hoje o 404 de uma carteira vazia aparece como erro no console e nos logs; o app já o trata como estado vazio |
 | Baixa | Rota para o score composto e para os pesos das regras | Documentado no escopo, sem rota |
 | Baixa | Recuperação/troca de senha | UC-01 |
 | Baixa | Dividendos | Doc.pdf §2.3 |

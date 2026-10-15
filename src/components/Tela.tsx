@@ -1,4 +1,5 @@
-import type { ReactNode } from 'react';
+import { HeaderHeightContext } from 'expo-router/react-navigation';
+import { type ReactNode, useContext } from 'react';
 import { KeyboardAvoidingView, Platform, RefreshControl, ScrollView, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -17,8 +18,14 @@ interface Props {
 
 export function Tela({ children, areaSegura = false, aoAtualizar, atualizando = false, centralizar = false }: Props) {
   const { cores } = useTema();
+  // Sob um cabeçalho, o teclado do iOS cobriria o fim do formulário sem este deslocamento (0 em login e cadastro).
+  const alturaDoCabecalho = useContext(HeaderHeightContext) ?? 0;
   const conteudo = (
-    <KeyboardAvoidingView style={estilos.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+    <KeyboardAvoidingView
+      style={estilos.flex}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      keyboardVerticalOffset={alturaDoCabecalho}
+    >
       <ScrollView
         style={[estilos.flex, { backgroundColor: cores.fundo }]}
         contentContainerStyle={[estilos.conteudo, centralizar && estilos.centralizado]}

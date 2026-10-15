@@ -6,6 +6,7 @@ import {
   formatarNumero,
   formatarPercentual,
   formatarQuantidade,
+  formatarVolume,
   normalizarDecimal,
   paraNumero,
 } from '@/utils/formatacao';
@@ -99,6 +100,21 @@ describe('datas', () => {
   it('dataParaISOLocal usa o dia local, não o dia UTC', () => {
     // 23:30 em São Paulo já é 26/09 em UTC.
     expect(dataParaISOLocal(new Date(2026, 8, 25, 23, 30))).toBe('2026-09-25');
+  });
+});
+
+describe('formatarVolume', () => {
+  it.each([
+    [0.42, '0,42'],
+    [12.5, '12,5'],
+    [0, '0'],
+    [999.5, '999,5'],
+    [1000, '1.000'],
+    [1234.4, '1.234'],
+    [1234567.89, '1.234.568'],
+    ['0.0042', '0,0042'],
+  ])('volume %p vira "%s"', (volume, esperado) => {
+    expect(formatarVolume(volume)).toBe(esperado);
   });
 });
 

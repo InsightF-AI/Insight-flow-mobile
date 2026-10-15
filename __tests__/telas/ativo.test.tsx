@@ -18,9 +18,26 @@ jest.mock('expo-router', () => ({
 }));
 // O gráfico usa Skia, que não roda no Jest: o painel é um stub que mostra quantos candles recebeu.
 jest.mock('@/components/PainelTecnico', () => ({
-  PainelTecnico: ({ analise }: { analise: { candles: unknown[]; rsiMacdCalculados: boolean } }) => {
-    const { Text } = jest.requireActual<typeof import('react-native')>('react-native');
-    return <Text>{`painel com ${analise.candles.length} candles, RSI e MACD ${analise.rsiMacdCalculados ? 'calculados' : 'sem aquecimento'}`}</Text>;
+  PainelTecnico: ({
+    analise,
+    sobreposicoesIniciais,
+    aoMudarSobreposicoes,
+  }: {
+    analise: { candles: unknown[]; rsiMacdCalculados: boolean };
+    sobreposicoesIniciais?: Record<string, boolean>;
+    aoMudarSobreposicoes?: (valor: Record<string, boolean>) => void;
+  }) => {
+    const { Pressable, Text, View } = jest.requireActual<typeof import('react-native')>('react-native');
+    const atuais = sobreposicoesIniciais ?? {};
+    return (
+      <View>
+        <Text>{`painel com ${analise.candles.length} candles, RSI e MACD ${analise.rsiMacdCalculados ? 'calculados' : 'sem aquecimento'}`}</Text>
+        <Text>{`Bollinger ${atuais.bollinger ? 'ligado' : 'desligado'}`}</Text>
+        <Pressable role="button" aria-label="Ligar Bollinger" onPress={() => aoMudarSobreposicoes?.({ ...atuais, bollinger: true })}>
+          <Text>Ligar Bollinger</Text>
+        </Pressable>
+      </View>
+    );
   },
 }));
 jest.mock('@/api/ativos', () => ({
@@ -145,6 +162,20 @@ describe('gráfico técnico', () => {
     jest.mocked(ativosApi.historico).mockResolvedValue([pontoDoDia(1, 10), pontoDoDia(2, 11), pontoDoDia(3, 12)]);
     await renderizar(<DetalheAtivo />);
     expect(await screen.findByText(/painel com 3 candles/)).toBeOnTheScreen();
+  });
+
+  it('trocar o período mantém as médias e o Bollinger que a pessoa escolheu', async () => {
+    const user = userEvent.setup();
+    jest.mocked(ativosApi.historico).mockResolvedValue([pontoDoDia(1, 10), pontoDoDia(2, 11), pontoDoDia(3, 12)]);
+    await renderizar(<DetalheAtivo />);
+    expect(await screen.findByText('Bollinger desligado')).toBeOnTheScreen();
+    await user.press(screen.getByRole('button', { name: 'Ligar Bollinger' }));
+    expect(await screen.findByText('Bollinger ligado')).toBeOnTheScreen();
+
+    await user.press(screen.getByRole('radio', { name: '3M' }));
+
+    await waitFor(() => expect(ativosApi.historico).toHaveBeenCalledWith('a-1', '3M'));
+    expect(await screen.findByText('Bollinger ligado')).toBeOnTheScreen();
   });
 
   it('pede também o histórico 5A como aquecimento das médias', async () => {

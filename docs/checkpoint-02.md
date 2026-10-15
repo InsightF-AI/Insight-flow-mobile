@@ -7,7 +7,7 @@ WebAPI utilizada: `Insight-flow-backend` (FastAPI), repositório <https://github
 
 ## 1. Evolução do projeto
 
-**Ponto de partida (Checkpoint 01).** [Preencher: o que foi entregue em 22/09/2026.]
+**Ponto de partida (Checkpoint 01).** [Preencher: o que foi entregue em 22/09/2026. Para consulta, o Termo de Uso de IA do Checkpoint 01 cita o aplicativo "Controle de Gastos" (React Native com TypeScript, estado elevado em `App.tsx`, telas "Início — lista de gastos", "Novo gasto" e "Resumo por categoria"). Se o InsightFlow é a evolução desse projeto ou o substitui, explicar aqui a relação entre os dois e o motivo.]
 
 **O que foi implementado desde então:**
 
@@ -42,6 +42,8 @@ Biblioteca: **Expo Router** (rotas por arquivo, pilhas e abas).
 | Buscar ativo | `/buscar` | Botão "+" do cabeçalho do Início |
 | Nova operação | `/operacao/nova` (modal) | Botão "Nova operação" da Carteira |
 | Chat com IA | `/chat` (aba) | Aba inferior |
+| Notificações | `/notificacoes` | Sino do cabeçalho do Início (com o selo de não lidas) ou "Abrir notificações" no Perfil |
+| Detalhe da notificação | `/notificacao/[id]` | Toque numa notificação sem ativo (resumo diário), no banner em tempo real ou numa notificação push |
 
 **Proteção de rotas.** O layout raiz mostra só `(auth)` sem sessão e só `(tabs)` e as pilhas com sessão (`Stack.Protected`); ao sair ou ao perder a sessão, o aplicativo volta ao login sozinho.
 

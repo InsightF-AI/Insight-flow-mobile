@@ -38,7 +38,16 @@ export function useMarcarTodasLidas() {
   return useMutation<{ falhas: number }, ApiError, Uuid[]>({
     mutationFn: async (ids) => {
       const resultados = await Promise.allSettled(ids.map((id) => notificacoesApi.marcarComoLida(id)));
-      return { falhas: resultados.filter((resultado) => resultado.status === 'rejected').length };
+      const semConfirmacao = ids.filter((_, indice) => resultados[indice]?.status === 'rejected');
+      if (semConfirmacao.length > 0) {
+        // A marcação otimista não vale para o que o servidor não confirmou: o selo volta ao que ele ainda tem.
+        queryClient.setQueryData<Notificacao[]>(chaves.notificacoes, (atual) =>
+          atual?.map((notificacao) =>
+            semConfirmacao.includes(notificacao.id) ? { ...notificacao, lida: false } : notificacao,
+          ),
+        );
+      }
+      return { falhas: semConfirmacao.length };
     },
     onMutate: (ids) => {
       queryClient.setQueryData<Notificacao[]>(chaves.notificacoes, (atual) =>

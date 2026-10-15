@@ -2,17 +2,20 @@ import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import { AlternadorFiltro } from '@/components/AlternadorFiltro';
-import { GraficoCandles, type Sobreposicoes } from '@/components/GraficoCandles';
+import { GraficoCandles } from '@/components/GraficoCandles';
 import { GraficoIndicador } from '@/components/GraficoIndicador';
 import { Texto } from '@/components/Texto';
-import type { AnaliseTecnica } from '@/dominio/candles';
+import { type AnaliseTecnica, SOBREPOSICOES_PADRAO, type Sobreposicoes } from '@/dominio/candles';
 import { espaco } from '@/theme/escala';
 import { useTema } from '@/theme/useTema';
-import { formatarData, formatarMoeda, formatarNumero } from '@/utils/formatacao';
+import { formatarData, formatarMoeda, formatarNumero, formatarVolume } from '@/utils/formatacao';
 
 interface Props {
   analise: AnaliseTecnica;
   moeda?: string;
+  /** Médias e Bollinger escolhidos antes (a tela os guarda: trocar de período remonta o painel). */
+  sobreposicoesIniciais?: Sobreposicoes;
+  aoMudarSobreposicoes?: (sobreposicoes: Sobreposicoes) => void;
 }
 
 function numero(valor: number | null | undefined, casas = 2): string {
@@ -32,21 +35,20 @@ function motivoSemIndicadores(semRsi: boolean, semMacd: boolean, calculados: boo
 }
 
 /** Candles, RSI e MACD com uma mira única: tocar num candle mostra os valores de todos os indicadores naquele dia. */
-export function PainelTecnico({ analise, moeda }: Props) {
+export function PainelTecnico({ analise, moeda, sobreposicoesIniciais, aoMudarSobreposicoes }: Props) {
   const { grafico } = useTema();
   const [selecionado, setSelecionado] = useState<number | null>(null);
-  const [sobreposicoes, setSobreposicoes] = useState<Sobreposicoes>({
-    sma20: true,
-    sma50: true,
-    sma200: false,
-    bollinger: false,
-  });
+  const [sobreposicoes, setSobreposicoes] = useState<Sobreposicoes>(sobreposicoesIniciais ?? SOBREPOSICOES_PADRAO);
 
   const total = analise.candles.length;
   if (total === 0) return null;
   const indice = Math.min(selecionado ?? total - 1, total - 1);
   const candle = analise.candles[indice];
-  const alternar = (chave: keyof Sobreposicoes) => setSobreposicoes((atual) => ({ ...atual, [chave]: !atual[chave] }));
+  const alternar = (chave: keyof Sobreposicoes) => {
+    const proximas = { ...sobreposicoes, [chave]: !sobreposicoes[chave] };
+    setSobreposicoes(proximas);
+    aoMudarSobreposicoes?.(proximas);
+  };
   const temRsi = temValor(analise.rsi);
   const temMacd = temValor(analise.macd.linha);
   const motivo = motivoSemIndicadores(!temRsi, !temMacd, analise.rsiMacdCalculados);
@@ -95,7 +97,7 @@ export function PainelTecnico({ analise, moeda }: Props) {
           {`Fechamento ${formatarMoeda(candle.fechamento, moeda)}`}
         </Texto>
         <Texto variante="legenda" cor="secundario" numerico>
-          {`Volume ${formatarNumero(candle.volume, 0)}`}
+          {`Volume ${formatarVolume(candle.volume)}`}
         </Texto>
       </View>
 

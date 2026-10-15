@@ -61,6 +61,7 @@ Como usar: percorra na ordem (cada bloco usa o que o anterior criou), marque ✔
 | Carteira vazia | Mensagem de vazio; aviso de que é simulação | |
 | **Nova operação**: compra de `PETR4`, quantidade 10, preço atual, data de alguns dias atrás | Registra; KPIs, posição e comparativo com CDI/Ibovespa aparecem | |
 | Ibovespa | "Indisponível" quando a fonte não cobre (nunca 0%) | |
+| **Teclado da nova operação** (iPhone): tocar em **Preço unitário** (teclado numérico) e rolar até o fim | O botão **Registrar operação** continua visível ou alcançável acima do teclado; se ficar coberto, anotar (a revisão apontou que o modal pode ficar uns 60 pt abaixo) | |
 | Nova operação: venda de `PETR4` maior que a quantidade disponível | Mostra "Disponível para venda: N" e recusa antes de enviar | |
 | Nova operação: tentar escolher uma data futura no seletor | O seletor não deixa passar de hoje | |
 | Nova operação: digitar um ticker fora da watchlist | Não adiciona em silêncio; oferece "Buscar ativo" (no iOS, a busca abre por cima do modal) | |
