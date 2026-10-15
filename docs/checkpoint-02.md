@@ -18,6 +18,7 @@ WebAPI utilizada: `Insight-flow-backend` (FastAPI), repositório <https://github
 - Tela **Início** (dashboard): indicadores da carteira, resumo diário gerado por IA (com o aviso legal obrigatório), watchlist com preço, variação e sinais, e sinais técnicos ativos com o histórico da mesma condição.
 - Tela de **detalhe do ativo** com gráfico de candles e volume, médias móveis e bandas de Bollinger que o usuário liga e desliga, leitura dos valores de cada dia ao tocar no gráfico, painéis de RSI e MACD (calculados no aplicativo com o mesmo histórico e as mesmas fórmulas do servidor, e conferidos com os valores oficiais da API), indicadores oficiais e sinais com o valor no disparo.
 - **Análise por IA** no detalhe do ativo e **Chat com IA** na aba inferior, ambos com o aviso legal. A análise só é gerada quando o usuário pede; o chat guarda a conversa apenas em memória. Quando a IA do servidor está desligada, sem cota ou bloqueada pelo filtro de linguagem, o aplicativo mostra a mensagem e o restante das telas segue funcionando.
+- **Perfil** com a conta, o push ligado ou desligado neste aparelho (no Expo Go e em simulador ele fica indisponível e a tela explica o motivo), a escolha de **notificar por ativo**, o endereço do servidor com **teste de conexão** e o tema.
 - **Busca** de ativos com adição explícita à watchlist: o aplicativo pede confirmação antes de adicionar e mostra "Na watchlist" para os que já estão.
 - **Notificações em tempo real** por WebSocket, com banner in-app, selo de não lidas e tela de notificações; alertas de preço com o preço atual e a distância ao alvo, e a aba de sinais técnicos ativos.
 - Tratamento explícito de carregamento, lista vazia, falha de comunicação e erro do servidor nas telas.
@@ -83,7 +84,7 @@ Biblioteca: **Expo Router** (rotas por arquivo, pilhas e abas).
 
 - **Estado do servidor:** TanStack Query (`useQuery`), com cache por chave, repetição automática só para falhas transitórias (sem conexão e erros 5xx, no máximo duas vezes) e atualização ao puxar a tela para baixo.
 - **Sessão:** Zustand (`useSessao`), com os tokens também no armazenamento seguro.
-- **Preferências:** Zustand (`usePreferencias`), com o tema salvo no aparelho.
+- **Preferências:** Zustand (`usePreferencias`), com o tema e a escolha de receber push salvos no aparelho.
 - Estado local de formulário com `useState`.
 
 **Controle de carregamento.** Cada consulta expõe `isPending`. Na tela Início, cada bloco (indicadores, resumo diário, watchlist, sinais) mostra **esqueletos** no lugar do conteúdo enquanto carrega, de modo que a tela não "pula" e uma consulta lenta não bloqueia as outras.

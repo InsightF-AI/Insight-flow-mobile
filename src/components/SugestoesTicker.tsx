@@ -14,6 +14,10 @@ export function SugestoesTicker({ tickers, aoEscolher }: Props) {
   if (tickers.length === 0) return null;
   return (
     <ScrollView
+      testID="sugestoes-ticker"
+      // `flexGrow: 0`: o ScrollView horizontal vem com `flexGrow: 1` e, num formulário curto, cresceria na vertical
+      // e esticaria os chips.
+      style={estilos.rolagem}
       horizontal
       showsHorizontalScrollIndicator={false}
       keyboardShouldPersistTaps="handled"
@@ -37,6 +41,7 @@ export function SugestoesTicker({ tickers, aoEscolher }: Props) {
 }
 
 const estilos = StyleSheet.create({
+  rolagem: { flexGrow: 0 },
   lista: { gap: espaco.sm },
   chip: {
     minHeight: 44,
