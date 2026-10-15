@@ -60,8 +60,8 @@ describe('mensagemErroOperacao', () => {
   });
 
   it('422 com texto legível é mantido', () => {
-    expect(mensagemErroOperacao(new ApiError(422, 'data nao pode ser futura'), 'registrar')).toBe(
-      'data nao pode ser futura',
+    expect(mensagemErroOperacao(new ApiError(422, 'Mensagem sem tradução do backend'), 'registrar')).toBe(
+      'Mensagem sem tradução do backend',
     );
   });
 

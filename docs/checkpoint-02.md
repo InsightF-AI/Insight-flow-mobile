@@ -14,6 +14,7 @@ WebAPI utilizada: `Insight-flow-backend` (FastAPI), repositório <https://github
 - Cadastro e login reais na WebAPI, com sessão por token de acesso (30 min) e token de renovação (30 dias) guardados em armazenamento seguro (`expo-secure-store`). O aplicativo renova a sessão sozinho; se a renovação for recusada, volta ao login.
 - Consumo de dados reais por `GET` nas telas de dados: watchlist, cotação, histórico de preços, indicadores técnicos, sinais e seu histórico (backtest), alertas, notificações, posições, rentabilidade, comparação com CDI e Ibovespa, e distribuição da carteira.
 - Operações com `POST`, `PATCH` e `DELETE`: adicionar e remover ativos da watchlist, ligar e desligar notificações, criar, ativar, desativar e remover alertas de preço, registrar e remover operações simuladas.
+- **Carteira simulada** com KPIs, comparação com CDI e Ibovespa, distribuição, posições com variação do dia e filtro, e registro de operações só com ativos da watchlist (o aplicativo mostra a quantidade disponível na venda e traduz os erros do servidor).
 - Tela **Início** (dashboard): indicadores da carteira, resumo diário gerado por IA (com o aviso legal obrigatório), watchlist com preço, variação e sinais, e sinais técnicos ativos com o histórico da mesma condição.
 - Tela de **detalhe do ativo** com gráfico de candles e volume, médias móveis e bandas de Bollinger que o usuário liga e desliga, leitura dos valores de cada dia ao tocar no gráfico, painéis de RSI e MACD (calculados no aplicativo com o mesmo histórico e as mesmas fórmulas do servidor, e conferidos com os valores oficiais da API), indicadores oficiais e sinais com o valor no disparo.
 - **Busca** de ativos com adição explícita à watchlist: o aplicativo pede confirmação antes de adicionar e mostra "Na watchlist" para os que já estão.
@@ -32,13 +33,13 @@ Biblioteca: **Expo Router** (rotas por arquivo, pilhas e abas).
 | Login | `/login` | Abertura sem sessão; "Entrar" no cadastro |
 | Cadastro | `/cadastro` | "Criar conta" no login |
 | Início | `/` (aba) | Abertura com sessão |
-| Portfólio | `/portfolio` (aba) | Aba inferior |
+| Carteira | `/portfolio` (aba) | Aba inferior |
 | Alertas | `/alertas` (aba) | Aba inferior |
 | Perfil | `/perfil` (aba) | Aba inferior |
 | Detalhe do ativo | `/ativo/[id]` | Toque num ativo da watchlist, num sinal ou numa notificação |
 | Buscar ativo | `/buscar` | Botão "+" do cabeçalho do Início |
-| Nova operação | `/operacao/nova` (modal) | Botão "Nova operação" do Portfólio |
-| Chat com IA | `/chat` | Botão do cabeçalho do Portfólio (em construção) |
+| Nova operação | `/operacao/nova` (modal) | Botão "Nova operação" da Carteira |
+| Chat com IA | `/chat` | Botão do cabeçalho da Carteira (em construção) |
 
 **Proteção de rotas.** O layout raiz mostra só `(auth)` sem sessão e só `(tabs)` e as pilhas com sessão (`Stack.Protected`); ao sair ou ao perder a sessão, o aplicativo volta ao login sozinho.
 
@@ -64,7 +65,7 @@ Biblioteca: **Expo Router** (rotas por arquivo, pilhas e abas).
 | Backtest | `GET /ativos/{id}/sinais/{regra}/backtest` | Histórico da condição (24 meses) |
 | Watchlist | `GET`, `POST /watchlist`; `DELETE /watchlist/{id}`; `PATCH /watchlist/{id}/notificacao` | Lista, adicionar, remover, notificar |
 | Alertas | `GET`, `POST /alertas`; `PATCH`, `DELETE /alertas/{id}` | Alertas de preço |
-| Operações | `GET`, `POST /operacoes`; `DELETE /operacoes/{id}` | Portfólio simulado |
+| Operações | `GET`, `POST /operacoes`; `DELETE /operacoes/{id}` | Carteira simulada |
 | Carteira | `GET /portfolio/posicoes`, `/rentabilidade`, `/benchmark`, `/distribuicao` | Posições, resultado, CDI/Ibovespa, distribuição |
 | Notificações | `GET /notificacoes`; `PATCH /notificacoes/{id}/lida` | Caixa de notificações e resumo diário |
 | Tempo real | `WS /notificacoes/ws` | Notificações em primeiro plano (o servidor não reenvia o que chegou com a conexão caída: o app sincroniza pelo `GET`) |
@@ -100,7 +101,7 @@ Biblioteca: **Expo Router** (rotas por arquivo, pilhas e abas).
 
 - Todo texto gerado por IA aparece com o aviso **"Análise gerada por IA. Não constitui recomendação de investimento."**
 - Linguagem informativa (RN-01): nenhum texto de análise sugere comprar, vender ou investir; "Compra" e "Venda" aparecem só como o tipo da operação simulada que o próprio usuário registra. Verde e vermelho indicam só valor positivo ou negativo.
-- Portfólio **simulado**: nenhuma operação é executada em corretora.
+- Carteira **simulada**: nenhuma operação é executada em corretora.
 
 ## 6. Requisitos do Checkpoint e onde estão no código
 

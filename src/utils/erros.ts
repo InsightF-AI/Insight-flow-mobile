@@ -11,6 +11,7 @@ const MENSAGENS: Record<string, string> = {
   'Operacao nao encontrada': 'Operação não encontrada',
   'Notificacao nao encontrada': 'Notificação não encontrada',
   'Nenhuma operacao registrada': 'Nenhuma operação registrada',
+  'data nao pode ser futura': 'A data da operação não pode ser futura',
   'Regra nao encontrada': 'Regra de sinal não encontrada',
   'Fonte de dados de mercado indisponivel': 'Fonte de dados de mercado indisponível. Tente novamente em instantes.',
   'Provedor de IA indisponivel': 'A análise por IA está indisponível no momento',

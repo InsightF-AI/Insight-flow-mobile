@@ -26,9 +26,10 @@ import {
   ultimoResumoDiario,
   variacaoDoDia,
 } from '@/dominio/inicio';
+import { ativosSemCotacao } from '@/dominio/portfolio';
 import { useBacktestsDosSinais, useCotacoes, useSinaisDosAtivos } from '@/hooks/useAtivo';
 import { useNotificacoes } from '@/hooks/useNotificacoes';
-import { usePosicoes, useRentabilidade } from '@/hooks/usePortfolio';
+import { useOperacoes, usePosicoes, useRentabilidade } from '@/hooks/usePortfolio';
 import { useDefinirNotificacao, useWatchlist } from '@/hooks/useWatchlist';
 import { espaco } from '@/theme/escala';
 import { mensagemDeErro } from '@/utils/erros';
@@ -42,6 +43,7 @@ export default function Inicio() {
   const watchlist = useWatchlist();
   const rentabilidade = useRentabilidade();
   const posicoes = usePosicoes();
+  const operacoes = useOperacoes();
   const notificacoes = useNotificacoes();
   const definirNotificacao = useDefinirNotificacao();
   // O spinner do "puxar para atualizar" só liga quando o usuário puxa (não a cada releitura em segundo plano).
@@ -79,6 +81,7 @@ export default function Inicio() {
   const carregandoVariacao =
     posicoes.isPending ||
     rentabilidade.isPending ||
+    operacoes.isPending ||
     (posicoes.data ?? []).some((p) => cotacaoPorId.get(p.ativo_id)?.isPending ?? false);
 
   async function atualizar() {
@@ -86,6 +89,7 @@ export default function Inicio() {
       watchlist,
       rentabilidade,
       posicoes,
+      operacoes,
       notificacoes,
       ...cotacoes,
       ...consultasSinais,
@@ -107,10 +111,16 @@ export default function Inicio() {
     );
   }
 
-  const patrimonio = rentabilidade.data ? kpiPatrimonio(rentabilidade.data) : null;
-  const resultado = rentabilidade.data ? kpiResultado(rentabilidade.data) : null;
+  // Ativo com saldo e sem cotação: o backend soma o custo dele e omite o valor, e o "prejuízo" não existe.
+  const semCotacao = operacoes.data && posicoes.data ? ativosSemCotacao(operacoes.data, posicoes.data).length : 0;
+  const patrimonio = rentabilidade.data ? kpiPatrimonio(rentabilidade.data, semCotacao) : null;
+  const resultado = rentabilidade.data ? kpiResultado(rentabilidade.data, semCotacao) : null;
   const variacao = posicoes.data
-    ? kpiVariacaoDoDia(variacaoDoDia(posicoes.data, cotacoesPorId), posicoesSemCotacao(rentabilidade.data, posicoes.data))
+    ? kpiVariacaoDoDia(
+        variacaoDoDia(posicoes.data, cotacoesPorId),
+        posicoesSemCotacao(rentabilidade.data, posicoes.data),
+        semCotacao,
+      )
     : null;
   const sinaisKpi = kpiSinais({
     total: sinaisAtivos.length,
@@ -128,7 +138,7 @@ export default function Inicio() {
           icone="carteira"
           valor={rentabilidadeIndisponivel ? 'indisponível' : (patrimonio?.valor ?? '')}
           dica={patrimonio?.dica}
-          carregando={rentabilidade.isPending}
+          carregando={rentabilidade.isPending || operacoes.isPending}
         />
         <Kpi
           rotulo="Resultado não realizado"
@@ -137,7 +147,7 @@ export default function Inicio() {
           corValor={resultado?.cor}
           valor={rentabilidadeIndisponivel ? 'indisponível' : (resultado?.valor ?? '')}
           dica={resultado?.dica}
-          carregando={rentabilidade.isPending}
+          carregando={rentabilidade.isPending || operacoes.isPending}
         />
         <Kpi
           rotulo="Variação do dia"

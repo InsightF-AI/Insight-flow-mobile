@@ -40,7 +40,7 @@ describe('mensagemDeErro', () => {
   });
 
   it('mensagem que não está no dicionário passa como veio', () => {
-    expect(mensagemDeErro(new ApiError(422, 'data nao pode ser futura'))).toBe('data nao pode ser futura');
+    expect(mensagemDeErro(new ApiError(422, 'Mensagem sem tradução do backend'))).toBe('Mensagem sem tradução do backend');
   });
 });
 

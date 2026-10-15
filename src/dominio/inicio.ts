@@ -84,9 +84,24 @@ function corDoNumero(numero: number, limite: number): DadoKpi['cor'] {
   return numero > 0 ? 'positivo' : 'negativo';
 }
 
-export function kpiPatrimonio(r: Rentabilidade): DadoKpi {
+function contagemDeAtivos(quantidade: number): string {
+  return `${quantidade} ${quantidade === 1 ? 'ativo' : 'ativos'}`;
+}
+
+/**
+ * `semCotacao`: quantos ativos com saldo ficaram sem cotação (o backend soma o custo deles e omite o valor de mercado:
+ * o "prejuízo" que sobra da conta não existe, então não vira número).
+ */
+export function kpiPatrimonio(r: Rentabilidade, semCotacao = 0): DadoKpi {
   if (carteiraVazia(r)) return { valor: '—', dica: 'Registre uma operação simulada', cor: 'padrao' };
   if (semValorDeMercado(r)) return { ...SEM_COTACAO };
+  if (semCotacao > 0) {
+    return {
+      valor: formatarMoeda(r.valor_mercado_brl, 'BRL'),
+      dica: `Parcial: ${contagemDeAtivos(semCotacao)} sem cotação`,
+      cor: 'padrao',
+    };
+  }
   return {
     valor: formatarMoeda(r.valor_mercado_brl, 'BRL'),
     dica: `Custo ${formatarMoeda(r.custo_base_brl, 'BRL')}`,
@@ -94,9 +109,16 @@ export function kpiPatrimonio(r: Rentabilidade): DadoKpi {
   };
 }
 
-export function kpiResultado(r: Rentabilidade): DadoKpi {
+export function kpiResultado(r: Rentabilidade, semCotacao = 0): DadoKpi {
   if (carteiraVazia(r)) return { valor: '—', dica: 'Registre uma operação simulada', cor: 'padrao' };
   if (semValorDeMercado(r)) return { ...SEM_COTACAO };
+  if (semCotacao > 0) {
+    return { valor: 'indisponível', dica: `Sem cotação de ${contagemDeAtivos(semCotacao)}`, cor: 'padrao' };
+  }
+  // Tudo vendido: o backend divide por um custo zero e devolve 0%, que não é um resultado.
+  if (paraNumero(r.custo_base_brl) === 0) {
+    return { valor: formatarMoeda(0, 'BRL'), dica: 'Sem posições abertas', cor: 'padrao' };
+  }
   const lucro = paraNumero(r.lucro_nao_realizado_brl);
   return {
     valor: formatarMoeda(lucro, 'BRL'),
@@ -105,7 +127,18 @@ export function kpiResultado(r: Rentabilidade): DadoKpi {
   };
 }
 
-export function kpiVariacaoDoDia(v: VariacaoDoDia, semCotacaoNoServidor = false): DadoKpi {
+/** Lucro de vendas já registradas: independe de haver cotação das posições abertas. */
+export function kpiLucroRealizado(r: Rentabilidade): DadoKpi {
+  if (carteiraVazia(r)) return { valor: '—', dica: 'Registre uma operação simulada', cor: 'padrao' };
+  const lucro = paraNumero(r.lucro_realizado_brl);
+  return {
+    valor: formatarMoeda(lucro, 'BRL'),
+    dica: 'Em vendas já registradas',
+    cor: corDoNumero(lucro, LIMITE_ZERO_EM_REAIS),
+  };
+}
+
+export function kpiVariacaoDoDia(v: VariacaoDoDia, semCotacaoNoServidor = false, semCotacao = 0): DadoKpi {
   if (semCotacaoNoServidor) return { ...SEM_COTACAO };
   if (v.total === 0) return { valor: '—', dica: 'Sem posições abertas', cor: 'padrao' };
   if (v.pontos === null) return { valor: 'indisponível', dica: 'Sem cotação das posições', cor: 'padrao' };
@@ -115,7 +148,9 @@ export function kpiVariacaoDoDia(v: VariacaoDoDia, semCotacaoNoServidor = false)
     dica:
       v.consideradas < v.total
         ? `${v.consideradas} de ${v.total} posições, ponderada pelo valor`
-        : 'Ponderada pelo valor em BRL',
+        : semCotacao > 0
+          ? 'Só das posições cotadas'
+          : 'Ponderada pelo valor em BRL',
     cor: texto.startsWith('+') ? 'positivo' : texto.startsWith('-') ? 'negativo' : 'padrao',
   };
 }
