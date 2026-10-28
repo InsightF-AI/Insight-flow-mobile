@@ -39,7 +39,7 @@ Foram publicados empilhados (cada um apontando para o anterior; o #1 apontava pa
 | [#9](https://github.com/InsightF-AI/Insight-flow-mobile/pull/9) | `feature/etapa-8-perfil-push` | Etapa 8 (parte A): perfil e cliente de push; roteiro de teste no aparelho |
 | [#10](https://github.com/InsightF-AI/Insight-flow-mobile/pull/10) | `feature/polimento-menores` | Polimento dos menores adiados e patches do Expo SDK 57 |
 | [#11](https://github.com/InsightF-AI/Insight-flow-mobile/pull/11) | `feature/documentacao-entrega-cp2` | Esta documentação, `CONTRIBUTING.md`, pasta da entrega e `tools/` |
-| (a abrir) | `feature/senha-e-dividendos` | Recuperação e troca de senha, dividendos por ativo e da carteira; [`entregas/senha-e-dividendos.md`](entregas/senha-e-dividendos.md) |
+| [#15](https://github.com/InsightF-AI/Insight-flow-mobile/pull/15) | `feature/senha-e-dividendos` | Recuperação e troca de senha, dividendos por ativo e da carteira; [`entregas/senha-e-dividendos.md`](entregas/senha-e-dividendos.md) |
 
 Ordem e forma de mesclar: [`CONTRIBUTING.md`](../CONTRIBUTING.md#pull-requests-empilhados-como-o-histórico-atual-foi-publicado).
 
