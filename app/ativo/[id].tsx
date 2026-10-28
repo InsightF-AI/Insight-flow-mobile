@@ -12,6 +12,7 @@ import { EstadoConsulta } from '@/components/EstadoConsulta';
 import { EstadoVazio } from '@/components/EstadoVazio';
 import { IndicadorItem } from '@/components/IndicadorItem';
 import { Linha } from '@/components/Linha';
+import { ListaProventosDoAtivo } from '@/components/ListaProventos';
 import { PainelTecnico } from '@/components/PainelTecnico';
 import { Pill } from '@/components/Pill';
 import { SeletorSegmentado } from '@/components/SeletorSegmentado';
@@ -23,7 +24,7 @@ import { prepararAnaliseTecnica, SOBREPOSICOES_PADRAO, type Sobreposicoes } from
 import { descreverIndicadores } from '@/dominio/indicadores';
 import { ROTULO_TIPO_ATIVO } from '@/dominio/rotulos';
 import { useAnaliseIA } from '@/hooks/useAnaliseIA';
-import { useBacktests, useCotacao, useHistorico, useIndicadores, useSinais } from '@/hooks/useAtivo';
+import { useBacktests, useCotacao, useDividendos, useHistorico, useIndicadores, useSinais } from '@/hooks/useAtivo';
 import { useDefinirNotificacao, useItemWatchlist, useRemoverWatchlist } from '@/hooks/useWatchlist';
 import { espaco } from '@/theme/escala';
 import { ehStatus, mensagemDeErro } from '@/utils/erros';
@@ -64,6 +65,9 @@ export default function DetalheAtivo() {
   );
   const indicadores = useIndicadores(id);
   const sinais = useSinais(id);
+  // Cripto e índices não pagam proventos: a consulta nem sai.
+  const pagaProventos = ativo !== undefined && ativo.tipo !== 'CRIPTO' && ativo.tipo !== 'INDICE';
+  const dividendos = useDividendos(id, pagaProventos);
   const backtests = useBacktests(id, sinais.data?.map((sinal) => sinal.regra_id) ?? []);
   const definirNotificacao = useDefinirNotificacao();
   const remover = useRemoverWatchlist();
@@ -76,6 +80,7 @@ export default function DetalheAtivo() {
     if (precisaAquecimento) void aquecimento.refetch();
     void indicadores.refetch();
     void sinais.refetch();
+    if (pagaProventos) void dividendos.refetch();
   }
 
   function confirmarRemocao() {
@@ -208,6 +213,14 @@ export default function DetalheAtivo() {
             )
           }
         </EstadoConsulta>
+
+        {pagaProventos ? (
+          <Card titulo="Dividendos" icone="carteira">
+            <EstadoConsulta consulta={dividendos}>
+              {(lista) => <ListaProventosDoAtivo proventos={lista} moeda={ativo?.moeda} />}
+            </EstadoConsulta>
+          </Card>
+        ) : null}
 
         <CardAnaliseIA
           analise={analiseIA.analise}

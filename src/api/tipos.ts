@@ -240,3 +240,36 @@ export interface Distribuicao {
   por_setor: Record<string, Decimal>;
   por_moeda: Record<string, Decimal>;
 }
+
+export interface AlterarSenhaRequest {
+  senha_atual: string;
+  nova_senha: string;
+}
+
+export interface RecuperarSenhaRequest {
+  email: string;
+}
+
+export interface RedefinirSenhaRequest {
+  token: string;
+  nova_senha: string;
+}
+
+export interface Provento {
+  data_ex: DataISO;
+  valor_por_cota: Decimal;
+}
+
+export interface ProventoRecebido {
+  ativo_id: Uuid;
+  ticker: string;
+  data_ex: DataISO;
+  valor_por_cota: Decimal;
+  quantidade: Decimal;
+  total_brl: Decimal;
+}
+
+export interface ResumoProventos {
+  total_brl: Decimal;
+  proventos: ProventoRecebido[];
+}

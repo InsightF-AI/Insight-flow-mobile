@@ -19,6 +19,9 @@ const MENSAGENS: Record<string, string> = {
   'Resposta da IA bloqueada pelo guardrail':
     'A IA não conseguiu gerar um texto dentro das regras de linguagem. Tente novamente.',
   'Dados insuficientes para gerar a analise': 'Ainda não há dados suficientes para analisar este ativo',
+  'Senha atual incorreta': 'A senha atual está incorreta',
+  'Token de redefinicao invalido': 'O código de redefinição é inválido ou expirou. Peça um novo e-mail.',
+  'Fonte de dados de proventos indisponivel': 'Fonte de proventos indisponível. Tente novamente em instantes.',
   'Token de push invalido': 'Não foi possível registrar este aparelho para notificações',
 };
 

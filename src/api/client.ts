@@ -46,7 +46,7 @@ interface ConfigApi {
   timeoutMs?: number;
 }
 
-type Metodo = 'GET' | 'POST' | 'PATCH' | 'DELETE';
+type Metodo = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
 type ValorQuery = string | number | boolean | undefined;
 
 interface OpcoesRequest {

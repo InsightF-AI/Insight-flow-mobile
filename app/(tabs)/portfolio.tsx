@@ -16,6 +16,7 @@ import { ItemOperacao } from '@/components/ItemOperacao';
 import { ItemPosicao } from '@/components/ItemPosicao';
 import { Kpi } from '@/components/Kpi';
 import { Linha } from '@/components/Linha';
+import { ListaProventosRecebidos } from '@/components/ListaProventos';
 import { SeletorSegmentado } from '@/components/SeletorSegmentado';
 import { Tela } from '@/components/Tela';
 import { Texto } from '@/components/Texto';
@@ -45,6 +46,7 @@ import { useCotacoes } from '@/hooks/useAtivo';
 import {
   useBenchmark,
   useDistribuicao,
+  useDividendosRecebidos,
   useOperacoes,
   usePosicoes,
   useRemoverOperacao,
@@ -104,6 +106,7 @@ export default function Portfolio() {
   const ibovespa = useBenchmark('IBOVESPA');
   const distribuicao = useDistribuicao();
   const posicoes = usePosicoes();
+  const dividendos = useDividendosRecebidos();
   const watchlist = useWatchlist();
   const removerOperacao = useRemoverOperacao();
   const [dimensao, setDimensao] = useState<DimensaoDistribuicao>('classe');
@@ -120,7 +123,7 @@ export default function Portfolio() {
   );
 
   function atualizar() {
-    for (const consulta of [operacoes, rentabilidade, cdi, ibovespa, distribuicao, posicoes, ...consultasCotacao]) {
+    for (const consulta of [operacoes, rentabilidade, cdi, ibovespa, distribuicao, posicoes, dividendos, ...consultasCotacao]) {
       void consulta.refetch();
     }
   }
@@ -254,6 +257,12 @@ export default function Portfolio() {
                 />
               );
             }}
+          </EstadoConsulta>
+        </Card>
+
+        <Card titulo="Dividendos recebidos" icone="carteira">
+          <EstadoConsulta consulta={dividendos}>
+            {(resumo) => <ListaProventosRecebidos totalBrl={resumo.total_brl} proventos={resumo.proventos} />}
           </EstadoConsulta>
         </Card>
 
