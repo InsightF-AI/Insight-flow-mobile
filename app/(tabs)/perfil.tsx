@@ -5,6 +5,7 @@ import { Alert, Linking } from 'react-native';
 import { type ResultadoDaConexao, testarConexao } from '@/api/saude';
 import { Botao } from '@/components/Botao';
 import { Card } from '@/components/Card';
+import { CardAlterarSenha } from '@/components/CardAlterarSenha';
 import { CardNotificarPorAtivo } from '@/components/CardNotificarPorAtivo';
 import { CardPush } from '@/components/CardPush';
 import { CardServidor } from '@/components/CardServidor';
@@ -12,6 +13,7 @@ import { SeletorSegmentado } from '@/components/SeletorSegmentado';
 import { Tela } from '@/components/Tela';
 import { Texto } from '@/components/Texto';
 import { urlDoServidor } from '@/config/ambiente';
+import { useAlterarSenha } from '@/hooks/useAuth';
 import { useNaoLidas } from '@/hooks/useNotificacoes';
 import { useDefinirNotificacao, useWatchlist } from '@/hooks/useWatchlist';
 import { type EsquemaTema, usePreferencias } from '@/store/preferencias';
@@ -46,6 +48,7 @@ export default function Perfil() {
   const email = useSessao((estado) => estado.email);
   const sair = useSessao((estado) => estado.sair);
   const naoLidas = useNaoLidas();
+  const alterarSenha = useAlterarSenha();
 
   const situacaoDoPush = usePush((estado) => estado.situacao);
   const motivoDoPush = usePush((estado) => estado.motivo);
@@ -70,6 +73,14 @@ export default function Perfil() {
     } finally {
       setTestando(false);
     }
+  }
+
+  /** O servidor revoga todos os refresh tokens ao trocar a senha: este aparelho sai e entra de novo com a nova. */
+  async function trocarSenha(senhaAtual: string, novaSenha: string) {
+    await alterarSenha.mutateAsync({ senhaAtual, novaSenha });
+    await desregistrarPushSemTravar();
+    Alert.alert('Senha alterada', 'Entre novamente com a nova senha.');
+    await sair({ revogarNoServidor: false }).catch(() => {});
   }
 
   function confirmarSaida() {
@@ -100,6 +111,7 @@ export default function Perfil() {
         <Texto cor="secundario">Conectado como</Texto>
         <Texto negrito>{email ?? '—'}</Texto>
       </Card>
+      <CardAlterarSenha aoAlterar={trocarSenha} />
       <Card titulo="Notificações" icone="sino">
         <Texto cor="secundario">{naoLidas === 1 ? '1 não lida' : naoLidas > 0 ? `${naoLidas} não lidas` : 'Nenhuma não lida'}</Texto>
         <Botao titulo="Abrir notificações" variante="secundario" onPress={() => router.push('/notificacoes')} />

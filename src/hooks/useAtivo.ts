@@ -2,7 +2,7 @@ import { keepPreviousData, useQueries, useQuery } from '@tanstack/react-query';
 
 import { ativosApi } from '@/api/ativos';
 import type { ApiError } from '@/api/client';
-import type { CotacaoAtual, IndicadorTecnico, PeriodoHistorico, PontoHistorico, Sinal, Uuid } from '@/api/tipos';
+import type { CotacaoAtual, IndicadorTecnico, PeriodoHistorico, PontoHistorico, Provento, Sinal, Uuid } from '@/api/tipos';
 import { chaves } from '@/hooks/chaves';
 
 // Mesmo TTL do cache Redis de cotação atual no backend.
@@ -49,6 +49,16 @@ export function useIndicadores(ativoId: Uuid) {
 
 export function useSinais(ativoId: Uuid) {
   return useQuery<Sinal[], ApiError>({ queryKey: chaves.sinais(ativoId), queryFn: () => ativosApi.sinais(ativoId) });
+}
+
+/** `habilitado: false` evita a chamada para ativos que não pagam proventos (cripto e índices). */
+export function useDividendos(ativoId: Uuid, habilitado = true) {
+  return useQuery<Provento[], ApiError>({
+    queryKey: chaves.dividendos(ativoId),
+    queryFn: () => ativosApi.dividendos(ativoId),
+    enabled: habilitado,
+    staleTime: VALIDADE_BACKTEST_MS,
+  });
 }
 
 export function useBacktests(ativoId: Uuid, regraIds: Uuid[]) {
