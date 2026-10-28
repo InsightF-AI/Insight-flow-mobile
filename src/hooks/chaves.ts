@@ -7,6 +7,7 @@ export const chaves = {
   indicadores: (ativoId: Uuid) => ['ativo', ativoId, 'indicadores'] as const,
   sinais: (ativoId: Uuid) => ['ativo', ativoId, 'sinais'] as const,
   backtest: (ativoId: Uuid, regraId: Uuid) => ['ativo', ativoId, 'backtest', regraId] as const,
+  dividendos: (ativoId: Uuid) => ['ativo', ativoId, 'dividendos'] as const,
   busca: (termo: string) => ['busca', termo] as const,
   analiseIA: (ativoId: Uuid) => ['ia', 'analise', ativoId] as const,
   alertas: ['alertas'] as const,
@@ -16,5 +17,6 @@ export const chaves = {
   posicoes: ['portfolio', 'posicoes'] as const,
   rentabilidade: ['portfolio', 'rentabilidade'] as const,
   distribuicao: ['portfolio', 'distribuicao'] as const,
+  dividendosRecebidos: ['portfolio', 'dividendos'] as const,
   benchmark: (benchmark: TipoBenchmark) => ['portfolio', 'benchmark', benchmark] as const,
 };

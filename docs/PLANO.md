@@ -16,7 +16,7 @@ Aprovadas com o "s" de 10/10/2026, seguindo as recomendações do §8.1 do mapea
 | D4 | Remover `AGENTS.md`, `LICENSE` (copyright da Expo), `.claude/settings.json` e `assets/favicon.png`; trocar o fundo `#E6F4FE` do ícone Android |
 | D5 | Cinco abas: Início, Carteira, Chat, Alertas, Perfil |
 | D6 | Ativo fora da watchlist exige "Adicionar à watchlist" explícito antes do detalhe, da operação e do alerta |
-| D7 | Sem recuperação de senha, edição de perfil e troca de senha (não há rota) |
+| D7 | ~~Sem recuperação de senha~~ **Revista em 28/10/2026**: o backend `v0.1.1` ganhou `POST /auth/recuperar-senha`, `POST /auth/redefinir-senha` e `PUT /usuarios/me/senha`, e o app passou a usá-las (recuperar no login, trocar no Perfil). Edição de nome/perfil continua fora (não há rota) |
 | D9 | Até 20/10, priorizar o que o Checkpoint 02 avalia; push e IA depois |
 | D10 | Manter tema claro e escuro (escuro padrão) |
 | D11 | Candles desenhados com Skia sobre o Victory Native já instalado |

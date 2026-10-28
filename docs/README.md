@@ -8,6 +8,7 @@
 | --- | --- |
 | [`checkpoint-02.md`](checkpoint-02.md) | Documentação do Checkpoint 02: evolução do projeto, navegação, integração com a WebAPI e tratamento de estado |
 | [`entregas/checkpoint-02/`](entregas/checkpoint-02/README.md) | Itens da entrega (Termo de Uso de IA, capturas, status do card) e a lista do que falta antes de entregar |
+| [`distribuicao-apk.md`](distribuicao-apk.md) | Como gerar o link do APK (EAS Build), quem faz cada parte e o que falta do servidor |
 
 ## Para quem desenvolve
 
@@ -39,6 +40,7 @@ Foram publicados empilhados (cada um apontando para o anterior; o #1 apontava pa
 | [#9](https://github.com/InsightF-AI/Insight-flow-mobile/pull/9) | `feature/etapa-8-perfil-push` | Etapa 8 (parte A): perfil e cliente de push; roteiro de teste no aparelho |
 | [#10](https://github.com/InsightF-AI/Insight-flow-mobile/pull/10) | `feature/polimento-menores` | Polimento dos menores adiados e patches do Expo SDK 57 |
 | [#11](https://github.com/InsightF-AI/Insight-flow-mobile/pull/11) | `feature/documentacao-entrega-cp2` | Esta documentação, `CONTRIBUTING.md`, pasta da entrega e `tools/` |
+| [#15](https://github.com/InsightF-AI/Insight-flow-mobile/pull/15) | `feature/senha-e-dividendos` | Recuperação e troca de senha, dividendos por ativo e da carteira; [`entregas/senha-e-dividendos.md`](entregas/senha-e-dividendos.md) |
 
 Ordem e forma de mesclar: [`CONTRIBUTING.md`](../CONTRIBUTING.md#pull-requests-empilhados-como-o-histórico-atual-foi-publicado).
 

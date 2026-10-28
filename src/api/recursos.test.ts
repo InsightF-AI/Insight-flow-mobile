@@ -37,6 +37,27 @@ const casos: [string, () => Promise<unknown>, string, string, unknown][] = [
   ['auth.cadastrar', () => authApi.cadastrar(cadastro), 'POST', '/usuarios', cadastro],
   ['auth.renovar', () => authApi.renovar('ref-1'), 'POST', '/auth/refresh', { refresh_token: 'ref-1' }],
   ['auth.sair', () => authApi.sair('ref-1'), 'POST', '/auth/logout', { refresh_token: 'ref-1' }],
+  [
+    'auth.recuperarSenha',
+    () => authApi.recuperarSenha('ana@exemplo.com'),
+    'POST',
+    '/auth/recuperar-senha',
+    { email: 'ana@exemplo.com' },
+  ],
+  [
+    'auth.redefinirSenha',
+    () => authApi.redefinirSenha('cod-1', 'nova12345'),
+    'POST',
+    '/auth/redefinir-senha',
+    { token: 'cod-1', nova_senha: 'nova12345' },
+  ],
+  [
+    'auth.alterarSenha',
+    () => authApi.alterarSenha('antiga123', 'nova12345'),
+    'PUT',
+    '/usuarios/me/senha',
+    { senha_atual: 'antiga123', nova_senha: 'nova12345' },
+  ],
   ['watchlist.listar', () => watchlistApi.listar(), 'GET', '/watchlist', undefined],
   ['watchlist.adicionar', () => watchlistApi.adicionar('PETR4'), 'POST', '/watchlist', { ticker: 'PETR4' }],
   ['watchlist.remover', () => watchlistApi.remover('a-1'), 'DELETE', '/watchlist/a-1', undefined],
@@ -53,6 +74,7 @@ const casos: [string, () => Promise<unknown>, string, string, unknown][] = [
   ['ativos.indicadores', () => ativosApi.indicadores('a-1'), 'GET', '/ativos/a-1/indicadores', undefined],
   ['ativos.sinais', () => ativosApi.sinais('a-1'), 'GET', '/ativos/a-1/sinais', undefined],
   ['ativos.backtest', () => ativosApi.backtest('a-1', 'r-1'), 'GET', '/ativos/a-1/sinais/r-1/backtest', undefined],
+  ['ativos.dividendos', () => ativosApi.dividendos('a-1'), 'GET', '/ativos/a-1/dividendos', undefined],
   ['alertas.listar', () => alertasApi.listar(), 'GET', '/alertas', undefined],
   ['alertas.criar', () => alertasApi.criar(alerta), 'POST', '/alertas', alerta],
   ['alertas.atualizar', () => alertasApi.atualizar('al-1', { ativo: false }), 'PATCH', '/alertas/al-1', { ativo: false }],
@@ -73,6 +95,7 @@ const casos: [string, () => Promise<unknown>, string, string, unknown][] = [
   ['portfolio.rentabilidade', () => portfolioApi.rentabilidade(), 'GET', '/portfolio/rentabilidade', undefined],
   ['portfolio.benchmark', () => portfolioApi.benchmark('CDI'), 'GET', '/portfolio/benchmark?benchmark=CDI', undefined],
   ['portfolio.distribuicao', () => portfolioApi.distribuicao(), 'GET', '/portfolio/distribuicao', undefined],
+  ['portfolio.dividendos', () => portfolioApi.dividendos(), 'GET', '/portfolio/dividendos', undefined],
 ];
 
 it.each(casos)('%s', async (_nome, chamar, metodo, caminho, corpo) => {

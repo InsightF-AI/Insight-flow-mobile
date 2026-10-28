@@ -92,4 +92,4 @@ O que só o celular confere (toque, rolagem, teclado, rede real, leitores de tel
 
 ## Próximas etapas
 
-O roteiro está em [`docs/PLANO.md`](docs/PLANO.md): da Etapa 8 só falta o que depende da decisão D8 (projeto EAS, chave FCM, development build e o teste do push em aparelho); o dashboard, o gráfico de candles, a busca, os alertas com WebSocket, a carteira, a análise e o chat por IA, o perfil e o cliente de push já estão prontos. Recuperação de senha não existe no backend.
+O roteiro está em [`docs/PLANO.md`](docs/PLANO.md): da Etapa 8 só falta o que depende da decisão D8 (projeto EAS, chave FCM, development build e o teste do push em aparelho); o dashboard, o gráfico de candles, a busca, os alertas com WebSocket, a carteira, a análise e o chat por IA, o perfil e o cliente de push já estão prontos. Depois da Etapa 8A entraram recuperação e troca de senha, dividendos por ativo e dividendos recebidos na carteira (rotas do backend `v0.1.1`; ver [`docs/entregas/senha-e-dividendos.md`](docs/entregas/senha-e-dividendos.md)).

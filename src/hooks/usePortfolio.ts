@@ -9,6 +9,7 @@ import type {
   Posicao,
   RegistrarOperacaoRequest,
   Rentabilidade,
+  ResumoProventos,
   TipoBenchmark,
   Uuid,
 } from '@/api/tipos';
@@ -37,6 +38,13 @@ export function useRentabilidade() {
 
 export function useDistribuicao() {
   return useQuery<Distribuicao, ApiError>({ queryKey: chaves.distribuicao, queryFn: () => portfolioApi.distribuicao() });
+}
+
+export function useDividendosRecebidos() {
+  return useQuery<ResumoProventos, ApiError>({
+    queryKey: chaves.dividendosRecebidos,
+    queryFn: () => portfolioApi.dividendos(),
+  });
 }
 
 export function useBenchmark(benchmark: TipoBenchmark) {

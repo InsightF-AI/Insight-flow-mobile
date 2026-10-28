@@ -83,6 +83,13 @@ export default function Login() {
           </Texto>
         ) : null}
         <Botao titulo="Entrar" onPress={aoEnviar} carregando={enviando} />
+        <Link href="/recuperar-senha" asChild>
+          <Pressable role="link" aria-label="Esqueci minha senha" style={estilos.link}>
+            <Texto cor="primaria" style={estilos.centro}>
+              Esqueci minha senha
+            </Texto>
+          </Pressable>
+        </Link>
       </CartaoAuth>
       <Texto variante="legenda" cor="terciario" style={estilos.rodape}>
         Ferramenta educacional de análise. Não constitui recomendação de investimento.
@@ -93,5 +100,6 @@ export default function Login() {
 
 const estilos = StyleSheet.create({
   link: { padding: espaco.sm },
+  centro: { textAlign: 'center' },
   rodape: { textAlign: 'center' },
 });

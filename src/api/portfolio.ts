@@ -6,6 +6,7 @@ import type {
   Posicao,
   RegistrarOperacaoRequest,
   Rentabilidade,
+  ResumoProventos,
   TipoBenchmark,
   Uuid,
 } from '@/api/tipos';
@@ -20,4 +21,5 @@ export const portfolioApi = {
   benchmark: (benchmark: TipoBenchmark) =>
     request<Comparativo>('/portfolio/benchmark', { query: { benchmark } }),
   distribuicao: () => request<Distribuicao>('/portfolio/distribuicao'),
+  dividendos: () => request<ResumoProventos>('/portfolio/dividendos'),
 };
