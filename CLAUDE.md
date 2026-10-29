@@ -41,3 +41,5 @@ Listas (FlatList) não exigem nada especial nos testes: o `afterEach` de `jest.s
 
 ## Expo muda a cada SDK
 Antes de usar uma API do Expo, EAS ou React Native, consulte a documentação da versão em uso (`https://docs.expo.dev/versions/v57.0.0/`; índice em `https://docs.expo.dev/llms.txt`) em vez de confiar na memória. Dependências novas entram com `npx expo install <pacote>`.
+
+No Windows, instalar dependência regrava o `package-lock.json` **sem** as entradas de topo `node_modules/@emnapi/core` e `node_modules/@emnapi/runtime`; o `npm ci` do Linux (CI e EAS Build) falha com "Missing: @emnapi/core ... from lock file", embora o `npm ci` do Windows passe. Depois de mexer em dependências, confira (`grep -c '"node_modules/@emnapi/\(core\|runtime\)"' package-lock.json` deve dar 2) e, se faltar, recoloque as duas entradas da `develop`. Para validar como no Linux: `npm ci --include=dev --dry-run --ignore-scripts` num container `node:24`.
