@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { Alert, Linking } from 'react-native';
 
 import { type ResultadoDaConexao, testarConexao } from '@/api/saude';
+import { versaoEmUso } from '@/atualizacoes/atualizacoes';
 import { Botao } from '@/components/Botao';
 import { Card } from '@/components/Card';
 import { CardAlterarSenha } from '@/components/CardAlterarSenha';
@@ -13,6 +14,7 @@ import { SeletorSegmentado } from '@/components/SeletorSegmentado';
 import { Tela } from '@/components/Tela';
 import { Texto } from '@/components/Texto';
 import { urlDoServidor } from '@/config/ambiente';
+import { descreverVersao } from '@/dominio/atualizacao';
 import { useAlterarSenha } from '@/hooks/useAuth';
 import { useNaoLidas } from '@/hooks/useNotificacoes';
 import { useDefinirNotificacao, useWatchlist } from '@/hooks/useWatchlist';
@@ -159,6 +161,9 @@ export default function Perfil() {
       <Botao titulo="Sair" variante="perigo" onPress={confirmarSaida} />
       <Texto variante="legenda" cor="secundario" style={{ textAlign: 'center' }}>
         Ferramenta educacional de análise. Não constitui recomendação de investimento.
+      </Texto>
+      <Texto variante="legenda" cor="terciario" style={{ textAlign: 'center' }}>
+        {descreverVersao(versaoEmUso())}
       </Texto>
     </Tela>
   );

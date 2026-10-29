@@ -126,6 +126,20 @@ Só vale depois da decisão D8 (conta Expo/EAS e projeto Firebase). Passos de pr
 | Perfil → desligar o push | O backend deixa de enviar; o aparelho some de `dispositivos` | |
 | Sair da conta | O aparelho é removido do push antes do logout | |
 
+## 11. Atualização automática (EAS Update, só no APK)
+
+Preparação: um APK gerado depois de 29/10/2026 (com `expo-updates`) instalado. Detalhes em [`distribuicao-apk.md`](distribuicao-apk.md#atualizações-automáticas-eas-update).
+
+| Passo | Esperado | ✔ |
+| --- | --- | --- |
+| Abrir o app e ir ao rodapé do Perfil | "Versão 0.1.0 (a que veio com o app instalado)" | |
+| No PC, mudar um texto visível e publicar: `npx eas-cli update --channel preview --environment preview --message "teste"` | O comando termina com o link da atualização | |
+| Com o app aberto, mandar para o segundo plano por mais de 15 min e voltar | Pergunta "Nova versão disponível"; "Reiniciar agora" abre com o texto novo | |
+| Publicar outra mudança, **fechar o app por completo** e abrir | Abre já com a mudança (ou, com rede lenta, na abertura seguinte) | |
+| Rodapé do Perfil | "Versão 0.1.0 · atualização de <data e hora da publicação>" | |
+| Modo avião e abrir o app | Abre normalmente na última versão baixada, sem erro | |
+| Desfazer: `npx eas-cli update:roll-back-to-embedded --channel preview` e reabrir duas vezes | Volta ao texto original | |
+
 ## Resultado
 
 | Bloco | Tudo ✔? | Observações / código do erro |
@@ -140,3 +154,4 @@ Só vale depois da decisão D8 (conta Expo/EAS e projeto Firebase). Passos de pr
 | 8. Estados do Checkpoint | | |
 | 9. Acessibilidade | | |
 | 10. Push | | |
+| 11. Atualização automática | | |

@@ -13,6 +13,7 @@ import { BannerNotificacao } from '@/components/BannerNotificacao';
 import { ConfiguracaoInvalida } from '@/components/ConfiguracaoInvalida';
 import { lerUrlDaApi, urlDoWebSocket } from '@/config/ambiente';
 import { queryClient } from '@/hooks/queryClient';
+import { useAtualizacaoDoApp } from '@/hooks/useAtualizacaoDoApp';
 import { useSessaoAtiva } from '@/hooks/useSessaoAtiva';
 import { usePreferencias } from '@/store/preferencias';
 import { geracaoDaSessao, pertoDeVencer, useSessao } from '@/store/sessao';
@@ -71,6 +72,8 @@ export default function RootLayout() {
   const hidratarPreferencias = usePreferencias((estado) => estado.hidratar);
   const [carregouFontes, erroFontes] = useFonts(FONTES);
   const tema = useTema();
+  // Versão nova publicada com `eas update`: verifica na volta ao app e oferece reiniciar (com ou sem sessão).
+  useAtualizacaoDoApp();
 
   useEffect(() => {
     void hidratar();
