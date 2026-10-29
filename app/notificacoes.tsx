@@ -11,7 +11,7 @@ import { mapaAtivos } from '@/dominio/portfolio';
 import { useAbrirNotificacao } from '@/hooks/useAbrirNotificacao';
 import { useMarcarTodasLidas, useNotificacoes } from '@/hooks/useNotificacoes';
 import { useWatchlist } from '@/hooks/useWatchlist';
-import { espaco } from '@/theme/escala';
+import { conteudoLimitado, espaco } from '@/theme/escala';
 import { useTema } from '@/theme/useTema';
 import { mensagemDeErro } from '@/utils/erros';
 
@@ -101,6 +101,6 @@ export default function Notificacoes() {
 }
 
 const estilos = StyleSheet.create({
-  lista: { padding: espaco.lg, gap: espaco.md, flexGrow: 1 },
+  lista: { ...conteudoLimitado, padding: espaco.lg, gap: espaco.md, flexGrow: 1 },
   cabecalho: { gap: espaco.md, marginBottom: espaco.sm },
 });

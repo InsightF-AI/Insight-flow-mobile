@@ -19,6 +19,7 @@
 | [`MAPEAMENTO.md`](MAPEAMENTO.md) | Fase 1: o que existe na organização (backend, web, desktop), rotas, regras de negócio, decisões D1 a D12 e sugestões de mudança na API |
 | [`PLANO.md`](PLANO.md) | Fase 2: stack, pastas, navegação, camada de API, tema, notificações, roteiro em etapas e como testar no celular (§9) |
 | [`roteiro-de-teste-no-aparelho.md`](roteiro-de-teste-no-aparelho.md) | O que só o celular confere (toque, teclado, rede real, leitores de tela, push), com o resultado esperado de cada passo |
+| [`entregas/acessibilidade-e-responsividade.md`](entregas/acessibilidade-e-responsividade.md) | Formulários pelo teclado, erros para leitor de tela, fonte grande e tablet: o que mudou, como foi feito e o que falta conferir |
 | [`superpowers/specs/`](superpowers/specs/) | Desenhos (spec) do MVP e do redesign visual |
 | [`superpowers/plans/`](superpowers/plans/) | Um plano por etapa, com tarefas, testes, revisão e o "Registro da execução" (menores adiados, o que não foi verificado) |
 | [`../tools/`](../tools/README.md) | IA falsa, conferência dos contratos do backend e prévia web |

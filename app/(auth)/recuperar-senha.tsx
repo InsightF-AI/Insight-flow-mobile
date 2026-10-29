@@ -1,10 +1,11 @@
 import { Link, router } from 'expo-router';
-import { useState } from 'react';
-import { Pressable, StyleSheet } from 'react-native';
+import { useRef, useState } from 'react';
+import { Pressable, StyleSheet, type TextInput } from 'react-native';
 
 import { Botao } from '@/components/Botao';
 import { Campo } from '@/components/Campo';
 import { CartaoAuth } from '@/components/CartaoAuth';
+import { MensagemErro } from '@/components/MensagemErro';
 import { Tela } from '@/components/Tela';
 import { Texto } from '@/components/Texto';
 import {
@@ -17,6 +18,7 @@ import {
 import { useRecuperarSenha, useRedefinirSenha } from '@/hooks/useAuth';
 import { espaco } from '@/theme/escala';
 import { mensagemDeErro } from '@/utils/erros';
+import { focarPrimeiroComErro } from '@/utils/formulario';
 
 type Etapa = 'pedir' | 'redefinir' | 'pronto';
 
@@ -31,11 +33,19 @@ export default function RecuperarSenha() {
   const [errosEmail, setErrosEmail] = useState<ErrosCredenciais>({});
   const [errosSenha, setErrosSenha] = useState<ErrosNovaSenha>({});
   const [erroGeral, setErroGeral] = useState<string | null>(null);
+  const campoEmail = useRef<TextInput>(null);
+  const campoCodigo = useRef<TextInput>(null);
+  const campoNovaSenha = useRef<TextInput>(null);
+  const campoConfirmacao = useRef<TextInput>(null);
 
   async function pedirCodigo() {
+    if (recuperar.isPending) return;
     const encontrados = validarRecuperacao({ email });
     setErrosEmail(encontrados);
-    if (Object.keys(encontrados).length > 0) return;
+    if (Object.keys(encontrados).length > 0) {
+      campoEmail.current?.focus();
+      return;
+    }
     setErroGeral(null);
     try {
       await recuperar.mutateAsync(email.trim());
@@ -47,9 +57,17 @@ export default function RecuperarSenha() {
 
   async function trocarSenha() {
     const token = extrairCodigoDeRedefinicao(codigo);
+    if (redefinir.isPending) return;
     const encontrados = validarRedefinicao({ token, novaSenha, confirmacao });
     setErrosSenha(encontrados);
-    if (Object.keys(encontrados).length > 0) return;
+    if (Object.keys(encontrados).length > 0) {
+      focarPrimeiroComErro(encontrados, [
+        ['token', campoCodigo],
+        ['novaSenha', campoNovaSenha],
+        ['confirmacao', campoConfirmacao],
+      ]);
+      return;
+    }
     setErroGeral(null);
     try {
       await redefinir.mutateAsync({ token, novaSenha });
@@ -88,6 +106,7 @@ export default function RecuperarSenha() {
           rodape={voltarAoLogin}
         >
           <Campo
+            ref={campoEmail}
             rotulo="E-mail"
             valor={email}
             aoMudar={setEmail}
@@ -96,12 +115,10 @@ export default function RecuperarSenha() {
             autoCapitalize="none"
             autoComplete="email"
             icone="email"
+            returnKeyType="send"
+            onSubmitEditing={() => void pedirCodigo()}
           />
-          {erroGeral ? (
-            <Texto role="alert" cor="negativo">
-              {erroGeral}
-            </Texto>
-          ) : null}
+          <MensagemErro mensagem={erroGeral} />
           <Botao titulo="Enviar link" onPress={() => void pedirCodigo()} carregando={recuperar.isPending} />
           <Botao
             titulo="Já tenho o código"
@@ -119,14 +136,20 @@ export default function RecuperarSenha() {
           rodape={voltarAoLogin}
         >
           <Campo
+            ref={campoCodigo}
             rotulo="Código do e-mail"
             valor={codigo}
             aoMudar={setCodigo}
             erro={errosSenha.token}
             autoCapitalize="none"
+            autoCorrect={false}
             icone="email"
+            returnKeyType="next"
+            submitBehavior="submit"
+            onSubmitEditing={() => campoNovaSenha.current?.focus()}
           />
           <Campo
+            ref={campoNovaSenha}
             rotulo="Nova senha"
             valor={novaSenha}
             aoMudar={setNovaSenha}
@@ -135,8 +158,12 @@ export default function RecuperarSenha() {
             alternarSenha
             autoComplete="new-password"
             icone="cadeado"
+            returnKeyType="next"
+            submitBehavior="submit"
+            onSubmitEditing={() => campoConfirmacao.current?.focus()}
           />
           <Campo
+            ref={campoConfirmacao}
             rotulo="Confirmar nova senha"
             valor={confirmacao}
             aoMudar={setConfirmacao}
@@ -145,12 +172,10 @@ export default function RecuperarSenha() {
             alternarSenha
             autoComplete="new-password"
             icone="cadeado"
+            returnKeyType="go"
+            onSubmitEditing={() => void trocarSenha()}
           />
-          {erroGeral ? (
-            <Texto role="alert" cor="negativo">
-              {erroGeral}
-            </Texto>
-          ) : null}
+          <MensagemErro mensagem={erroGeral} />
           <Botao titulo="Redefinir senha" onPress={() => void trocarSenha()} carregando={redefinir.isPending} />
         </CartaoAuth>
       )}

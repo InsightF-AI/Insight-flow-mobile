@@ -51,6 +51,18 @@ const FAMILIA_NEGRITO: Partial<Record<VarianteTexto, string>> = {
   rotulo: familia.negrito,
 };
 
+// A fonte acompanha o tamanho escolhido no aparelho até 200% (WCAG 1.4.4); títulos, já grandes, param antes para não
+// empurrar o conteúdo para fora da tela.
+const AMPLIACAO_MAXIMA: Record<VarianteTexto, number> = {
+  destaque: 1.5,
+  titulo: 1.5,
+  subtitulo: 1.75,
+  secao: 2,
+  corpo: 2,
+  legenda: 2,
+  rotulo: 2,
+};
+
 const NUMERICO: TextStyle = { fontVariant: ['tabular-nums'] };
 
 interface Props extends TextProps {
@@ -66,6 +78,9 @@ export function Texto({ variante = 'corpo', cor = 'padrao', negrito = false, num
   const familiaNegrito = negrito ? FAMILIA_NEGRITO[variante] : undefined;
   return (
     <Text
+      maxFontSizeMultiplier={AMPLIACAO_MAXIMA[variante]}
+      // No Android, `role="alert"` sozinho não é lido quando aparece: a região viva faz o TalkBack anunciar.
+      accessibilityLiveRegion={resto.role === 'alert' ? 'polite' : undefined}
       style={[
         ESTILO_DA_VARIANTE[variante],
         familiaNegrito ? { fontFamily: familiaNegrito } : null,

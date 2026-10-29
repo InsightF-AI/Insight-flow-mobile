@@ -111,6 +111,14 @@ Sem `AI_HABILITADA` e `GEMINI_API_KEY` no backend, os dois recursos respondem 50
 | Interruptores do Perfil e dos alertas | O nome e o estado (ligado/desligado) são lidos | |
 | Chat: enviar uma pergunta | A resposta chega e é possível alcançá-la; anote se foi **anunciada** (sabe-se que o app ainda não anuncia a chegada) | |
 | Alvos de toque | Nenhum botão é difícil de acertar com o polegar | |
+| **Login sem leitor de tela:** digitar o e-mail e tocar em "Próximo" no teclado; na senha, tocar em "Entrar" | O foco passa à senha e a tecla final entra, sem tocar no botão da tela | |
+| Login com os dois campos vazios → "Entrar" | O foco vai ao **E-mail** e o leitor lê "E-mail, Informe um e-mail válido" | |
+| Login com o servidor desligado (ou modo avião) | O erro geral é **anunciado** assim que aparece | |
+| Nova operação e novo alerta: encadear os campos pelo teclado | Ticker → Quantidade → Preço (Android); no iOS o teclado numérico não tem tecla de envio, usar o botão | |
+| Aba Alertas no iPhone: focar "Valor alvo" | O teclado não cobre o campo | |
+| Arrastar a tela com o teclado aberto | O teclado fecha | |
+| Fonte do sistema no máximo (Android: Tamanho da fonte; iOS: Tamanhos Maiores) e percorrer as abas | Texto maior, nada cortado nem sobreposto; títulos crescem menos | |
+| Tablet ou paisagem | Conteúdo centralizado, sem esticar de ponta a ponta | |
 
 ## 10. Push de verdade (parte B da Etapa 8, só com development build)
 

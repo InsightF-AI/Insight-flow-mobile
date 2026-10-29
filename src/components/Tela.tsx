@@ -3,7 +3,7 @@ import { type ReactNode, useContext } from 'react';
 import { KeyboardAvoidingView, Platform, RefreshControl, ScrollView, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { espaco } from '@/theme/escala';
+import { conteudoLimitado, espaco } from '@/theme/escala';
 import { useTema } from '@/theme/useTema';
 
 interface Props {
@@ -30,6 +30,8 @@ export function Tela({ children, areaSegura = false, aoAtualizar, atualizando = 
         style={[estilos.flex, { backgroundColor: cores.fundo }]}
         contentContainerStyle={[estilos.conteudo, centralizar && estilos.centralizado]}
         keyboardShouldPersistTaps="handled"
+        // Arrastar a tela fecha o teclado (no iOS, acompanhando o dedo).
+        keyboardDismissMode={Platform.OS === 'ios' ? 'interactive' : 'on-drag'}
         refreshControl={
           aoAtualizar ? (
             <RefreshControl refreshing={atualizando} onRefresh={aoAtualizar} tintColor={cores.primaria} />
@@ -47,6 +49,6 @@ export function Tela({ children, areaSegura = false, aoAtualizar, atualizando = 
 
 const estilos = StyleSheet.create({
   flex: { flex: 1 },
-  conteudo: { padding: espaco.lg, gap: espaco.lg, flexGrow: 1 },
+  conteudo: { ...conteudoLimitado, padding: espaco.lg, gap: espaco.lg, flexGrow: 1 },
   centralizado: { justifyContent: 'center' },
 });

@@ -23,6 +23,14 @@ App Expo SDK 57 (React Native 0.86, TypeScript). Spec: `docs/superpowers/specs/2
 - Nunca use `fontWeight`: a fonte é escolhida pela família (`Texto` ou `familia.*` de `@/theme/familias`).
 - Ícones só pelo wrapper `Icone` (lucide); novos ícones entram no mapa de `src/components/Icone.tsx` com nome em pt-BR.
 - Contraste ≥ 4,5:1 nos dois temas (`src/theme/cores.test.ts`); alvos de toque ≥ 44 pt.
+- Conteúdo de tela ou lista nova usa `conteudoLimitado` (`@/theme/escala`, até 720 pt) para não esticar em tablet; a `Tela` já aplica. A fonte acompanha o aparelho (limite por variante no `Texto`): não fixe `allowFontScaling={false}`.
+
+## Formulários (ver `docs/entregas/acessibilidade-e-responsividade.md`)
+- Campos de texto só pelo `Campo`. Cada campo tem `ref`; os do meio usam `returnKeyType="next"`, `submitBehavior="submit"` e `onSubmitEditing` focando o próximo; o último envia o formulário.
+- Validação que falha chama `focarPrimeiroComErro(erros, [[chave, ref], …])` (`@/utils/formulario`) na ordem da tela. O erro do campo vai em `erro` (vira a dica lida pelo leitor de tela).
+- Erro geral do formulário só pela `MensagemErro` (anuncia no Android e no iOS); não repita `<Texto role="alert">`.
+- O envio ignora chamadas enquanto o anterior está em andamento (a tecla do teclado não respeita o botão desabilitado).
+- O projeto não usa Prettier: não rode `npx prettier --write` (reformata tudo com outro estilo); valide com `npm run lint`.
 - As variantes do `Botao` (`primario`, `secundario` e `perigo`) mantêm os nomes; só o visual mudou.
 - Jest mapeia `lucide-react-native` para o build CJS (`moduleNameMapper` na config do jest em `package.json`): o resolvedor do RN escolhe o `.mjs` ESM, que o transform do jest-expo não cobre. O Metro não é afetado.
 - Os ícones lucide são `aria-hidden`; nos testes, consulte-os com `{ includeHiddenElements: true }`.

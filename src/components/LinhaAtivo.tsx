@@ -8,7 +8,7 @@ import { VariacaoBadge } from '@/components/VariacaoBadge';
 import { ROTULO_TIPO_ATIVO } from '@/dominio/rotulos';
 import { espaco, raio } from '@/theme/escala';
 import { useTema } from '@/theme/useTema';
-import { formatarMoeda } from '@/utils/formatacao';
+import { formatarMoeda, formatarPercentual } from '@/utils/formatacao';
 
 export type EstadoCotacao = 'carregando' | 'ok' | 'indisponivel';
 
@@ -37,13 +37,23 @@ export function LinhaAtivo({
   ocupado = false,
 }: Props) {
   const { cores, sombras } = useTema();
+  // O rótulo do botão substitui o texto de dentro para o leitor de tela: preço, variação e sinais precisam estar nele.
+  const partesDoRotulo = [`${ativo.ticker}, ${ativo.nome}`];
+  if (estadoCotacao === 'ok' && cotacao) {
+    partesDoRotulo.push(
+      formatarMoeda(cotacao.preco, ativo.moeda),
+      `variação ${formatarPercentual(cotacao.variacao_percentual, 'pontos')}`,
+    );
+  }
+  if (estadoCotacao === 'indisponivel') partesDoRotulo.push('sem cotação');
+  if (sinais > 0) partesDoRotulo.push(`${sinais} ${sinais === 1 ? 'sinal' : 'sinais'}`);
   return (
     <View
       style={[estilos.linha, { backgroundColor: cores.superficie, borderColor: cores.borda, boxShadow: sombras.sm }]}
     >
       <Pressable
         role="button"
-        aria-label={`${ativo.ticker}, ${ativo.nome}`}
+        aria-label={partesDoRotulo.join(', ')}
         onPress={aoPressionar}
         style={({ pressed }) => [estilos.principal, { opacity: pressed ? 0.85 : 1 }]}
       >
