@@ -42,6 +42,7 @@ Foram publicados empilhados (cada um apontando para o anterior; o #1 apontava pa
 | [#10](https://github.com/InsightF-AI/Insight-flow-mobile/pull/10) | `feature/polimento-menores` | Polimento dos menores adiados e patches do Expo SDK 57 |
 | [#11](https://github.com/InsightF-AI/Insight-flow-mobile/pull/11) | `feature/documentacao-entrega-cp2` | Esta documentação, `CONTRIBUTING.md`, pasta da entrega e `tools/` |
 | [#15](https://github.com/InsightF-AI/Insight-flow-mobile/pull/15) | `feature/senha-e-dividendos` | Recuperação e troca de senha, dividendos por ativo e da carteira; [`entregas/senha-e-dividendos.md`](entregas/senha-e-dividendos.md) |
+| [#19](https://github.com/InsightF-AI/Insight-flow-mobile/pull/19) | `feature/acessibilidade-formularios` | Formulários pelo teclado, erros para leitor de tela, fonte grande e tablet; [`entregas/acessibilidade-e-responsividade.md`](entregas/acessibilidade-e-responsividade.md) |
 
 Ordem e forma de mesclar: [`CONTRIBUTING.md`](../CONTRIBUTING.md#pull-requests-empilhados-como-o-histórico-atual-foi-publicado).
 
