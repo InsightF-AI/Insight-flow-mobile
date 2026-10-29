@@ -38,4 +38,7 @@ Ou seja: o Bruno consegue gerar o APK sozinho, mas só terá um app que funciona
 
 ## Estado
 
-`eas.json` com o perfil `preview` foi adicionado em 28/10/2026. **Ainda não foi gerado nenhum APK**: aguardando a URL pública do backend.
+- 29/10/2026: primeiro APK gerado na conta Expo `brngstzz` (projeto `@brngstzz/insight-flow-mobile`), apontando para a produção `https://api-insight.agilesoftware.net.br` (endereço do `cd.yml` do backend; homologação em `https://hom-api-insight.agilesoftware.net.br`). O link fica em expo.dev → projeto → Builds.
+- O `app.json` ganhou `owner`, `extra.eas.projectId` (o `.env` não vai para a build na nuvem) e `android.package` (`br.com.insightflow.mobile`).
+- A primeira build falhou com `resource drawable/splashscreen_logo not found`: o plugin `expo-splash-screen` precisa de `image`. O Expo Go não acusa isso, só a build nativa.
+- Push com o app fechado continua pendente (FCM).
