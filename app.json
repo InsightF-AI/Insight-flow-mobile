@@ -50,6 +50,14 @@
         "projectId": "d071469c-ef74-45d8-a681-f4e78b7f5572"
       }
     },
-    "owner": "brngstzz"
+    "owner": "brngstzz",
+    "updates": {
+      "url": "https://u.expo.dev/d071469c-ef74-45d8-a681-f4e78b7f5572",
+      "checkAutomatically": "ON_LOAD",
+      "fallbackToCacheTimeout": 3000
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
+    }
   }
 }

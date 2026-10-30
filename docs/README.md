@@ -8,7 +8,7 @@
 | --- | --- |
 | [`checkpoint-02.md`](checkpoint-02.md) | Documentação do Checkpoint 02: evolução do projeto, navegação, integração com a WebAPI e tratamento de estado |
 | [`entregas/checkpoint-02/`](entregas/checkpoint-02/README.md) | Itens da entrega (Termo de Uso de IA, capturas, status do card) e a lista do que falta antes de entregar |
-| [`distribuicao-apk.md`](distribuicao-apk.md) | Como gerar o link do APK (EAS Build), quem faz cada parte e o que falta do servidor |
+| [`distribuicao-apk.md`](distribuicao-apk.md) | Como gerar o link do APK (EAS Build), publicar atualizações automáticas (EAS Update) e o que exige APK novo |
 
 ## Para quem desenvolve
 
