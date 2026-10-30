@@ -1,5 +1,6 @@
 import { router } from 'expo-router';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
+import type { TextInput } from 'react-native';
 
 import type { TipoOperacao } from '@/api/tipos';
 import { Botao } from '@/components/Botao';
@@ -8,6 +9,7 @@ import { CampoData } from '@/components/CampoData';
 import { Carregando } from '@/components/Carregando';
 import { ErroComRetry } from '@/components/ErroComRetry';
 import { EstadoVazio } from '@/components/EstadoVazio';
+import { MensagemErro } from '@/components/MensagemErro';
 import { SeletorSegmentado } from '@/components/SeletorSegmentado';
 import { SugestoesTicker } from '@/components/SugestoesTicker';
 import { Tela } from '@/components/Tela';
@@ -19,6 +21,7 @@ import { useOperacoes, useRegistrarOperacao } from '@/hooks/usePortfolio';
 import { useWatchlist } from '@/hooks/useWatchlist';
 import { ehStatus } from '@/utils/erros';
 import { formatarMoeda, formatarQuantidade } from '@/utils/formatacao';
+import { focarPrimeiroComErro } from '@/utils/formulario';
 
 // Tipo da operação simulada que o próprio usuário registra (rótulos permitidos pela RN-01).
 const TIPOS: readonly { valor: TipoOperacao; rotulo: string }[] = [
@@ -37,6 +40,9 @@ export default function NovaOperacao() {
   const [data, setData] = useState(() => new Date());
   const [erros, setErros] = useState<ErrosOperacao>({});
   const [erroGeral, setErroGeral] = useState<string | null>(null);
+  const campoTicker = useRef<TextInput>(null);
+  const campoQuantidade = useRef<TextInput>(null);
+  const campoPreco = useRef<TextInput>(null);
 
   const itens = watchlist.data ?? [];
   // O ativo da operação precisa estar na watchlist: digitar um ticker nunca o adiciona em silêncio (decisão D6).
@@ -56,6 +62,7 @@ export default function NovaOperacao() {
   }
 
   async function aoRegistrar() {
+    if (registrar.isPending) return;
     setErroGeral(null);
     const resultado = validarOperacao({ tipo, ticker, quantidade, precoUnitario, data }, new Date(), {
       tickersPermitidos: itens.map((item) => item.ativo.ticker),
@@ -63,6 +70,11 @@ export default function NovaOperacao() {
     });
     if (!resultado.ok) {
       setErros(resultado.erros);
+      focarPrimeiroComErro(resultado.erros, [
+        ['ticker', campoTicker],
+        ['quantidade', campoQuantidade],
+        ['precoUnitario', campoPreco],
+      ]);
       return;
     }
     setErros({});
@@ -70,6 +82,7 @@ export default function NovaOperacao() {
     const ativo = itens.find((item) => item.ativo.ticker.toUpperCase() === dados.ticker);
     if (!ativo) {
       setErros({ ticker: 'Escolha um ativo da sua watchlist' });
+      campoTicker.current?.focus();
       return;
     }
     try {
@@ -82,8 +95,10 @@ export default function NovaOperacao() {
       });
       router.back();
     } catch (erro) {
-      if (ehStatus(erro, 404)) setErros({ ticker: 'Ativo não encontrado' });
-      else setErroGeral(mensagemErroOperacao(erro, 'registrar'));
+      if (ehStatus(erro, 404)) {
+        setErros({ ticker: 'Ativo não encontrado' });
+        campoTicker.current?.focus();
+      } else setErroGeral(mensagemErroOperacao(erro, 'registrar'));
     }
   }
 
@@ -117,21 +132,30 @@ export default function NovaOperacao() {
       <Texto cor="secundario">Operação simulada: nenhuma ordem real é enviada a corretoras.</Texto>
       <SeletorSegmentado rotulo="Tipo da operação" opcoes={TIPOS} selecionado={tipo} aoSelecionar={aoMudarTipo} />
       <Campo
+        ref={campoTicker}
         rotulo="Ativo (ticker)"
         valor={ticker}
         aoMudar={setTicker}
         erro={erros.ticker}
         autoCapitalize="characters"
+        autoCorrect={false}
         placeholder="Ex.: PETR4"
+        returnKeyType="next"
+        submitBehavior="submit"
+        onSubmitEditing={() => campoQuantidade.current?.focus()}
       />
       <SugestoesTicker tickers={itens.map((item) => item.ativo.ticker)} aoEscolher={setTicker} />
       <Campo
+        ref={campoQuantidade}
         rotulo="Quantidade"
         valor={quantidade}
         aoMudar={setQuantidade}
         erro={erros.quantidade}
         keyboardType="decimal-pad"
         placeholder="Ex.: 100"
+        returnKeyType="next"
+        submitBehavior="submit"
+        onSubmitEditing={() => campoPreco.current?.focus()}
       />
       {tipo === 'VENDA' && itemEscolhido && disponivel !== null ? (
         <Texto variante="legenda" cor="secundario">
@@ -141,12 +165,14 @@ export default function NovaOperacao() {
         </Texto>
       ) : null}
       <Campo
+        ref={campoPreco}
         rotulo="Preço unitário"
         valor={precoUnitario}
         aoMudar={setPrecoUnitario}
         erro={erros.precoUnitario}
         keyboardType="decimal-pad"
         placeholder="Ex.: 38,50"
+        returnKeyType="done"
       />
       {precoAtual ? (
         <Botao
@@ -156,11 +182,7 @@ export default function NovaOperacao() {
         />
       ) : null}
       <CampoData rotulo="Data da operação" valor={data} aoMudar={setData} maximo={new Date()} erro={erros.data} />
-      {erroGeral ? (
-        <Texto role="alert" cor="negativo">
-          {erroGeral}
-        </Texto>
-      ) : null}
+      <MensagemErro mensagem={erroGeral} />
       <Botao titulo="Registrar operação" onPress={aoRegistrar} carregando={registrar.isPending} />
     </Tela>
   );

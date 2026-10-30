@@ -27,7 +27,7 @@ import {
   validarPergunta,
 } from '@/dominio/ia';
 import { useConversa } from '@/store/conversa';
-import { espaco, fonte, raio } from '@/theme/escala';
+import { conteudoLimitado, espaco, fonte, raio } from '@/theme/escala';
 import { familia } from '@/theme/familias';
 import { useTema } from '@/theme/useTema';
 import { mensagemDeErroDaIA } from '@/utils/erros';
@@ -101,6 +101,7 @@ export default function Chat() {
         ref={rolagem}
         contentContainerStyle={estilos.conversa}
         keyboardShouldPersistTaps="handled"
+        keyboardDismissMode={Platform.OS === 'ios' ? 'interactive' : 'on-drag'}
         onContentSizeChange={() => rolagem.current?.scrollToEnd({ animated: true })}
       >
         {mensagens.length > 0 ? (
@@ -143,33 +144,40 @@ export default function Chat() {
       </ScrollView>
 
       <View style={[estilos.rodape, { borderColor: cores.borda, backgroundColor: cores.superficie }]}>
-        <AvisoIA />
-        <View style={estilos.entrada}>
-          <TextInput
-            aria-label="Mensagem para a IA"
-            multiline
-            value={rascunho}
-            onChangeText={setRascunho}
-            placeholder="Pergunte sobre a sua carteira…"
-            placeholderTextColor={cores.textoTerciario}
-            style={[
-              estilos.campo,
-              {
-                color: cores.texto,
-                borderColor: excedeu ? cores.negativo : cores.bordaForte,
-                backgroundColor: cores.superficieElevada,
-              },
-            ]}
-          />
-          <Botao titulo="Enviar" onPress={enviarRascunho} desabilitado={!podeEnviar} />
+        <View style={estilos.rodapeConteudo}>
+          <AvisoIA />
+          <View style={estilos.entrada}>
+            <TextInput
+              aria-label="Mensagem para a IA"
+              accessibilityHint={
+                excedeu && !validacao.valida ? validacao.motivo : `${caracteres} de ${MAXIMO_DE_CARACTERES} caracteres`
+              }
+              maxFontSizeMultiplier={2}
+              multiline
+              value={rascunho}
+              onChangeText={setRascunho}
+              placeholder="Pergunte sobre a sua carteira…"
+              placeholderTextColor={cores.textoTerciario}
+              style={[
+                estilos.campo,
+                {
+                  color: cores.texto,
+                  borderColor: excedeu ? cores.negativo : cores.bordaForte,
+                  backgroundColor: cores.superficieElevada,
+                },
+              ]}
+            />
+            <Botao titulo="Enviar" onPress={enviarRascunho} desabilitado={!podeEnviar} />
+          </View>
+          {excedeu && !validacao.valida ? (
+            <Texto variante="legenda" cor="negativo" role="alert">
+              {validacao.motivo}
+            </Texto>
+          ) : (
+            // O contador muda a cada letra: fica fora do leitor de tela (a contagem vai na dica do campo).
+            <Texto variante="legenda" cor="terciario" aria-hidden>{`${caracteres}/${MAXIMO_DE_CARACTERES}`}</Texto>
+          )}
         </View>
-        {excedeu && !validacao.valida ? (
-          <Texto variante="legenda" cor="negativo">
-            {validacao.motivo}
-          </Texto>
-        ) : (
-          <Texto variante="legenda" cor="terciario">{`${caracteres}/${MAXIMO_DE_CARACTERES}`}</Texto>
-        )}
       </View>
     </KeyboardAvoidingView>
   );
@@ -177,9 +185,10 @@ export default function Chat() {
 
 const estilos = StyleSheet.create({
   tela: { flex: 1 },
-  conversa: { padding: espaco.lg, gap: espaco.md, flexGrow: 1 },
+  conversa: { ...conteudoLimitado, padding: espaco.lg, gap: espaco.md, flexGrow: 1 },
   limpar: { minHeight: 44, flexDirection: 'row', alignItems: 'center', gap: espaco.xs, alignSelf: 'flex-end' },
-  rodape: { borderTopWidth: StyleSheet.hairlineWidth, padding: espaco.md, gap: espaco.sm },
+  rodape: { borderTopWidth: StyleSheet.hairlineWidth, padding: espaco.md },
+  rodapeConteudo: { ...conteudoLimitado, gap: espaco.sm },
   entrada: { flexDirection: 'row', alignItems: 'flex-end', gap: espaco.sm },
   campo: {
     flex: 1,

@@ -19,6 +19,7 @@
 | [`MAPEAMENTO.md`](MAPEAMENTO.md) | Fase 1: o que existe na organização (backend, web, desktop), rotas, regras de negócio, decisões D1 a D12 e sugestões de mudança na API |
 | [`PLANO.md`](PLANO.md) | Fase 2: stack, pastas, navegação, camada de API, tema, notificações, roteiro em etapas e como testar no celular (§9) |
 | [`roteiro-de-teste-no-aparelho.md`](roteiro-de-teste-no-aparelho.md) | O que só o celular confere (toque, teclado, rede real, leitores de tela, push), com o resultado esperado de cada passo |
+| [`entregas/acessibilidade-e-responsividade.md`](entregas/acessibilidade-e-responsividade.md) | Formulários pelo teclado, erros para leitor de tela, fonte grande e tablet: o que mudou, como foi feito e o que falta conferir |
 | [`superpowers/specs/`](superpowers/specs/) | Desenhos (spec) do MVP e do redesign visual |
 | [`superpowers/plans/`](superpowers/plans/) | Um plano por etapa, com tarefas, testes, revisão e o "Registro da execução" (menores adiados, o que não foi verificado) |
 | [`../tools/`](../tools/README.md) | IA falsa, conferência dos contratos do backend e prévia web |
@@ -41,6 +42,7 @@ Foram publicados empilhados (cada um apontando para o anterior; o #1 apontava pa
 | [#10](https://github.com/InsightF-AI/Insight-flow-mobile/pull/10) | `feature/polimento-menores` | Polimento dos menores adiados e patches do Expo SDK 57 |
 | [#11](https://github.com/InsightF-AI/Insight-flow-mobile/pull/11) | `feature/documentacao-entrega-cp2` | Esta documentação, `CONTRIBUTING.md`, pasta da entrega e `tools/` |
 | [#15](https://github.com/InsightF-AI/Insight-flow-mobile/pull/15) | `feature/senha-e-dividendos` | Recuperação e troca de senha, dividendos por ativo e da carteira; [`entregas/senha-e-dividendos.md`](entregas/senha-e-dividendos.md) |
+| [#19](https://github.com/InsightF-AI/Insight-flow-mobile/pull/19) | `feature/acessibilidade-formularios` | Formulários pelo teclado, erros para leitor de tela, fonte grande e tablet; [`entregas/acessibilidade-e-responsividade.md`](entregas/acessibilidade-e-responsividade.md) |
 
 Ordem e forma de mesclar: [`CONTRIBUTING.md`](../CONTRIBUTING.md#pull-requests-empilhados-como-o-histórico-atual-foi-publicado).
 

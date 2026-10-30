@@ -1,10 +1,11 @@
 import { Link } from 'expo-router';
-import { useState } from 'react';
-import { Pressable, StyleSheet } from 'react-native';
+import { useRef, useState } from 'react';
+import { Pressable, StyleSheet, type TextInput } from 'react-native';
 
 import { Botao } from '@/components/Botao';
 import { CartaoAuth } from '@/components/CartaoAuth';
 import { Campo } from '@/components/Campo';
+import { MensagemErro } from '@/components/MensagemErro';
 import { Tela } from '@/components/Tela';
 import { Texto } from '@/components/Texto';
 import { type ErrosCredenciais, validarLogin } from '@/dominio/credenciais';
@@ -12,6 +13,7 @@ import { useLogin } from '@/hooks/useAuth';
 import { useSessao } from '@/store/sessao';
 import { espaco } from '@/theme/escala';
 import { ehStatus, mensagemDeErro } from '@/utils/erros';
+import { focarPrimeiroComErro } from '@/utils/formulario';
 
 export default function Login() {
   const entrar = useSessao((estado) => estado.entrar);
@@ -22,11 +24,20 @@ export default function Login() {
   const [erroGeral, setErroGeral] = useState<string | null>(null);
   // `isPending` da mutation volta a false antes de `entrar` terminar de gravar no armazenamento seguro.
   const [enviando, setEnviando] = useState(false);
+  const campoEmail = useRef<TextInput>(null);
+  const campoSenha = useRef<TextInput>(null);
 
   async function aoEnviar() {
+    if (enviando) return;
     const encontrados = validarLogin({ email, senha });
     setErros(encontrados);
-    if (Object.keys(encontrados).length > 0) return;
+    if (Object.keys(encontrados).length > 0) {
+      focarPrimeiroComErro(encontrados, [
+        ['email', campoEmail],
+        ['senha', campoSenha],
+      ]);
+      return;
+    }
     setErroGeral(null);
     setEnviando(true);
     try {
@@ -58,6 +69,7 @@ export default function Login() {
         }
       >
         <Campo
+          ref={campoEmail}
           rotulo="E-mail"
           valor={email}
           aoMudar={setEmail}
@@ -66,8 +78,12 @@ export default function Login() {
           autoCapitalize="none"
           autoComplete="email"
           icone="email"
+          returnKeyType="next"
+          submitBehavior="submit"
+          onSubmitEditing={() => campoSenha.current?.focus()}
         />
         <Campo
+          ref={campoSenha}
           rotulo="Senha"
           valor={senha}
           aoMudar={setSenha}
@@ -76,12 +92,10 @@ export default function Login() {
           alternarSenha
           autoComplete="password"
           icone="cadeado"
+          returnKeyType="go"
+          onSubmitEditing={() => void aoEnviar()}
         />
-        {erroGeral ? (
-          <Texto role="alert" cor="negativo">
-            {erroGeral}
-          </Texto>
-        ) : null}
+        <MensagemErro mensagem={erroGeral} />
         <Botao titulo="Entrar" onPress={aoEnviar} carregando={enviando} />
         <Link href="/recuperar-senha" asChild>
           <Pressable role="link" aria-label="Esqueci minha senha" style={estilos.link}>

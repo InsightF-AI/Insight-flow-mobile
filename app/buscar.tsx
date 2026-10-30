@@ -8,11 +8,11 @@ import { Carregando } from '@/components/Carregando';
 import { ErroComRetry } from '@/components/ErroComRetry';
 import { EstadoVazio } from '@/components/EstadoVazio';
 import { LinhaResultadoBusca } from '@/components/LinhaResultadoBusca';
-import { Texto } from '@/components/Texto';
+import { MensagemErro } from '@/components/MensagemErro';
 import { TAMANHO_MINIMO_BUSCA, useBuscaAtivos, useDebounce } from '@/hooks/useBusca';
 import { useResolverAtivo } from '@/hooks/useResolverAtivo';
 import { useWatchlist } from '@/hooks/useWatchlist';
-import { espaco } from '@/theme/escala';
+import { conteudoLimitado, espaco } from '@/theme/escala';
 import { useTema } from '@/theme/useTema';
 import { mensagemDeErro } from '@/utils/erros';
 
@@ -67,6 +67,7 @@ export default function Buscar() {
         data={busca.data}
         keyExtractor={(ativo) => ativo.ticker}
         keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="on-drag"
         renderItem={({ item }) => (
           <LinhaResultadoBusca
             ativo={item}
@@ -79,30 +80,31 @@ export default function Buscar() {
   }
 
   return (
-    <View style={[estilos.tela, { backgroundColor: cores.fundo }]}>
-      <Campo
-        rotulo="Ticker ou nome"
-        valor={termo}
-        aoMudar={(texto) => {
-          setErro(null);
-          setTermo(texto);
-        }}
-        placeholder="Ex.: PETR4, Vale"
-        autoCapitalize="characters"
-        icone="busca"
-      />
-      {erro ? (
-        <Texto role="alert" cor="negativo">
-          {erro}
-        </Texto>
-      ) : null}
-      {resolver.isPending ? <Carregando mensagem="Adicionando à watchlist…" /> : null}
-      <View style={estilos.resultados}>{resultados()}</View>
+    <View style={[estilos.fundo, { backgroundColor: cores.fundo }]}>
+      <View style={estilos.tela}>
+        <Campo
+          rotulo="Ticker ou nome"
+          valor={termo}
+          aoMudar={(texto) => {
+            setErro(null);
+            setTermo(texto);
+          }}
+          placeholder="Ex.: PETR4, Vale"
+          autoCapitalize="characters"
+          autoCorrect={false}
+          icone="busca"
+          returnKeyType="search"
+        />
+        <MensagemErro mensagem={erro} />
+        {resolver.isPending ? <Carregando mensagem="Adicionando à watchlist…" /> : null}
+        <View style={estilos.resultados}>{resultados()}</View>
+      </View>
     </View>
   );
 }
 
 const estilos = StyleSheet.create({
-  tela: { flex: 1, padding: espaco.lg, gap: espaco.md },
+  fundo: { flex: 1 },
+  tela: { ...conteudoLimitado, flex: 1, padding: espaco.lg, gap: espaco.md },
   resultados: { flex: 1 },
 });

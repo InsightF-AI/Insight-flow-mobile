@@ -1,11 +1,14 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
+import type { TextInput } from 'react-native';
 
 import { Botao } from '@/components/Botao';
 import { Campo } from '@/components/Campo';
 import { Card } from '@/components/Card';
+import { MensagemErro } from '@/components/MensagemErro';
 import { Texto } from '@/components/Texto';
 import { type ErrosNovaSenha, validarAlteracaoDeSenha } from '@/dominio/credenciais';
 import { mensagemDeErro } from '@/utils/erros';
+import { focarPrimeiroComErro } from '@/utils/formulario';
 
 interface Props {
   /** Resolve quando o servidor aceitou a troca; rejeita com o erro da API. */
@@ -21,6 +24,9 @@ export function CardAlterarSenha({ aoAlterar }: Props) {
   const [erros, setErros] = useState<ErrosNovaSenha>({});
   const [erroGeral, setErroGeral] = useState<string | null>(null);
   const [enviando, setEnviando] = useState(false);
+  const campoAtual = useRef<TextInput>(null);
+  const campoNova = useRef<TextInput>(null);
+  const campoConfirmacao = useRef<TextInput>(null);
 
   function fechar() {
     setAberto(false);
@@ -32,9 +38,17 @@ export function CardAlterarSenha({ aoAlterar }: Props) {
   }
 
   async function enviar() {
+    if (enviando) return;
     const encontrados = validarAlteracaoDeSenha({ senhaAtual, novaSenha, confirmacao });
     setErros(encontrados);
-    if (Object.keys(encontrados).length > 0) return;
+    if (Object.keys(encontrados).length > 0) {
+      focarPrimeiroComErro(encontrados, [
+        ['senhaAtual', campoAtual],
+        ['novaSenha', campoNova],
+        ['confirmacao', campoConfirmacao],
+      ]);
+      return;
+    }
     setErroGeral(null);
     setEnviando(true);
     try {
@@ -51,6 +65,7 @@ export function CardAlterarSenha({ aoAlterar }: Props) {
       {aberto ? (
         <>
           <Campo
+            ref={campoAtual}
             rotulo="Senha atual"
             valor={senhaAtual}
             aoMudar={setSenhaAtual}
@@ -59,8 +74,12 @@ export function CardAlterarSenha({ aoAlterar }: Props) {
             alternarSenha
             autoComplete="current-password"
             icone="cadeado"
+            returnKeyType="next"
+            submitBehavior="submit"
+            onSubmitEditing={() => campoNova.current?.focus()}
           />
           <Campo
+            ref={campoNova}
             rotulo="Nova senha"
             valor={novaSenha}
             aoMudar={setNovaSenha}
@@ -69,8 +88,12 @@ export function CardAlterarSenha({ aoAlterar }: Props) {
             alternarSenha
             autoComplete="new-password"
             icone="cadeado"
+            returnKeyType="next"
+            submitBehavior="submit"
+            onSubmitEditing={() => campoConfirmacao.current?.focus()}
           />
           <Campo
+            ref={campoConfirmacao}
             rotulo="Confirmar nova senha"
             valor={confirmacao}
             aoMudar={setConfirmacao}
@@ -79,15 +102,13 @@ export function CardAlterarSenha({ aoAlterar }: Props) {
             alternarSenha
             autoComplete="new-password"
             icone="cadeado"
+            returnKeyType="done"
+            onSubmitEditing={() => void enviar()}
           />
           <Texto variante="legenda" cor="secundario">
             Ao trocar a senha, todos os aparelhos saem da conta e você entra de novo.
           </Texto>
-          {erroGeral ? (
-            <Texto role="alert" cor="negativo">
-              {erroGeral}
-            </Texto>
-          ) : null}
+          <MensagemErro mensagem={erroGeral} />
           <Botao titulo="Salvar nova senha" onPress={() => void enviar()} carregando={enviando} />
           <Botao titulo="Cancelar" variante="secundario" onPress={fechar} />
         </>
