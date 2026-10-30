@@ -41,6 +41,17 @@ describe('LinhaAtivo', () => {
     expect(aoPressionar).toHaveBeenCalled();
   });
 
+  it('o nome acessível leva preço, variação e sinais (o rótulo esconde o texto de dentro)', async () => {
+    const { rerender } = await render(
+      <LinhaAtivo ativo={ativo} cotacao={cotacao} estadoCotacao="ok" sinais={2} aoPressionar={jest.fn()} />,
+    );
+    expect(
+      screen.getByRole('button', { name: `PETR4, Petrobras PN, R$${NBSP}38,50, variação +1,05%, 2 sinais` }),
+    ).toBeOnTheScreen();
+    await rerender(<LinhaAtivo ativo={ativo} estadoCotacao="indisponivel" aoPressionar={jest.fn()} />);
+    expect(screen.getByRole('button', { name: 'PETR4, Petrobras PN, sem cotação' })).toBeOnTheScreen();
+  });
+
   it('mostra o selo de sinais só quando há sinais, com singular e plural', async () => {
     const { rerender } = await render(
       <LinhaAtivo ativo={ativo} cotacao={cotacao} estadoCotacao="ok" sinais={1} aoPressionar={jest.fn()} />,

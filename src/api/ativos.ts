@@ -1,5 +1,6 @@
 import { request } from '@/api/client';
 import type {
+  Ativo,
   AtivoEncontrado,
   CotacaoAtual,
   IndicadorTecnico,
@@ -13,6 +14,8 @@ import type {
 
 export const ativosApi = {
   buscar: (termo: string) => request<AtivoEncontrado[]>('/ativos/buscar', { query: { termo } }),
+  /** Ativos já cadastrados no servidor, com `id` (dispensa a watchlist para operar). Não traz preço. */
+  catalogo: () => request<Ativo[]>('/ativos/catalogo'),
   cotacao: (ativoId: Uuid) => request<CotacaoAtual>(`/ativos/${ativoId}/cotacao`),
   historico: (ativoId: Uuid, periodo: PeriodoHistorico) =>
     request<PontoHistorico[]>(`/ativos/${ativoId}/historico`, { query: { periodo } }),

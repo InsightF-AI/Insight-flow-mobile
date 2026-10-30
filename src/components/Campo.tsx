@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { type Ref, useState } from 'react';
 import { Pressable, StyleSheet, TextInput, type TextInputProps, View } from 'react-native';
 
 import { Icone, type NomeIcone } from '@/components/Icone';
@@ -9,10 +9,21 @@ import { useTema } from '@/theme/useTema';
 
 type PropsRepassadas = Pick<
   TextInputProps,
-  'placeholder' | 'secureTextEntry' | 'keyboardType' | 'autoCapitalize' | 'autoComplete' | 'editable'
+  | 'placeholder'
+  | 'secureTextEntry'
+  | 'keyboardType'
+  | 'autoCapitalize'
+  | 'autoComplete'
+  | 'autoCorrect'
+  | 'editable'
+  | 'returnKeyType'
+  | 'onSubmitEditing'
+  | 'submitBehavior'
 >;
 
 interface Props extends PropsRepassadas {
+  /** Para o formulário levar o foco a este campo (próximo campo, primeiro com erro). */
+  ref?: Ref<TextInput>;
   rotulo: string;
   valor: string;
   aoMudar: (texto: string) => void;
@@ -23,12 +34,25 @@ interface Props extends PropsRepassadas {
   alternarSenha?: boolean;
 }
 
-export function Campo({ rotulo, valor, aoMudar, erro, icone, alternarSenha = false, secureTextEntry, ...resto }: Props) {
+export function Campo({
+  ref,
+  rotulo,
+  valor,
+  aoMudar,
+  erro,
+  icone,
+  alternarSenha = false,
+  secureTextEntry,
+  autoCorrect,
+  ...resto
+}: Props) {
   const { cores, sombras } = useTema();
   const [focado, setFocado] = useState(false);
   const [senhaVisivel, setSenhaVisivel] = useState(false);
   const comOlho = Boolean(secureTextEntry) && alternarSenha;
   const ocultar = Boolean(secureTextEntry) && !(comOlho && senhaVisivel);
+  // O corretor troca letras de e-mail e senha sem o usuário perceber.
+  const corrigir = autoCorrect ?? !(secureTextEntry || resto.keyboardType === 'email-address');
   const corDaBorda = erro ? cores.negativo : focado ? cores.primaria : cores.bordaForte;
 
   return (
@@ -49,7 +73,11 @@ export function Campo({ rotulo, valor, aoMudar, erro, icone, alternarSenha = fal
       >
         {icone ? <Icone nome={icone} tamanho={17} cor={focado ? 'primaria' : 'textoTerciario'} /> : null}
         <TextInput
+          ref={ref}
           aria-label={rotulo}
+          // O erro vira a dica do campo: o leitor de tela o lê junto com o rótulo ao focar.
+          accessibilityHint={erro}
+          autoCorrect={corrigir}
           value={valor}
           onChangeText={aoMudar}
           placeholderTextColor={cores.textoTerciario}

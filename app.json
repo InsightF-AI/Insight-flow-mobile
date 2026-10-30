@@ -11,6 +11,7 @@
       "supportsTablet": true
     },
     "android": {
+      "package": "br.com.insightflow.mobile",
       "adaptiveIcon": {
         "backgroundColor": "#070b14",
         "foregroundImage": "./assets/android-icon-foreground.png",
@@ -26,6 +27,9 @@
       [
         "expo-splash-screen",
         {
+          "image": "./assets/splash-icon.png",
+          "imageWidth": 200,
+          "resizeMode": "contain",
           "backgroundColor": "#070b14"
         }
       ],
@@ -39,6 +43,21 @@
           "color": "#3aa0ff"
         }
       ]
-    ]
+    ],
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "d071469c-ef74-45d8-a681-f4e78b7f5572"
+      }
+    },
+    "owner": "brngstzz",
+    "updates": {
+      "url": "https://u.expo.dev/d071469c-ef74-45d8-a681-f4e78b7f5572",
+      "checkAutomatically": "ON_LOAD",
+      "fallbackToCacheTimeout": 3000
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
+    }
   }
 }

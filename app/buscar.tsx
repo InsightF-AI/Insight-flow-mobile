@@ -8,11 +8,12 @@ import { Carregando } from '@/components/Carregando';
 import { ErroComRetry } from '@/components/ErroComRetry';
 import { EstadoVazio } from '@/components/EstadoVazio';
 import { LinhaResultadoBusca } from '@/components/LinhaResultadoBusca';
+import { MensagemErro } from '@/components/MensagemErro';
 import { Texto } from '@/components/Texto';
-import { TAMANHO_MINIMO_BUSCA, useBuscaAtivos, useDebounce } from '@/hooks/useBusca';
+import { TAMANHO_MINIMO_BUSCA, useBuscaAtivos, useCatalogo, useDebounce } from '@/hooks/useBusca';
 import { useResolverAtivo } from '@/hooks/useResolverAtivo';
 import { useWatchlist } from '@/hooks/useWatchlist';
-import { espaco } from '@/theme/escala';
+import { conteudoLimitado, espaco } from '@/theme/escala';
 import { useTema } from '@/theme/useTema';
 import { mensagemDeErro } from '@/utils/erros';
 
@@ -24,6 +25,7 @@ export default function Buscar() {
   const [erro, setErro] = useState<string | null>(null);
   const termoAtrasado = useDebounce(termo.trim(), ATRASO_BUSCA_MS);
   const busca = useBuscaAtivos(termoAtrasado);
+  const catalogo = useCatalogo();
   const resolver = useResolverAtivo();
   const watchlist = useWatchlist();
   const idPorTicker = new Map((watchlist.data ?? []).map((item) => [item.ativo.ticker.toUpperCase(), item.ativo.id]));
@@ -53,20 +55,13 @@ export default function Buscar() {
     ]);
   }
 
-  function resultados() {
-    if (termoAtrasado.length < TAMANHO_MINIMO_BUSCA) {
-      return <EstadoVazio mensagem="Digite ao menos 2 caracteres do ticker ou do nome." />;
-    }
-    if (busca.isPending) return <Carregando />;
-    if (busca.isError) return <ErroComRetry erro={busca.error} aoTentarNovamente={() => void busca.refetch()} />;
-    if (busca.data.length === 0) {
-      return <EstadoVazio mensagem={`Nenhum ativo encontrado para “${termoAtrasado}”.`} />;
-    }
+  function lista(ativos: AtivoEncontrado[]) {
     return (
       <FlatList
-        data={busca.data}
+        data={ativos}
         keyExtractor={(ativo) => ativo.ticker}
         keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="on-drag"
         renderItem={({ item }) => (
           <LinhaResultadoBusca
             ativo={item}
@@ -78,31 +73,55 @@ export default function Buscar() {
     );
   }
 
+  function resultados() {
+    if (termoAtrasado.length < TAMANHO_MINIMO_BUSCA) {
+      if (!catalogo.data?.length) {
+        return <EstadoVazio mensagem="Digite ao menos 2 caracteres do ticker ou do nome." />;
+      }
+      return (
+        <View style={estilos.catalogo}>
+          <Texto variante="legenda" cor="secundario">
+            Ativos disponíveis. Digite ao menos 2 caracteres para buscar outros.
+          </Texto>
+          {lista(catalogo.data)}
+        </View>
+      );
+    }
+    if (busca.isPending) return <Carregando />;
+    if (busca.isError) return <ErroComRetry erro={busca.error} aoTentarNovamente={() => void busca.refetch()} />;
+    if (busca.data.length === 0) {
+      return <EstadoVazio mensagem={`Nenhum ativo encontrado para “${termoAtrasado}”.`} />;
+    }
+    return lista(busca.data);
+  }
+
   return (
-    <View style={[estilos.tela, { backgroundColor: cores.fundo }]}>
-      <Campo
-        rotulo="Ticker ou nome"
-        valor={termo}
-        aoMudar={(texto) => {
-          setErro(null);
-          setTermo(texto);
-        }}
-        placeholder="Ex.: PETR4, Vale"
-        autoCapitalize="characters"
-        icone="busca"
-      />
-      {erro ? (
-        <Texto role="alert" cor="negativo">
-          {erro}
-        </Texto>
-      ) : null}
-      {resolver.isPending ? <Carregando mensagem="Adicionando à watchlist…" /> : null}
-      <View style={estilos.resultados}>{resultados()}</View>
+    <View style={[estilos.fundo, { backgroundColor: cores.fundo }]}>
+      <View style={estilos.tela}>
+        <Campo
+          rotulo="Ticker ou nome"
+          valor={termo}
+          aoMudar={(texto) => {
+            setErro(null);
+            setTermo(texto);
+          }}
+          placeholder="Ex.: PETR4, Vale"
+          autoCapitalize="characters"
+          autoCorrect={false}
+          icone="busca"
+          returnKeyType="search"
+        />
+        <MensagemErro mensagem={erro} />
+        {resolver.isPending ? <Carregando mensagem="Adicionando à watchlist…" /> : null}
+        <View style={estilos.resultados}>{resultados()}</View>
+      </View>
     </View>
   );
 }
 
 const estilos = StyleSheet.create({
-  tela: { flex: 1, padding: espaco.lg, gap: espaco.md },
+  fundo: { flex: 1 },
+  tela: { ...conteudoLimitado, flex: 1, padding: espaco.lg, gap: espaco.md },
   resultados: { flex: 1 },
+  catalogo: { flex: 1, gap: espaco.sm },
 });

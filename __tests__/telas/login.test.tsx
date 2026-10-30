@@ -37,6 +37,26 @@ it('valida os campos antes de chamar a API', async () => {
   expect(authApi.login).not.toHaveBeenCalled();
 });
 
+it('o erro de cada campo vira a dica lida pelo leitor de tela', async () => {
+  const user = userEvent.setup();
+  await renderizar(<Login />);
+  await user.press(screen.getByRole('button', { name: 'Entrar' }));
+  await screen.findByText('Informe um e-mail válido');
+  expect(screen.getByLabelText('E-mail').props.accessibilityHint).toBe('Informe um e-mail válido');
+  expect(screen.getByLabelText('Senha').props.accessibilityHint).toBe('Informe a senha');
+});
+
+it('entra pela tecla do teclado, sem tocar no botão', async () => {
+  const user = userEvent.setup();
+  jest.mocked(authApi.login).mockResolvedValue({ access_token: 'tok', refresh_token: 'ref', token_type: 'bearer', expires_in: 1800 });
+  await renderizar(<Login />);
+  expect(screen.getByLabelText('E-mail').props.returnKeyType).toBe('next');
+  await user.type(screen.getByLabelText('E-mail'), 'ana@exemplo.com');
+  await user.type(screen.getByLabelText('Senha'), 'segredo123', { submitEditing: true });
+  await waitFor(() => expect(useSessao.getState().status).toBe('autenticado'));
+  expect(authApi.login).toHaveBeenCalledTimes(1);
+});
+
 it('login com sucesso inicia a sessão com o e-mail sem espaços', async () => {
   const user = userEvent.setup();
   jest.mocked(authApi.login).mockResolvedValue({ access_token: 'tok', refresh_token: 'ref', token_type: 'bearer', expires_in: 1800 });

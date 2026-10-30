@@ -1,6 +1,6 @@
 import { router } from 'expo-router';
-import { useMemo, useState } from 'react';
-import { Alert, FlatList, Pressable, RefreshControl, StyleSheet, View } from 'react-native';
+import { useMemo, useRef, useState } from 'react';
+import { Alert, FlatList, Platform, Pressable, RefreshControl, StyleSheet, type TextInput, View } from 'react-native';
 
 import type { Alerta, CotacaoAtual, TipoCondicaoAlerta, Uuid } from '@/api/tipos';
 import { Botao } from '@/components/Botao';
@@ -10,6 +10,7 @@ import { Carregando } from '@/components/Carregando';
 import { ErroComRetry } from '@/components/ErroComRetry';
 import { EstadoVazio } from '@/components/EstadoVazio';
 import { ItemAlerta } from '@/components/ItemAlerta';
+import { MensagemErro } from '@/components/MensagemErro';
 import { SeletorSegmentado } from '@/components/SeletorSegmentado';
 import { SinalCard } from '@/components/SinalCard';
 import { SugestoesTicker } from '@/components/SugestoesTicker';
@@ -20,9 +21,10 @@ import { useAlertas, useAtualizarAlerta, useCriarAlerta, useRemoverAlerta } from
 import { useBacktestsDosSinais, useCotacoes, useSinaisDosAtivos } from '@/hooks/useAtivo';
 import { TAMANHO_MINIMO_BUSCA, useBuscaAtivos, useDebounce } from '@/hooks/useBusca';
 import { useWatchlist } from '@/hooks/useWatchlist';
-import { espaco } from '@/theme/escala';
+import { conteudoLimitado, espaco } from '@/theme/escala';
 import { useTema } from '@/theme/useTema';
 import { ehStatus, mensagemDeErro } from '@/utils/erros';
+import { focarPrimeiroComErro } from '@/utils/formulario';
 
 type Secao = 'preco' | 'sinais';
 
@@ -46,6 +48,8 @@ function FormNovoAlerta() {
   const [valorAlvo, setValorAlvo] = useState('');
   const [erros, setErros] = useState<ErrosAlerta>({});
   const [erroGeral, setErroGeral] = useState<string | null>(null);
+  const campoTicker = useRef<TextInput>(null);
+  const campoValor = useRef<TextInput>(null);
 
   const termo = useDebounce(ticker.trim(), ATRASO_BUSCA_MS);
   const busca = useBuscaAtivos(termo);
@@ -59,10 +63,15 @@ function FormNovoAlerta() {
       : [];
 
   async function aoCriar() {
+    if (criar.isPending) return;
     setErroGeral(null);
     const resultado = validarAlerta({ ticker, tipoCondicao, valorAlvo });
     if (!resultado.ok) {
       setErros(resultado.erros);
+      focarPrimeiroComErro(resultado.erros, [
+        ['ticker', campoTicker],
+        ['valorAlvo', campoValor],
+      ]);
       return;
     }
     setErros({});
@@ -71,37 +80,43 @@ function FormNovoAlerta() {
       setTicker('');
       setValorAlvo('');
     } catch (erro) {
-      if (ehStatus(erro, 404)) setErros({ ticker: 'Ativo não encontrado' });
-      else setErroGeral(mensagemDeErro(erro));
+      if (ehStatus(erro, 404)) {
+        setErros({ ticker: 'Ativo não encontrado' });
+        campoTicker.current?.focus();
+      } else setErroGeral(mensagemDeErro(erro));
     }
   }
 
   return (
     <Card titulo="Novo alerta de preço" icone="sino">
       <Campo
+        ref={campoTicker}
         rotulo="Ticker"
         valor={ticker}
         aoMudar={setTicker}
         erro={erros.ticker}
         autoCapitalize="characters"
+        autoCorrect={false}
         placeholder="Ex.: PETR4"
         icone="busca"
+        returnKeyType="next"
+        submitBehavior="submit"
+        onSubmitEditing={() => campoValor.current?.focus()}
       />
       <SugestoesTicker tickers={sugestoes} aoEscolher={setTicker} />
       <SeletorSegmentado rotulo="Condição do alerta" opcoes={CONDICOES} selecionado={tipoCondicao} aoSelecionar={setTipoCondicao} />
       <Campo
+        ref={campoValor}
         rotulo="Valor alvo"
         valor={valorAlvo}
         aoMudar={setValorAlvo}
         erro={erros.valorAlvo}
         keyboardType="decimal-pad"
         placeholder="Ex.: 40,00"
+        returnKeyType="done"
+        onSubmitEditing={() => void aoCriar()}
       />
-      {erroGeral ? (
-        <Texto role="alert" cor="negativo">
-          {erroGeral}
-        </Texto>
-      ) : null}
+      <MensagemErro mensagem={erroGeral} />
       <Botao titulo="Criar alerta" onPress={aoCriar} carregando={criar.isPending} />
     </Card>
   );
@@ -154,6 +169,9 @@ function AlertasDePreco() {
       style={{ backgroundColor: cores.fundo }}
       contentContainerStyle={estilos.lista}
       keyboardShouldPersistTaps="handled"
+      keyboardDismissMode={Platform.OS === 'ios' ? 'interactive' : 'on-drag'}
+      // O formulário fica no topo de uma lista sem KeyboardAvoidingView: no iOS a lista abre espaço para o teclado.
+      automaticallyAdjustKeyboardInsets
       data={alertas.data ?? []}
       keyExtractor={(alerta) => alerta.id}
       refreshControl={
@@ -296,8 +314,8 @@ export default function Alertas() {
 
 const estilos = StyleSheet.create({
   tela: { flex: 1 },
-  seletor: { paddingHorizontal: espaco.lg, paddingTop: espaco.lg },
-  lista: { padding: espaco.lg, gap: espaco.md, flexGrow: 1 },
+  seletor: { ...conteudoLimitado, paddingHorizontal: espaco.lg, paddingTop: espaco.lg },
+  lista: { ...conteudoLimitado, padding: espaco.lg, gap: espaco.md, flexGrow: 1 },
   cabecalho: { gap: espaco.lg },
   sinal: { gap: espaco.sm },
   tituloDoSinal: { minHeight: 44, justifyContent: 'center' },

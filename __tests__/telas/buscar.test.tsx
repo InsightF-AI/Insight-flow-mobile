@@ -10,7 +10,7 @@ import { renderizar } from '@/test/renderizar';
 import Buscar from '../../app/buscar';
 
 jest.mock('expo-router', () => ({ router: { replace: jest.fn(), push: jest.fn() } }));
-jest.mock('@/api/ativos', () => ({ ativosApi: { buscar: jest.fn() } }));
+jest.mock('@/api/ativos', () => ({ ativosApi: { buscar: jest.fn(), catalogo: jest.fn() } }));
 jest.mock('@/api/watchlist', () => ({ watchlistApi: { listar: jest.fn(), adicionar: jest.fn() } }));
 
 const petr = { ticker: 'PETR4', nome: 'Petrobras PN', tipo: 'ACAO' as const, moeda: 'BRL', setor: 'Petróleo' };
@@ -21,6 +21,7 @@ beforeEach(() => {
   jest.clearAllMocks();
   jest.restoreAllMocks();
   jest.mocked(watchlistApi.listar).mockResolvedValue([]);
+  jest.mocked(ativosApi.catalogo).mockResolvedValue([]);
 });
 
 /** Confirma o diálogo "Adicionar à watchlist" tocando no botão de ação. */
@@ -30,9 +31,19 @@ function confirmarAdicao() {
   });
 }
 
-it('pede ao menos 2 caracteres antes de buscar', async () => {
+it('sem catálogo, pede ao menos 2 caracteres antes de buscar', async () => {
   await renderizar(<Buscar />);
-  expect(screen.getByText('Digite ao menos 2 caracteres do ticker ou do nome.')).toBeOnTheScreen();
+  expect(await screen.findByText('Digite ao menos 2 caracteres do ticker ou do nome.')).toBeOnTheScreen();
+  expect(ativosApi.buscar).not.toHaveBeenCalled();
+});
+
+it('sem termo, lista o catálogo de ativos sem consultar a busca externa', async () => {
+  jest.mocked(ativosApi.catalogo).mockResolvedValue([
+    { id: 'c-1', ticker: 'BTC', nome: 'Bitcoin', tipo: 'CRIPTO', setor: null, moeda: 'BRL' },
+  ]);
+  await renderizar(<Buscar />);
+  expect(await screen.findByText('Bitcoin', { exact: false })).toBeOnTheScreen();
+  expect(screen.getByText(/Ativos disponíveis/)).toBeOnTheScreen();
   expect(ativosApi.buscar).not.toHaveBeenCalled();
 });
 

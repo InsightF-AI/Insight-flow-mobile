@@ -1,5 +1,6 @@
 import { fireEvent, render, screen, userEvent } from '@testing-library/react-native';
-import { useState } from 'react';
+import { createRef, useState } from 'react';
+import type { TextInput } from 'react-native';
 
 import { Campo } from '@/components/Campo';
 import { coresEscuro } from '@/theme/cores';
@@ -59,5 +60,42 @@ describe('Campo (padrão do web)', () => {
   it('sem alternarSenha não mostra o botão de olho', async () => {
     await render(<Campo rotulo="Senha" valor="" aoMudar={() => undefined} secureTextEntry />);
     expect(screen.queryByRole('button', { name: 'Mostrar senha' })).toBeNull();
+  });
+});
+
+describe('Campo (acessibilidade e teclado)', () => {
+  it('o erro vira a dica do campo para o leitor de tela', async () => {
+    const { rerender } = await render(<Campo rotulo="E-mail" valor="" aoMudar={() => undefined} />);
+    expect(screen.getByLabelText('E-mail').props.accessibilityHint).toBeUndefined();
+    await rerender(<Campo rotulo="E-mail" valor="" aoMudar={() => undefined} erro="E-mail inválido" />);
+    expect(screen.getByLabelText('E-mail').props.accessibilityHint).toBe('E-mail inválido');
+  });
+
+  it('corretor desligado em e-mail e senha, ligado no texto comum, e o formulário pode forçar', async () => {
+    await render(
+      <>
+        <Campo rotulo="E-mail" valor="" aoMudar={() => undefined} keyboardType="email-address" />
+        <Campo rotulo="Senha" valor="" aoMudar={() => undefined} secureTextEntry />
+        <Campo rotulo="Nome" valor="" aoMudar={() => undefined} />
+        <Campo rotulo="Ticker" valor="" aoMudar={() => undefined} autoCorrect={false} />
+      </>,
+    );
+    expect(screen.getByLabelText('E-mail').props.autoCorrect).toBe(false);
+    expect(screen.getByLabelText('Senha').props.autoCorrect).toBe(false);
+    expect(screen.getByLabelText('Nome').props.autoCorrect).toBe(true);
+    expect(screen.getByLabelText('Ticker').props.autoCorrect).toBe(false);
+  });
+
+  it('repassa a tecla do teclado e o envio, e expõe o campo pela ref', async () => {
+    const aoEnviar = jest.fn();
+    const ref = createRef<TextInput>();
+    await render(
+      <Campo ref={ref} rotulo="Senha" valor="" aoMudar={() => undefined} returnKeyType="go" onSubmitEditing={aoEnviar} />,
+    );
+    const campo = screen.getByLabelText('Senha');
+    expect(campo.props.returnKeyType).toBe('go');
+    await fireEvent(campo, 'submitEditing');
+    expect(aoEnviar).toHaveBeenCalledTimes(1);
+    expect(typeof ref.current?.focus).toBe('function');
   });
 });

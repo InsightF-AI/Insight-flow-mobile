@@ -9,6 +9,7 @@ export const chaves = {
   backtest: (ativoId: Uuid, regraId: Uuid) => ['ativo', ativoId, 'backtest', regraId] as const,
   dividendos: (ativoId: Uuid) => ['ativo', ativoId, 'dividendos'] as const,
   busca: (termo: string) => ['busca', termo] as const,
+  catalogo: ['catalogo'] as const,
   analiseIA: (ativoId: Uuid) => ['ia', 'analise', ativoId] as const,
   alertas: ['alertas'] as const,
   notificacoes: ['notificacoes'] as const,

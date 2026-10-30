@@ -38,6 +38,20 @@ describe('CardAlterarSenha', () => {
     expect(aoAlterar).toHaveBeenCalledWith('antiga123', 'nova12345');
     expect(await screen.findByText('A senha atual está incorreta')).toBeOnTheScreen();
   });
+
+  it('a tecla de envio do último campo envia o formulário', async () => {
+    const aoAlterar = jest.fn().mockResolvedValue(undefined);
+    const usuario = userEvent.setup();
+    await render(<CardAlterarSenha aoAlterar={aoAlterar} />);
+
+    await usuario.press(screen.getByRole('button', { name: 'Alterar senha' }));
+    expect(screen.getByLabelText('Senha atual').props.returnKeyType).toBe('next');
+    await usuario.type(screen.getByLabelText('Senha atual'), 'antiga123');
+    await usuario.type(screen.getByLabelText('Nova senha'), 'nova12345');
+    await usuario.type(screen.getByLabelText('Confirmar nova senha'), 'nova12345', { submitEditing: true });
+
+    expect(aoAlterar).toHaveBeenCalledWith('antiga123', 'nova12345');
+  });
 });
 
 describe('ListaProventosDoAtivo', () => {

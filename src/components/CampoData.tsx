@@ -46,6 +46,7 @@ export function CampoData({ rotulo, valor, aoMudar, maximo, erro }: Props) {
         <Pressable
           role="button"
           aria-label={`${rotulo}: ${texto}`}
+          accessibilityHint={erro ?? 'Abre o calendário'}
           onPress={abrirNoAndroid}
           style={[estilos.campo, { backgroundColor: cores.superficieElevada, borderColor: erro ? cores.negativo : cores.bordaForte }]}
         >

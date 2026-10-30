@@ -185,10 +185,10 @@ describe('com dados', () => {
     expect(await screen.findByText(`R$${NBSP}38,50`)).toBeOnTheScreen();
     expect(screen.getByText('▲ +2,00%')).toBeOnTheScreen();
     expect(await screen.findByText('1 sinal')).toBeOnTheScreen();
-    const linhas = screen.getAllByRole('button', { name: /^(PETR4|VALE3), (Petrobras PN|Vale ON)$/ });
+    const linhas = screen.getAllByRole('button', { name: /^(PETR4|VALE3), (Petrobras PN|Vale ON)/ });
     expect(linhas).toHaveLength(2);
-    expect(linhas[0]).toHaveAccessibleName('PETR4, Petrobras PN');
-    expect(linhas[1]).toHaveAccessibleName('VALE3, Vale ON');
+    expect(linhas[0]).toHaveAccessibleName(/^PETR4, Petrobras PN, /);
+    expect(linhas[1]).toHaveAccessibleName(/^VALE3, Vale ON, /);
   });
 
   it('lista os sinais ativos com o histórico de 20 pregões e abre o ativo ao tocar', async () => {
@@ -204,7 +204,7 @@ describe('com dados', () => {
     const user = userEvent.setup();
     prepararComDados();
     await renderizar(<Inicio />);
-    await user.press(await screen.findByRole('button', { name: 'PETR4, Petrobras PN' }));
+    await user.press(await screen.findByRole('button', { name: /^PETR4, Petrobras PN/ }));
     expect(router.push).toHaveBeenCalledWith({ pathname: '/ativo/[id]', params: { id: 'a-1', ticker: 'PETR4' } });
   });
 
@@ -264,7 +264,7 @@ describe('falha de comunicação', () => {
     expect(await screen.findByText(`R$${NBSP}4.000,00`)).toBeOnTheScreen();
     jest.mocked(watchlistApi.listar).mockResolvedValue([item('a-1', 'PETR4', 'Petrobras PN')]);
     await user.press(screen.getByRole('button', { name: 'Tentar novamente' }));
-    expect(await screen.findByRole('button', { name: 'PETR4, Petrobras PN' })).toBeOnTheScreen();
+    expect(await screen.findByRole('button', { name: /^PETR4, Petrobras PN/ })).toBeOnTheScreen();
     expect(watchlistApi.listar).toHaveBeenCalledTimes(2);
   });
 });
@@ -434,7 +434,7 @@ describe('falha em segundo plano não apaga o que já está na tela', () => {
     });
     expect(screen.getByText('A carteira variou +1,00% no dia.')).toBeOnTheScreen();
     expect(screen.getByText(`R$${NBSP}4.000,00`)).toBeOnTheScreen();
-    expect(screen.getByRole('button', { name: 'PETR4, Petrobras PN' })).toBeOnTheScreen();
+    expect(screen.getByRole('button', { name: /^PETR4, Petrobras PN/ })).toBeOnTheScreen();
     expect(screen.queryByText('Resumo diário indisponível no momento.')).not.toBeOnTheScreen();
     expect(screen.queryByRole('button', { name: 'Tentar novamente' })).not.toBeOnTheScreen();
   });

@@ -16,6 +16,7 @@ App Expo SDK 57 (React Native 0.86, TypeScript). Spec: `docs/superpowers/specs/2
 - Rotas `/auth/*` não levam `Authorization`. Chamadas lentas passam `timeoutMs` ao `request` (padrão 20 s).
 - Mensagem de erro para o usuário só via `mensagemDeErro`; o `requestId` aparece como "Código do erro" no `ErroComRetry`.
 - Push: só `src/notificacoes/push.ts` fala com `expo-notifications` (carga sob demanda: nada é carregado no Expo Go). A vontade do usuário é `usePreferencias.pushLigado`; o que o aparelho consegue é `usePush` (`src/store/push.ts`). A permissão só é pedida sozinha quando ainda não foi decidida. O token é guardado ao ser obtido (antes do `POST`); o `DELETE /dispositivos` espera o registro em curso e roda no fluxo de sair do Perfil, antes de limpar a sessão e com limite de 4 s; desligar só vale com a remoção confirmada pelo servidor; o registro tem limite de 30 s. Sem `projectId` (`EAS_PROJECT_ID`), no Expo Go e em simulador o push fica "indisponível" com explicação.
+- Atualizações (EAS Update, `docs/distribuicao-apk.md`): só `src/atualizacoes/atualizacoes.ts` fala com `expo-updates`; `useAtualizacaoDoApp` (na raiz) verifica na volta ao app e pergunta antes de reiniciar. A `runtimeVersion` segue a `version` do `app.json`: mudança nativa (dependência com código nativo, plugin, ícone, permissão, SDK) exige subir `version` e gerar APK novo; o resto vai por `eas update --channel preview --environment preview`.
 - IA: chamadas de IA nunca repetem sozinhas (cada uma gasta cota). A análise é a consulta desligada de `useAnaliseIA` (só o botão dispara); a conversa do chat vive em memória em `src/store/conversa.ts` (limpa ao sair da conta; resposta tardia é descartada) e o corpo do `/chat` sai de `montarMensagensDaApi` (`src/dominio/ia.ts`), que respeita os limites do backend. O card da análise usa `avisoLegalDe` (o aviso da API, ou o fixo se vier vazio); o rodapé do chat mostra sempre o aviso fixo e o botão Copiar leva o `avisoLegal` guardado da resposta.
 
 ## Regras visuais (identidade do web)
@@ -23,6 +24,14 @@ App Expo SDK 57 (React Native 0.86, TypeScript). Spec: `docs/superpowers/specs/2
 - Nunca use `fontWeight`: a fonte é escolhida pela família (`Texto` ou `familia.*` de `@/theme/familias`).
 - Ícones só pelo wrapper `Icone` (lucide); novos ícones entram no mapa de `src/components/Icone.tsx` com nome em pt-BR.
 - Contraste ≥ 4,5:1 nos dois temas (`src/theme/cores.test.ts`); alvos de toque ≥ 44 pt.
+- Conteúdo de tela ou lista nova usa `conteudoLimitado` (`@/theme/escala`, até 720 pt) para não esticar em tablet; a `Tela` já aplica. A fonte acompanha o aparelho (limite por variante no `Texto`): não fixe `allowFontScaling={false}`.
+
+## Formulários (ver `docs/entregas/acessibilidade-e-responsividade.md`)
+- Campos de texto só pelo `Campo`. Cada campo tem `ref`; os do meio usam `returnKeyType="next"`, `submitBehavior="submit"` e `onSubmitEditing` focando o próximo; o último envia o formulário.
+- Validação que falha chama `focarPrimeiroComErro(erros, [[chave, ref], …])` (`@/utils/formulario`) na ordem da tela. O erro do campo vai em `erro` (vira a dica lida pelo leitor de tela).
+- Erro geral do formulário só pela `MensagemErro` (anuncia no Android e no iOS); não repita `<Texto role="alert">`.
+- O envio ignora chamadas enquanto o anterior está em andamento (a tecla do teclado não respeita o botão desabilitado).
+- O projeto não usa Prettier: não rode `npx prettier --write` (reformata tudo com outro estilo); valide com `npm run lint`.
 - As variantes do `Botao` (`primario`, `secundario` e `perigo`) mantêm os nomes; só o visual mudou.
 - Jest mapeia `lucide-react-native` para o build CJS (`moduleNameMapper` na config do jest em `package.json`): o resolvedor do RN escolhe o `.mjs` ESM, que o transform do jest-expo não cobre. O Metro não é afetado.
 - Os ícones lucide são `aria-hidden`; nos testes, consulte-os com `{ includeHiddenElements: true }`.
@@ -40,3 +49,5 @@ Listas (FlatList) não exigem nada especial nos testes: o `afterEach` de `jest.s
 
 ## Expo muda a cada SDK
 Antes de usar uma API do Expo, EAS ou React Native, consulte a documentação da versão em uso (`https://docs.expo.dev/versions/v57.0.0/`; índice em `https://docs.expo.dev/llms.txt`) em vez de confiar na memória. Dependências novas entram com `npx expo install <pacote>`.
+
+No Windows, instalar dependência regrava o `package-lock.json` **sem** as entradas de topo `node_modules/@emnapi/core` e `node_modules/@emnapi/runtime`; o `npm ci` do Linux (CI e EAS Build) falha com "Missing: @emnapi/core ... from lock file", embora o `npm ci` do Windows passe. Depois de mexer em dependências, confira (`grep -c '"node_modules/@emnapi/\(core\|runtime\)"' package-lock.json` deve dar 2) e, se faltar, recoloque as duas entradas da `develop`. Para validar como no Linux: `npm ci --include=dev --dry-run --ignore-scripts` num container `node:24`.

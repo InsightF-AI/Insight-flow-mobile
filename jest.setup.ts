@@ -29,6 +29,17 @@ jest.mock('expo-secure-store', () => {
 // Área de transferência sem nativo: os testes inspecionam `setStringAsync`.
 jest.mock('expo-clipboard', () => ({ setStringAsync: jest.fn(async () => true) }));
 
+// EAS Update sem nativo: desligado, como no Expo Go (o hook tem testes próprios com o módulo do app mockado).
+jest.mock('expo-updates', () => ({
+  isEnabled: false,
+  isEmbeddedLaunch: true,
+  createdAt: null,
+  checkForUpdateAsync: jest.fn(async () => ({ isAvailable: false })),
+  fetchUpdateAsync: jest.fn(async () => ({ isNew: false })),
+  reloadAsync: jest.fn(async () => undefined),
+  useUpdates: jest.fn(() => ({ isUpdatePending: false, downloadedUpdate: undefined })),
+}));
+
 // O VirtualizedList agenda um setTimeout (updateCellsBatchingPeriod, 50 ms) a cada atualização de dados. Se ele dispara
 // depois do último `await` do teste e antes do cleanup, o React avisa "not wrapped in act". Este afterEach roda ANTES do
 // cleanup automático do RNTL (hooks do mesmo tipo rodam na ordem de declaração e o RNTL só registra o dele quando o teste

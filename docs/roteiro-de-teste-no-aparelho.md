@@ -111,6 +111,14 @@ Sem `AI_HABILITADA` e `GEMINI_API_KEY` no backend, os dois recursos respondem 50
 | Interruptores do Perfil e dos alertas | O nome e o estado (ligado/desligado) são lidos | |
 | Chat: enviar uma pergunta | A resposta chega e é possível alcançá-la; anote se foi **anunciada** (sabe-se que o app ainda não anuncia a chegada) | |
 | Alvos de toque | Nenhum botão é difícil de acertar com o polegar | |
+| **Login sem leitor de tela:** digitar o e-mail e tocar em "Próximo" no teclado; na senha, tocar em "Entrar" | O foco passa à senha e a tecla final entra, sem tocar no botão da tela | |
+| Login com os dois campos vazios → "Entrar" | O foco vai ao **E-mail** e o leitor lê "E-mail, Informe um e-mail válido" | |
+| Login com o servidor desligado (ou modo avião) | O erro geral é **anunciado** assim que aparece | |
+| Nova operação e novo alerta: encadear os campos pelo teclado | Ticker → Quantidade → Preço (Android); no iOS o teclado numérico não tem tecla de envio, usar o botão | |
+| Aba Alertas no iPhone: focar "Valor alvo" | O teclado não cobre o campo | |
+| Arrastar a tela com o teclado aberto | O teclado fecha | |
+| Fonte do sistema no máximo (Android: Tamanho da fonte; iOS: Tamanhos Maiores) e percorrer as abas | Texto maior, nada cortado nem sobreposto; títulos crescem menos | |
+| Tablet ou paisagem | Conteúdo centralizado, sem esticar de ponta a ponta | |
 
 ## 10. Push de verdade (parte B da Etapa 8, só com development build)
 
@@ -126,6 +134,20 @@ Só vale depois da decisão D8 (conta Expo/EAS e projeto Firebase). Passos de pr
 | Perfil → desligar o push | O backend deixa de enviar; o aparelho some de `dispositivos` | |
 | Sair da conta | O aparelho é removido do push antes do logout | |
 
+## 11. Atualização automática (EAS Update, só no APK)
+
+Preparação: um APK gerado depois de 29/10/2026 (com `expo-updates`) instalado. Detalhes em [`distribuicao-apk.md`](distribuicao-apk.md#atualizações-automáticas-eas-update).
+
+| Passo | Esperado | ✔ |
+| --- | --- | --- |
+| Abrir o app e ir ao rodapé do Perfil | "Versão 0.1.0 (a que veio com o app instalado)" | |
+| No PC, mudar um texto visível e publicar: `npx eas-cli update --channel preview --environment preview --message "teste"` | O comando termina com o link da atualização | |
+| Com o app aberto, mandar para o segundo plano por mais de 15 min e voltar | Pergunta "Nova versão disponível"; "Reiniciar agora" abre com o texto novo | |
+| Publicar outra mudança, **fechar o app por completo** e abrir | Abre já com a mudança (ou, com rede lenta, na abertura seguinte) | |
+| Rodapé do Perfil | "Versão 0.1.0 · atualização de <data e hora da publicação>" | |
+| Modo avião e abrir o app | Abre normalmente na última versão baixada, sem erro | |
+| Desfazer: `npx eas-cli update:roll-back-to-embedded --channel preview` e reabrir duas vezes | Volta ao texto original | |
+
 ## Resultado
 
 | Bloco | Tudo ✔? | Observações / código do erro |
@@ -140,3 +162,4 @@ Só vale depois da decisão D8 (conta Expo/EAS e projeto Firebase). Passos de pr
 | 8. Estados do Checkpoint | | |
 | 9. Acessibilidade | | |
 | 10. Push | | |
+| 11. Atualização automática | | |

@@ -38,7 +38,7 @@ function decimalPositivo(entrada: string): Decimal | null {
 }
 
 export interface RestricoesOperacao {
-  /** Tickers que o usuário pode operar (a watchlist). Ausente = sem restrição. */
+  /** Tickers que o usuário pode operar (watchlist e catálogo). Ausente = sem restrição. */
   tickersPermitidos?: readonly string[];
   /** Quantidade em carteira. Só limita venda feita hoje; null/ausente = desconhecida, o servidor decide. */
   disponivel?: number | null;
@@ -60,7 +60,7 @@ export function validarOperacao(
 
   if (!ticker) erros.ticker = 'Informe o ticker do ativo';
   else if (restricoes.tickersPermitidos && !restricoes.tickersPermitidos.some((t) => t.toUpperCase() === ticker)) {
-    erros.ticker = 'Escolha um ativo da sua watchlist';
+    erros.ticker = 'Escolha um ativo da lista';
   }
   if (quantidade === null) erros.quantidade = 'Informe uma quantidade maior que zero';
   else if (casasDecimais(quantidade) > MAXIMO_DE_CASAS_DECIMAIS) erros.quantidade = MENSAGEM_CASAS_DECIMAIS;
