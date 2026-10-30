@@ -16,7 +16,7 @@ jest.mock('expo-router', () => ({ router: { back: jest.fn(), push: jest.fn() } }
 jest.mock('@/components/CampoData', () => ({ CampoData: () => null }));
 jest.mock('@/api/watchlist', () => ({ watchlistApi: { listar: jest.fn(), adicionar: jest.fn() } }));
 jest.mock('@/api/portfolio', () => ({ portfolioApi: { registrarOperacao: jest.fn(), listarOperacoes: jest.fn() } }));
-jest.mock('@/api/ativos', () => ({ ativosApi: { cotacao: jest.fn() } }));
+jest.mock('@/api/ativos', () => ({ ativosApi: { cotacao: jest.fn(), catalogo: jest.fn() } }));
 
 const NBSP = ' ';
 
@@ -49,6 +49,7 @@ beforeEach(() => {
   jest.clearAllMocks();
   jest.mocked(watchlistApi.listar).mockResolvedValue([item('a-1', 'PETR4')]);
   jest.mocked(portfolioApi.listarOperacoes).mockResolvedValue([]);
+  jest.mocked(ativosApi.catalogo).mockResolvedValue([]);
   jest.mocked(ativosApi.cotacao).mockResolvedValue({
     ticker: 'PETR4',
     preco: '38.2',
@@ -65,14 +66,38 @@ it('mostra o aviso de operação simulada', async () => {
   expect(screen.getByText(/nenhuma ordem real é enviada/)).toBeOnTheScreen();
 });
 
-it('watchlist vazia leva à busca em vez de deixar digitar qualquer ativo', async () => {
+it('sem watchlist e sem catálogo leva à busca em vez de deixar digitar qualquer ativo', async () => {
   const user = userEvent.setup();
   jest.mocked(watchlistApi.listar).mockResolvedValue([]);
   await renderizar(<NovaOperacao />);
-  expect(await screen.findByText(/o ativo precisa estar na sua watchlist/)).toBeOnTheScreen();
+  expect(await screen.findByText(/Nenhum ativo disponível para operar/)).toBeOnTheScreen();
   expect(screen.queryByRole('button', { name: 'Registrar operação' })).not.toBeOnTheScreen();
   await user.press(screen.getByRole('button', { name: 'Buscar ativo' }));
   expect(router.push).toHaveBeenCalledWith('/buscar');
+});
+
+it('usuário novo sem watchlist registra um ativo do catálogo sem adicioná-lo à watchlist', async () => {
+  const user = userEvent.setup();
+  jest.mocked(watchlistApi.listar).mockResolvedValue([]);
+  jest.mocked(ativosApi.catalogo).mockResolvedValue([
+    { id: 'c-9', ticker: 'BTC', nome: 'Bitcoin', tipo: 'CRIPTO', setor: null, moeda: 'BRL' },
+  ]);
+  jest.mocked(portfolioApi.registrarOperacao).mockResolvedValue({ id: 'o-3' } as Operacao);
+  await abrir();
+  await user.press(screen.getByRole('button', { name: 'Usar BTC' }));
+  await user.type(screen.getByLabelText('Quantidade'), '0,5');
+  await user.type(screen.getByLabelText('Preço unitário'), '416915');
+  await user.press(screen.getByRole('button', { name: 'Registrar operação' }));
+  await waitFor(() => expect(router.back).toHaveBeenCalled());
+  expect(ativosApi.cotacao).toHaveBeenCalledWith('c-9');
+  expect(watchlistApi.adicionar).not.toHaveBeenCalled();
+  expect(portfolioApi.registrarOperacao).toHaveBeenCalledWith(expect.objectContaining({ ativo_id: 'c-9', quantidade: '0.5' }));
+});
+
+it('catálogo fora do ar não impede operar com a watchlist', async () => {
+  jest.mocked(ativosApi.catalogo).mockRejectedValue(new ApiError(503, 'Fonte indisponivel'));
+  await abrir();
+  expect(screen.getByRole('button', { name: 'Usar PETR4' })).toBeOnTheScreen();
 });
 
 it('valida os campos antes de enviar', async () => {
@@ -83,14 +108,14 @@ it('valida os campos antes de enviar', async () => {
   expect(portfolioApi.registrarOperacao).not.toHaveBeenCalled();
 });
 
-it('ticker fora da watchlist é recusado e nada é adicionado em silêncio', async () => {
+it('ticker fora da watchlist e do catálogo é recusado e nada é adicionado em silêncio', async () => {
   const user = userEvent.setup();
   await abrir();
   await user.type(screen.getByLabelText('Ativo (ticker)'), 'vale3');
   await user.type(screen.getByLabelText('Quantidade'), '10');
   await user.type(screen.getByLabelText('Preço unitário'), '61,4');
   await user.press(screen.getByRole('button', { name: 'Registrar operação' }));
-  expect(await screen.findByText('Escolha um ativo da sua watchlist')).toBeOnTheScreen();
+  expect(await screen.findByText('Escolha um ativo da lista')).toBeOnTheScreen();
   expect(watchlistApi.adicionar).not.toHaveBeenCalled();
   expect(portfolioApi.registrarOperacao).not.toHaveBeenCalled();
 });

@@ -8,9 +8,9 @@ describe('validarOperacao com restrições', () => {
     expect(validarOperacao(BASE, HOJE).ok).toBe(true);
   });
 
-  it('ticker fora da watchlist é recusado, sem diferenciar maiúsculas', () => {
+  it('ticker fora da lista permitida é recusado, sem diferenciar maiúsculas', () => {
     const fora = validarOperacao({ ...BASE, ticker: 'vale3' }, HOJE, { tickersPermitidos: ['PETR4'] });
-    expect(fora).toEqual({ ok: false, erros: { ticker: 'Escolha um ativo da sua watchlist' } });
+    expect(fora).toEqual({ ok: false, erros: { ticker: 'Escolha um ativo da lista' } });
     expect(validarOperacao({ ...BASE, ticker: ' petr4 ' }, HOJE, { tickersPermitidos: ['PETR4'] }).ok).toBe(true);
   });
 

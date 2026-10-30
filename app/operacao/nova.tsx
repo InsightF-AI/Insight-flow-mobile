@@ -16,7 +16,9 @@ import { Tela } from '@/components/Tela';
 import { Texto } from '@/components/Texto';
 import { type ErrosOperacao, mensagemErroOperacao, validarOperacao } from '@/dominio/operacao';
 import { quantidadeDisponivel } from '@/dominio/portfolio';
+import { sugerirTickers, juntarAtivos } from '@/dominio/catalogo';
 import { useCotacao } from '@/hooks/useAtivo';
+import { useCatalogo } from '@/hooks/useBusca';
 import { useOperacoes, useRegistrarOperacao } from '@/hooks/usePortfolio';
 import { useWatchlist } from '@/hooks/useWatchlist';
 import { ehStatus } from '@/utils/erros';
@@ -29,8 +31,11 @@ const TIPOS: readonly { valor: TipoOperacao; rotulo: string }[] = [
   { valor: 'VENDA', rotulo: 'Venda' },
 ];
 
+const LIMITE_SUGESTOES = 12;
+
 export default function NovaOperacao() {
   const watchlist = useWatchlist();
+  const catalogo = useCatalogo();
   const operacoes = useOperacoes();
   const registrar = useRegistrarOperacao();
   const [tipo, setTipo] = useState<TipoOperacao>('COMPRA');
@@ -44,15 +49,18 @@ export default function NovaOperacao() {
   const campoQuantidade = useRef<TextInput>(null);
   const campoPreco = useRef<TextInput>(null);
 
-  const itens = watchlist.data ?? [];
-  // O ativo da operação precisa estar na watchlist: digitar um ticker nunca o adiciona em silêncio (decisão D6).
+  // O ativo vem da watchlist ou do catálogo do servidor: digitar um ticker nunca o adiciona em silêncio (decisão D6).
+  const ativos = juntarAtivos(
+    watchlist.data?.map((item) => item.ativo),
+    catalogo.data,
+  );
   const tickerNormalizado = ticker.trim().toUpperCase();
-  const itemEscolhido = itens.find((item) => item.ativo.ticker.toUpperCase() === tickerNormalizado);
-  const cotacao = useCotacao(itemEscolhido?.ativo.id);
+  const ativoEscolhido = ativos.find((ativo) => ativo.ticker.toUpperCase() === tickerNormalizado);
+  const cotacao = useCotacao(ativoEscolhido?.id);
   const precoAtual = cotacao.data?.preco;
   // Saldo vindo das operações (não de /portfolio/posicoes: ela omite o ativo sem cotação). null = ainda não se sabe.
   const disponivel =
-    itemEscolhido && operacoes.data ? quantidadeDisponivel(operacoes.data, itemEscolhido.ativo.id) : null;
+    ativoEscolhido && operacoes.data ? quantidadeDisponivel(operacoes.data, ativoEscolhido.id) : null;
 
   // O erro de quantidade de uma venda não vale para a compra (e vice-versa): some junto com a troca.
   function aoMudarTipo(novo: TipoOperacao) {
@@ -65,7 +73,7 @@ export default function NovaOperacao() {
     if (registrar.isPending) return;
     setErroGeral(null);
     const resultado = validarOperacao({ tipo, ticker, quantidade, precoUnitario, data }, new Date(), {
-      tickersPermitidos: itens.map((item) => item.ativo.ticker),
+      tickersPermitidos: ativos.map((ativo) => ativo.ticker),
       disponivel: tipo === 'VENDA' ? disponivel : null,
     });
     if (!resultado.ok) {
@@ -79,15 +87,15 @@ export default function NovaOperacao() {
     }
     setErros({});
     const { dados } = resultado;
-    const ativo = itens.find((item) => item.ativo.ticker.toUpperCase() === dados.ticker);
+    const ativo = ativos.find((item) => item.ticker.toUpperCase() === dados.ticker);
     if (!ativo) {
-      setErros({ ticker: 'Escolha um ativo da sua watchlist' });
+      setErros({ ticker: 'Escolha um ativo da lista' });
       campoTicker.current?.focus();
       return;
     }
     try {
       await registrar.mutateAsync({
-        ativo_id: ativo.ativo.id,
+        ativo_id: ativo.id,
         tipo: dados.tipo,
         quantidade: dados.quantidade,
         preco_unitario: dados.precoUnitario,
@@ -102,25 +110,31 @@ export default function NovaOperacao() {
     }
   }
 
-  if (watchlist.isPending) {
+  if (watchlist.isPending || catalogo.isPending) {
     return (
       <Tela>
         <Carregando />
       </Tela>
     );
   }
-  if (watchlist.isError) {
+  if (watchlist.isError && catalogo.isError) {
     return (
       <Tela>
-        <ErroComRetry erro={watchlist.error} aoTentarNovamente={() => void watchlist.refetch()} />
+        <ErroComRetry
+          erro={watchlist.error}
+          aoTentarNovamente={() => {
+            void watchlist.refetch();
+            void catalogo.refetch();
+          }}
+        />
       </Tela>
     );
   }
-  if (itens.length === 0) {
+  if (ativos.length === 0) {
     return (
       <Tela>
         <EstadoVazio
-          mensagem="Para registrar uma operação, o ativo precisa estar na sua watchlist. Busque o ativo e adicione-o primeiro."
+          mensagem="Nenhum ativo disponível para operar no momento. Busque o ativo e adicione-o à watchlist."
           acao={{ titulo: 'Buscar ativo', onPress: () => router.push('/buscar') }}
         />
       </Tela>
@@ -144,7 +158,7 @@ export default function NovaOperacao() {
         submitBehavior="submit"
         onSubmitEditing={() => campoQuantidade.current?.focus()}
       />
-      <SugestoesTicker tickers={itens.map((item) => item.ativo.ticker)} aoEscolher={setTicker} />
+      <SugestoesTicker tickers={sugerirTickers(ativos, ticker, LIMITE_SUGESTOES)} aoEscolher={setTicker} />
       <Campo
         ref={campoQuantidade}
         rotulo="Quantidade"
@@ -157,7 +171,7 @@ export default function NovaOperacao() {
         submitBehavior="submit"
         onSubmitEditing={() => campoPreco.current?.focus()}
       />
-      {tipo === 'VENDA' && itemEscolhido && disponivel !== null ? (
+      {tipo === 'VENDA' && ativoEscolhido && disponivel !== null ? (
         <Texto variante="legenda" cor="secundario">
           {disponivel > 0
             ? `Disponível para venda: ${formatarQuantidade(disponivel)}`
@@ -177,7 +191,7 @@ export default function NovaOperacao() {
       {precoAtual ? (
         <Botao
           variante="secundario"
-          titulo={`Usar cotação atual (${formatarMoeda(precoAtual, itemEscolhido?.ativo.moeda)})`}
+          titulo={`Usar cotação atual (${formatarMoeda(precoAtual, ativoEscolhido?.moeda)})`}
           onPress={() => setPrecoUnitario(precoAtual.replace('.', ','))}
         />
       ) : null}
